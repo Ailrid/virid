@@ -8,7 +8,6 @@ import {
   watch,
   computed,
   type WatchStopHandle,
-  isRef,
   ref,
   shallowReactive,
   onMounted,
@@ -21,6 +20,7 @@ import {
 import { ControllerMessage } from "../decorators";
 import { MessageWriter, type SystemContext } from "@virid/core";
 import { viridApp } from "../app";
+import { createDeepShield } from "./shield";
 // controller注册表
 
 export class GlobalRegistry {
@@ -58,74 +58,65 @@ export class GlobalRegistry {
 /**
  * @Project 连接component，只读一个component的值
  */
-export function bindProject(
-  proto: any,
-  instance: any,
-  rawDeps: Record<string, any>,
-) {
+export function bindProject(proto: any, instance: any) {
   const projects = Reflect.getMetadata(VIRID_METADATA.PROJECT, proto);
 
   projects?.forEach((config: any) => {
     const { propertyKey, isAccessor, type, componentClass, source } = config;
-    let c: any;
-    let setter: (val: any) => void = () => {
+    let project: any;
+
+    // 统一报错 Setter
+    const readOnlySetter = (_val: any) => {
       MessageWriter.error(
         new Error(
-          `[Virid Shield] Property "${propertyKey}" is read-only.\n` +
-            `If you need to mutate, define an explicit setter and ensure the dependency is injected.`,
+          `[Virid Project] Read-only: Property "${propertyKey}" in "${instance.constructor.name}" is a protected projection.\n`,
         ),
       );
     };
-    // 获取目标对象（确保它是已经 bindResponsive 过的）
-    const getTarget = () => {
-      const target =
-        type === "component" ? viridApp.get(componentClass) : instance;
-      if (target && !target.__ccs_processed__) {
-        // 兜底：如果没处理过，现场处理（虽然最好在外部流转中处理好）
-        bindResponsive(target);
-      }
-      return target;
-    };
 
-    // 手写 get/set (支持提权写入)
+    // 手写 Accessor
     if (isAccessor) {
-      const rawDescriptor = Object.getOwnPropertyDescriptor(proto, propertyKey);
-
-      //如果有set，就警告
-      if (rawDescriptor?.set) {
-        MessageWriter.warn(
-          `[Virid Project] Possible Implicit Modification:\nManual Set on "${propertyKey}".` +
-            `If this is not intentional, please do not use set.`,
+      if (type === "component") {
+        MessageWriter.error(
+          new Error(
+            `[Virid Project] Architecture Violation: Manual get/set is forbidden on ${componentClass} projection "${propertyKey}". Please use functional source.`,
+          ),
         );
-        setter = (val) => {
-          // 只有在这里，我们允许绕过 Shield
-          const elevatedContext = new Proxy(instance, {
-            get(target, key) {
-              if (typeof key === "string" && rawDeps[key]) {
-                return rawDeps[key]; // 返回未经 Proxy 劫持的原始对象
-              }
-              return Reflect.get(target, key);
-            },
-          });
-          // 执行用户手写的 setter
-          rawDescriptor?.set?.call(elevatedContext, val);
-        };
+        return;
       }
-      c = computed({
-        get: () => {
-          // 这里的 this 绑定必须非常明确
-          return rawDescriptor?.get?.call(instance);
+
+      // 只有非 component 类型才走到这里，不套盾，支持读写
+      const rawDescriptor = Object.getOwnPropertyDescriptor(proto, propertyKey);
+      project = computed({
+        get: () => rawDescriptor?.get?.call(instance),
+        set: (val) => {
+          if (rawDescriptor?.set) {
+            rawDescriptor.set.call(instance, val);
+          } else {
+            readOnlySetter(val);
+          }
         },
-        set: setter,
       });
     }
-    // 函数式投影 (只读契约)
+    //函数式投影
     else {
-      // 处理普通的函数式投影
-      c = computed(() => {
-        const target = getTarget();
-        // 调试用：console.log(`[Project Debug] Tracking ${propertyKey} from`, target);
-        return source(target);
+      project = computed({
+        get: () => {
+          const isFromComponent = type === "component";
+          const target = isFromComponent
+            ? viridApp.get(componentClass)
+            : instance;
+          const val = source(target);
+
+          // 来自 component 的数据套盾
+          if (isFromComponent) {
+            return createDeepShield(val, componentClass.name, propertyKey);
+          }
+
+          // 来自自己的投影，直接返回
+          return val;
+        },
+        set: readOnlySetter,
       });
     }
 
@@ -136,8 +127,8 @@ export function bindProject(
     if (currentDescriptor && currentDescriptor.configurable === false) return;
 
     Object.defineProperty(instance, propertyKey, {
-      get: () => c.value,
-      set: (val) => (c.value = val), // computed 如果没设 setter，这里赋值会报错，符合你 read-only 的预期
+      get: () => project.value,
+      set: (val) => (project.value = val),
       enumerable: true,
       configurable: true,
     });
@@ -195,8 +186,8 @@ export function bindWatch(proto: any, instance: any) {
  * @Responsive 递归处理，支持在 Observer 基础上套娃
  */
 export function bindResponsive(instance: any) {
-  if (!instance || typeof instance !== "object") return;
-  if (instance.__virid_responsive_processed__) return;
+  if (!instance || typeof instance !== "object") return instance;
+  if (instance.__virid_responsive_processed__) return instance;
 
   Object.defineProperty(instance, "__virid_responsive_processed__", {
     value: true,
@@ -259,113 +250,14 @@ export function bindResponsive(instance: any) {
       bindResponsive(val);
     }
   });
-}
-/**
- * 递归物理护盾：将对象及其所有后代变为硬只读
- */
-export function createDeepShield(
-  target: any,
-  rootName: string,
-  path: string = "",
-): any {
-  // 基本类型处理
-  if (
-    target === null ||
-    (typeof target !== "object" && typeof target !== "function")
-  ) {
-    return target;
-  }
-
-  // 防止重复包装
-  if (target.__ccs_shield__) return target;
-
-  return new Proxy(target, {
-    get(obj, prop) {
-      // 内部标识，用于识别是否已被包装
-      if (prop === "__ccs_shield__") return true;
-      // 允许访问原始对象（仅限框架内部使用）
-      if (prop === "__raw__") return obj;
-
-      const value = Reflect.get(obj, prop);
-      const currentPath = path ? `${path}.${String(prop)}` : String(prop);
-      // 函数拦截
-      if (typeof value === "function") {
-        return (...args: any[]) => {
-          // 检查该方法是否有 @Safe 标记
-          // target 可能是实例，元数据通常存在 constructor.prototype 上
-          const safeMethods =
-            Reflect.getMetadata(
-              VIRID_METADATA.SAFE,
-              obj.constructor?.prototype,
-            ) || new Set();
-
-          if (!safeMethods.has(prop)) {
-            const errorMsg = [
-              `[Virid Security Violation]`,
-              `------------------------------------------------`,
-              `Location: ${rootName}.${currentPath}()`,
-              `Status: BLOCKED`,
-              `Reason: This method is NOT marked with @Safe.`,
-              `Constraint: In Virid, UI/Controller can only call READ-ONLY(Safe) methods.`,
-              `------------------------------------------------`,
-            ].join("\n");
-            MessageWriter.error(new Error(errorMsg));
-            return null; // 拒绝执行
-          }
-
-          // 安全执行：如果是 Safe 的，执行它
-          const result = value.apply(obj, args);
-          // 对返回值递归套盾
-          return createDeepShield(result, rootName, `${currentPath}()`);
-        };
-      }
-      // 自动给子对象也穿上护盾
-      return createDeepShield(value, rootName, currentPath);
-    },
-
-    set(_obj, prop) {
-      const currentPath = path ? `${path}.${String(prop)}` : String(prop);
-
-      // 优雅地失败，并给出修复建议
-      const errorMsg = [
-        `[Virid Security Violation]`,
-        `------------------------------------------------`,
-        `Component: ${rootName}`,
-        `Code: this.${rootName}.${currentPath}`,
-        `Result: Rejected`,
-        `Repair suggestion: Please use @ Project (${currentPath}) to create a projection in the Controller.`,
-        `------------------------------------------------`,
-      ].join("\n");
-      MessageWriter.error(new Error(errorMsg));
-      return false;
-    },
-
-    deleteProperty(_obj, prop) {
-      MessageWriter.error(
-        new Error(
-          `[Virid DeepShield] Physical Protection:\nProhibit Deletion of Component Attributes ${String(prop)}`,
-        ),
-      );
-      return false;
-    },
-
-    // 拦截 Object.defineProperty 等底层操作
-    defineProperty() {
-      MessageWriter.error(
-        new Error(
-          `[Virid DeepShield] Physical Protection:\nProhibit redefining component attribute structure`,
-        ),
-      );
-      return false;
-    },
-  });
+  return instance;
 }
 
 /**
  * 解析 @OnHook 并将其绑定到 Vue 生命周期
  */
 export function bindHooks(proto: any, instance: any) {
-  const hooks = Reflect.getMetadata(VIRID_METADATA.LIFE_CRICLE, proto);
+  const hooks = Reflect.getMetadata(VIRID_METADATA.LIFE_CIRCLE, proto);
 
   hooks?.forEach((config: any) => {
     const { hookName, methodName } = config;

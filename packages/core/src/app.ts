@@ -31,8 +31,8 @@ export class ViridApp {
   public container: ViridContainer = new ViridContainer();
   private messageInternal: MessageInternal = new MessageInternal();
   // Core 内部提供一个中间件数组
-  private activationHooks: Array<(context: any, instance: any) => void> = [];
-  public addActivationHook(hook: (context: any, instance: any) => void) {
+  private activationHooks: Array<(instance: any) => any> = [];
+  public addActivationHook(hook: (instance: any) => any) {
     this.activationHooks.push(hook);
   }
 
@@ -46,20 +46,27 @@ export class ViridApp {
     }
     return this.container.get(identifier, (ins) => this.handleActivation(ins));
   }
-  // 统一的激活逻辑处理
+
   private handleActivation<T>(instance: T): T {
-    if (instance) {
-      bindObservers(instance); // 执行 Core 的 Observer
-      this.activationHooks.forEach((hook) => {
-        try {
-          // 这里的 context 传入 null 或模拟对象，因为我们不再依赖 Inversify 的 context
-          hook(null, instance);
-        } catch (e) {
-          MessageWriter.error(e, `[Virid Core] Activation hook failed`);
+    if (!instance) return instance;
+
+    // 前一个 Hook 的输出是后一个 Hook 的输入
+    return this.activationHooks.reduce((currentInstance, hook) => {
+      try {
+        const nextInstance = hook(currentInstance);
+        // 如果 Hook 忘记写 return，则保留上一步的结果
+        // 同时，弹一个警告
+        if (nextInstance === undefined) {
+          MessageWriter.warn(
+            `[Virid Container] Hook Does Bot Return A Value: Hook "${hook.name}" should return a instance to continue.`,
+          );
         }
-      });
-    }
-    return instance;
+        return nextInstance !== undefined ? nextInstance : currentInstance;
+      } catch (e) {
+        MessageWriter.error(e, `[Virid Container] Activation Hook Failed`);
+        return currentInstance;
+      }
+    }, instance);
   }
   /**
    * 绑定多例 (Controller 通常是多例)
@@ -110,7 +117,7 @@ export class ViridApp {
   use<T>(plugin: ViridPlugin<T>, options: T): this {
     if (installedPlugins.has(plugin.name)) {
       MessageWriter.warn(
-        `[Virid Plugin] Plugin ${plugin.name} has already been installed.`,
+        `[Virid Plugin] Duplicate Installation: Plugin ${plugin.name} has already been installed.`,
       );
       return this;
     }
@@ -120,7 +127,7 @@ export class ViridApp {
     } catch (e) {
       MessageWriter.error(
         e as Error,
-        `[Virid Plugin]: Install Faild: ${plugin.name}`,
+        `[Virid Plugin]: Install Failed: ${plugin.name}`,
       );
     }
     return this;
@@ -128,5 +135,5 @@ export class ViridApp {
 }
 
 export const viridApp = new ViridApp();
-
+viridApp.addActivationHook(bindObservers);
 initializeGlobalSystems(viridApp);

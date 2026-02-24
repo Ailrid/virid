@@ -81,7 +81,7 @@ class AmberTickStore {
     if (!historyMap) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Travel Error: Tick ${targetTick} is out of history range.`,
+          `[Virid Amber] Travel Error: Tick ${targetTick} is out of history range.`,
         ),
       );
       return;
@@ -167,7 +167,7 @@ class AmberComponentStore {
     if (!instance) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Serialize Error: Component ${compClass.name} is not registered.`,
+          `[Virid Amber] Serialize Error: Component ${compClass.name} is not registered.`,
         ),
       );
       return null;
@@ -183,7 +183,7 @@ class AmberComponentStore {
     } catch (e) {
       MessageWriter.error(
         e,
-        `[Vrid Amber] Serialize Error: Component ${compClass.name} serialization error`,
+        `[Virid Amber] Serialize Error: Component ${compClass.name} serialization error`,
       );
     }
     return null;
@@ -196,7 +196,7 @@ class AmberComponentStore {
     if (!instance) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber]  Deserialize Error: Component ${compClass.name} is not registered.`,
+          `[Virid Amber]  Deserialize Error: Component ${compClass.name} is not registered.`,
         ),
       );
       return;
@@ -204,7 +204,7 @@ class AmberComponentStore {
     if (!data) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber]  Deserialize Error: Component ${compClass.name} data is ${data}!.`,
+          `[Virid Amber]  Deserialize Error: Component ${compClass.name} data is ${data}!.`,
         ),
       );
       return;
@@ -220,7 +220,7 @@ class AmberComponentStore {
     } catch (e) {
       MessageWriter.error(
         e,
-        `[Vrid Amber] Deserialize Error: Component ${compClass.name} deserialize error`,
+        `[Virid Amber] Deserialize Error: Component ${compClass.name} deserialize error`,
       );
     }
     return;
@@ -233,7 +233,7 @@ class AmberComponentStore {
     if (!instance) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Diff Error: Component ${compClass.name} is not registered.`,
+          `[Virid Amber] Diff Error: Component ${compClass.name} is not registered.`,
         ),
       );
       return false;
@@ -241,7 +241,7 @@ class AmberComponentStore {
     if (!old_data) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Diff Error: Component ${compClass.name} data is ${old_data}!.`,
+          `[Virid Amber] Diff Error: Component ${compClass.name} data is ${old_data}!.`,
         ),
       );
       return false;
@@ -256,7 +256,7 @@ class AmberComponentStore {
     } catch (e) {
       MessageWriter.error(
         e,
-        `[Vrid Amber] Diff Error: Component ${compClass.name} diff error`,
+        `[Virid Amber] Diff Error: Component ${compClass.name} diff error`,
       );
     }
     return false;
@@ -278,7 +278,7 @@ class AmberComponentStore {
     } catch (e) {
       MessageWriter.error(
         e,
-        `[Vrid Amber] Serialize Error: Component ${compClass.name} serialization error`,
+        `[Virid Amber] Serialize Error: Component ${compClass.name} serialization error`,
       );
       return;
     }
@@ -317,7 +317,7 @@ class AmberComponentStore {
   }
 
   /**
-   * 给一个comonent 打快照
+   * 给一个component 打快照
    * @param compClass 构造函数
    * @returns
    */
@@ -326,7 +326,7 @@ class AmberComponentStore {
     if (!stack) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Seal Error: Component ${compClass.name} is not initialized.`,
+          `[Virid Amber] Seal Error: Component ${compClass.name} is not initialized.`,
         ),
       );
     }
@@ -359,7 +359,7 @@ class AmberComponentStore {
     if (!newData) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Seal Error: Component ${compClass.name} is not serializable.`,
+          `[Virid Amber] Seal Error: Component ${compClass.name} is not serializable.`,
         ),
       );
       return;
@@ -395,7 +395,7 @@ class AmberComponentStore {
     if (!stack) {
       MessageWriter.error(
         new Error(
-          `[Vrid Amber] Seal Error: Component ${compClass.name} is not initialized.`,
+          `[Virid Amber] Seal Error: Component ${compClass.name} is not initialized.`,
         ),
       );
       return false;

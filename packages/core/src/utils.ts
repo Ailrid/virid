@@ -50,7 +50,7 @@ const globalInfoHandler = (err: InfoMessage) => {
   console.log(
     `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
       `  ${clr.green}Details:${clr.reset}`,
-    err.context || "Unknown Info",
+    err.context || "unknownn Info",
   );
 };
 
@@ -65,7 +65,7 @@ const globalErrorHandler = (err: ErrorMessage) => {
     `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
       `  ${clr.red}Context:${clr.reset} ${context}\n` +
       `  ${clr.red}Details:${clr.reset}`,
-    err.error || err || "Unknown Error",
+    err.error || err || "unknownn Error",
   );
 };
 
@@ -109,11 +109,11 @@ const atomicModifyHandler = (modifications: AtomicModifyMessage<any>) => {
   }
 };
 
-export interface IviridApp {
+export interface IViridApp {
   get(identifier: any): any;
 }
 
-let activeApp: IviridApp | null = null;
+let activeApp: IViridApp | null = null;
 
 /**
  * 激活真正的 App 实例
@@ -150,8 +150,8 @@ export function initializeGlobalSystems(app: ViridApp) {
 /**
  * viridApp 代理
  */
-export const viridApp: IviridApp = new Proxy({} as IviridApp, {
-  get(_, prop: keyof IviridApp) {
+export const viridApp: IViridApp = new Proxy({} as IViridApp, {
+  get(_, prop: keyof IViridApp) {
     return (...args: any[]) => {
       // 检查实例是否存在
       if (!activeApp) {

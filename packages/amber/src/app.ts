@@ -12,11 +12,11 @@ import {
   activateConfig,
 } from "./amber";
 import { VIRID_METADATA } from "./decorators";
-export interface IviridApp {
+export interface IViridApp {
   get(identifier: any): any;
 }
 
-let activeApp: IviridApp | null = null;
+let activeApp: IViridApp | null = null;
 
 export function activateApp(app: ViridApp, options: PluginOptions) {
   //注册钩子
@@ -24,7 +24,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
   app.onAfterExecute(BaseMessage, afterExecuteHooks, true);
   //看看用户提供的配置
   if (options) activateConfig(options);
-  const amberInitHook = (_context, instance) => {
+  const amberInitHook = (instance) => {
     if (
       instance &&
       Reflect.hasMetadata(VIRID_METADATA.VERSION, instance.constructor)
@@ -32,6 +32,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
       //实例化的时候，init第一个版本
       amberComponentStore.initComponent(instance);
     }
+    return instance;
   };
   app.addActivationHook(amberInitHook);
   activeApp = app;
@@ -40,8 +41,8 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
 /**
  * viridApp 代理
  */
-export const viridApp: IviridApp = new Proxy({} as IviridApp, {
-  get(_, prop: keyof IviridApp) {
+export const viridApp: IViridApp = new Proxy({} as IViridApp, {
+  get(_, prop: keyof IViridApp) {
     return (...args: any[]) => {
       // 检查实例是否存在
       if (!activeApp) {

@@ -30,7 +30,7 @@ function ReceiveMessages(message: any): void {
     // 主进程没注册这个消息,直接报错
     MessageWriter.error(
       new Error(
-        `[Virid Main] Unknown Message Type: Cannot find ${__virid_messageType} in the main process registry.`,
+        `[Virid Main] unknown Message Type: Cannot find ${__virid_messageType} in the main process registry.`,
       ),
     );
     return;
@@ -66,7 +66,7 @@ function TransmitMessages(message: any): void {
     // 主进程没注册这个消息,直接报错
     MessageWriter.error(
       new Error(
-        `[Virid Main] Unknown Window: Cannot find ${__virid_target} in the windows registry.`,
+        `[Virid Main] unknown Window: Cannot find ${__virid_target} in the windows registry.`,
       ),
     );
     return;

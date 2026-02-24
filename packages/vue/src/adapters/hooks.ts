@@ -5,9 +5,7 @@
  */
 import {
   bindProject,
-  bindResponsive,
   bindWatch,
-  createDeepShield,
   bindHooks,
   bindUseHooks,
   bindListener,
@@ -28,8 +26,6 @@ export function useController<T>(
   options?: { id?: string; context?: any },
 ): T {
   const instance = viridApp.get(token) as any;
-  // 处理@Responsive，将属性变成响应式的
-  // bindResponsive(instance);
 
   //注入vue的乱七八糟的context
   const reactiveContext = options?.context || useAttrs();
@@ -39,23 +35,20 @@ export function useController<T>(
 
   // 检查身份 Controller
   const isController = Reflect.hasMetadata(VIRID_METADATA.CONTROLLER, token);
-  // 建立真身仓库 (此时 instance 里的 service 还是干净的原始对象)
-  const rawDeps: Record<string, any> = {};
-  if (isController) {
-    Object.keys(instance).forEach((key) => {
-      const dep = (instance as any)[key];
-      if (dep && typeof dep === "object" && dep.constructor) {
-        if (Reflect.hasMetadata(VIRID_METADATA.COMPONENT, dep.constructor)) {
-          rawDeps[key] = dep; // 存下真身
-        }
-      }
-    });
+  if (!isController) {
+    // 确保非 Controller 的实例不能被其他 Controller 访问
+    MessageWriter.error(
+      new Error(
+        `[Virid Controller] ${token.name} is not a Controller.Use @Controller to inject it.`,
+      ),
+    );
+    return;
   }
 
   //绑定各种魔法装饰器
   const proto = Object.getPrototypeOf(instance);
   // @Project装饰器
-  bindProject(proto, instance, rawDeps);
+  bindProject(proto, instance);
   // @Use装饰器
   bindUseHooks(proto, instance);
   // @Watch装饰器
@@ -63,13 +56,6 @@ export function useController<T>(
   // @Listener装饰器
   // 运行时动态挂载监听器
   const unbindList = bindListener(proto, instance);
-  // 给 Controller 上的注入项套上护盾，禁止写操作
-  if (isController) {
-    Object.keys(rawDeps).forEach((key) => {
-      // 从这一刻起，直接访问 instance.service 就会报错
-      (instance as any)[key] = createDeepShield(rawDeps[key], key, "");
-    });
-  }
   // 生命周期钩子
   bindHooks(proto, instance);
   // @Inherit装饰器
@@ -82,7 +68,7 @@ export function useController<T>(
   }
   onUnmounted(() => {
     stops.forEach((stop) => stop());
-    unbindList.forEach((unreg) => unreg());
+    unbindList.forEach((stop) => stop());
     unbindRegister();
     // 自动卸载信号处理器，防止 Controller 销毁后残留
   });
@@ -101,18 +87,12 @@ function injectContext(context: any, instance: any) {
       Object.defineProperty(instance, key, {
         // Getter 确保了 @Watch 的依赖收集能一路穿透到 Vue 源头
         get: () => context[key],
-
         // 处理写入逻辑
         set: (val) => {
-          // 如果 context 是只读的 (比如 attrs)，Vue 内部会报错
-          // 我们这里可以增加一层架构上的提示
           if (context[key] === val) return;
-
           try {
-            // 尝试直接修改源数据（支持某些 slot props 的双向绑定）
             context[key] = val;
           } catch (e) {
-            // console.error(`[Virid] 属性 "${key}" 是环境受限的，无法在逻辑层直接修改。`)
             MessageWriter.error(
               e as Error,
               `[Virid Context] Set Failed:\n "${key}" is only readable.`,

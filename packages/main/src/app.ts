@@ -42,7 +42,7 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       if (!win) {
         MessageWriter.error(
           new Error(
-            `[Virid Main] Unknown Window: Unable to find the window corresponding to event.sender`,
+            `[Virid Main] unknown Window: Unable to find the window corresponding to event.sender`,
           ),
         );
         return;

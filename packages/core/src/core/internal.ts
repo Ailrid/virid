@@ -13,7 +13,7 @@ import {
   Middleware,
 } from "./types";
 import { MessageRegistry } from "./registry";
-import { MessageWriter, activatInstance } from "./io";
+import { MessageWriter, activateInstance } from "./io";
 
 export class MessageInternal {
   private eventHub = new EventHub();
@@ -23,7 +23,7 @@ export class MessageInternal {
 
   constructor() {
     // 修改
-    activatInstance(this);
+    activateInstance(this);
   }
 
   useMiddleware(mw: Middleware, front: boolean) {

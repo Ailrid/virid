@@ -11,7 +11,7 @@ export interface IMessagePublisher {
 }
 // 导出这个“壳子”
 let activeInstance: MessageInternal | null = null;
-export function activatInstance(instance: MessageInternal) {
+export function activateInstance(instance: MessageInternal) {
   activeInstance = instance;
 }
 export const publisher: IMessagePublisher = new Proxy({} as IMessagePublisher, {

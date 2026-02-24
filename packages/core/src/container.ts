@@ -40,18 +40,21 @@ export class ViridContainer {
     }
     const TargetCtor = binding.ctor;
 
-    // 获取/创建 实例
-    let instance: T;
-    if (binding?.type === "singleton") {
+    // 处理单例逻辑
+    if (binding.type === "singleton") {
       if (!this.singletonInstances.has(identifier)) {
-        this.singletonInstances.set(identifier, new TargetCtor());
+        // 第一次创建：实例化 -> 走流水线加工 -> 存入成品
+        const rawInstance = new TargetCtor();
+        const processedInstance = onActivate(rawInstance);
+        this.singletonInstances.set(identifier, processedInstance);
       }
-      instance = this.singletonInstances.get(identifier);
-    } else {
-      instance = new TargetCtor();
+      // 后续直接返回加工后的成品
+      return this.singletonInstances.get(identifier);
     }
 
-    // 执行激活钩子 (仅在第一次创建单例或每次创建多例时)
+    // 处理多例（Transient）逻辑
+    // 每次都创建新实例并走一遍流水线加工
+    const instance = new TargetCtor();
     return onActivate(instance);
   }
 }

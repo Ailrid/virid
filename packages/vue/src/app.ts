@@ -5,7 +5,7 @@
  */
 import { type ViridApp } from "@virid/core";
 import { bindResponsive } from "./adapters/bind";
-export interface IviridApp {
+export interface IViridApp {
   register(
     eventClass: any,
     systemFn: (...args: any[]) => any,
@@ -15,7 +15,7 @@ export interface IviridApp {
   bindComponent<T>(identifier: new (...args: any[]) => T);
 }
 
-let activeApp: IviridApp | null = null;
+let activeApp: IViridApp | null = null;
 
 /**
  * 激活真正的 App 实例
@@ -33,8 +33,8 @@ export function activateApp(app: ViridApp) {
 /**
  * viridApp 代理
  */
-export const viridApp: IviridApp = new Proxy({} as IviridApp, {
-  get(_, prop: keyof IviridApp) {
+export const viridApp: IViridApp = new Proxy({} as IViridApp, {
+  get(_, prop: keyof IViridApp) {
     return (...args: any[]) => {
       // 检查实例是否存在
       if (!activeApp) {

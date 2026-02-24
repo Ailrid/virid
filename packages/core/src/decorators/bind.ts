@@ -15,14 +15,14 @@ const ARRAY_MUTABLE_METHODS = [
   "reverse",
 ];
 export function bindObservers(instance: any) {
-  if (!instance || typeof instance !== "object") return;
+  if (!instance || typeof instance !== "object") return instance;;
   if (
     Object.prototype.hasOwnProperty.call(
       instance,
       "__virid_observer_processed__",
     )
   )
-    return;
+    return instance;;
 
   Object.defineProperty(instance, "__virid_observer_processed__", {
     value: true,
@@ -96,4 +96,5 @@ export function bindObservers(instance: any) {
       bindObservers(val);
     }
   });
+  return instance;
 }

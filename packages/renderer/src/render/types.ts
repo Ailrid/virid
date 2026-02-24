@@ -10,7 +10,7 @@ import { EventMessage, Newable } from "@virid/core";
 export abstract class FromMainMessage extends EventMessage {
   /** 我来自哪？
    */
-  public __virid_source: string = "unknow";
+  public __virid_source: string = "unknown";
   /** 我的目的地是哪儿？
    * 'main': 发给主进程处理
    * 'all': 广播给所有窗口（经过主进程中转）

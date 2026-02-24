@@ -17,7 +17,7 @@ export const handleResult = (res: any) => {
       MessageWriter.write(m);
     } else {
       MessageWriter.warn(
-        `[Vrid HandleResult] Invalid Return Type: Must return Message or  Message[].`,
+        `[Virid HandleResult] Invalid Return Type: Must return Message or  Message[].`,
       );
     }
   });
@@ -102,7 +102,7 @@ export function System(priority: number = 0) {
         if (!param)
           MessageWriter.error(
             new Error(
-              `[Virid System] Unknown Inject Data Types: ${type.name} is not registered in the container!`,
+              `[Virid System] unknownn Inject Data Types: ${type.name} is not registered in the container!`,
             ),
           );
         return param;

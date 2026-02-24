@@ -16,7 +16,7 @@ app.config.errorHandler = (err, instance, info) => {
       "Core dependencies are missing, program rendering interrupted:",
       {
         message: err.message,
-        component: instance?.$options.name || "unknown",
+        component: instance?.$options.name || "unknownn",
         lifecycle: info,
       },
     );

@@ -5,13 +5,11 @@
  */
 import { VIRID_METADATA } from "./constants";
 import type { WatchOptions } from "vue";
-
-import { BaseMessage, Newable } from "@virid/core";
+import { Newable } from "@virid/core";
 import { ControllerMessage } from "./types";
 
 /**
  * @description:实现Watch
- * 用法：@Watch('a.b.c') 或 @Watch(instance => instance.a.b.c)
  */
 
 // 重载 1: 监听 Controller 自身变量
@@ -117,9 +115,9 @@ export function OnHook(
 ) {
   return (target: any, methodName: string) => {
     const existing =
-      Reflect.getMetadata(VIRID_METADATA.LIFE_CRICLE, target) || [];
+      Reflect.getMetadata(VIRID_METADATA.LIFE_CIRCLE, target) || [];
     existing.push({ hookName, methodName });
-    Reflect.defineMetadata(VIRID_METADATA.LIFE_CRICLE, existing, target);
+    Reflect.defineMetadata(VIRID_METADATA.LIFE_CIRCLE, existing, target);
   };
 }
 /**
@@ -136,7 +134,7 @@ export function Use(hookFactory: () => any) {
 }
 /**
  * @description: Inherit注入装饰器
- * 用法：@Inherit(Contronller,(instance) => instance.xxxx) public data!: SomeType
+ * 用法：@Inherit(Controller,(instance) => instance.xxxx) public data!: SomeType
  */
 export function Inherit<T>(
   token: new (...args: any[]) => T,
@@ -162,7 +160,6 @@ export function Env() {
 
 /**
  * @description: Listener 装饰器 - 标记 Controller 的成员方法为消息监听器
- * 模仿 Bevy 的即时响应机制，但严格限制其只能处理 UI 逻辑
  */
 export function Listener<T extends ControllerMessage>(
   eventClass: Newable<T>,
