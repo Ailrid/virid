@@ -29,7 +29,7 @@ export function useController<T>(
 ): T {
   const instance = viridApp.get(token) as any;
   // 处理@Responsive，将属性变成响应式的
-  bindResponsive(instance);
+  // bindResponsive(instance);
 
   //注入vue的乱七八糟的context
   const reactiveContext = options?.context || useAttrs();
@@ -72,7 +72,7 @@ export function useController<T>(
   }
   // 生命周期钩子
   bindHooks(proto, instance);
-  // @Iherit装饰器
+  // @Inherit装饰器
   bindInherit(proto, instance);
   //绑定全局注册表
   //如果有id,就去注册

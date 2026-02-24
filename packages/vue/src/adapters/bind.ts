@@ -192,58 +192,74 @@ export function bindWatch(proto: any, instance: any) {
 }
 
 /**
- * @Responsive 递归处理依赖注入树中的所有 Component，将其标记属性变为响应式
+ * @Responsive 递归处理，支持在 Observer 基础上套娃
  */
-
 export function bindResponsive(instance: any) {
   if (!instance || typeof instance !== "object") return;
-  if (
-    Object.prototype.hasOwnProperty.call(
-      instance,
-      "__virid_responsive_processed__",
-    )
-  )
-    return;
+  if (instance.__virid_responsive_processed__) return;
+
   Object.defineProperty(instance, "__virid_responsive_processed__", {
     value: true,
     enumerable: false,
   });
 
-  // 偷梁换柱
   const props = Reflect.getMetadata(VIRID_METADATA.RESPONSIVE, instance) || [];
-  // 先将当前层级的所有属性Ref化
+
   props.forEach((config: any) => {
     const key = config.propertyKey;
-    const rawValue = instance[key];
-
-    // 如果该属性已经是 getter/setter 了（可能被重复调用），跳过
     const descriptor = Object.getOwnPropertyDescriptor(instance, key);
-    if (descriptor && descriptor.get) return;
 
-    const internalState = config.shallow ? shallowRef(rawValue) : ref(rawValue);
+    // 【关键逻辑】检查是否已经被 bindObservers 劫持过
+    const existingBox = (descriptor?.get as any)?.__virid_box__;
 
-    Object.defineProperty(instance, key, {
-      get: () => internalState.value,
-      set: (val) => {
-        internalState.value = val;
-      },
-      enumerable: true,
-      configurable: true,
-    });
+    // 在 bindResponsive 内部
+    if (existingBox) {
+      const rawValue = existingBox.value;
+      const vRef = config.shallow ? shallowRef(rawValue) : ref(rawValue);
+      const autoValueProxy = new Proxy(vRef, {
+        get(target, prop) {
+          // 当访问这个代理时，它自动去拿 vRef.value 的内容
+          const inner = target.value;
+          // 如果是函数，需要绑定原始对象
+          const val = Reflect.get(inner, prop);
+          return typeof val === "function" ? val.bind(inner) : val;
+        },
+        set(target, prop, newVal) {
+          // 它自动写进 vRef.value
+          return Reflect.set(target.value, prop, newVal);
+        },
+      });
+      // 现在 logicProxy 访问 existingBox.value 拿到的就是这个 autoValueProxy
+      existingBox.value = autoValueProxy;
+    } else {
+      // 普通属性，按照原逻辑处理
+      if (descriptor && descriptor.get) return;
+
+      const rawValue = instance[key];
+      const internalState = config.shallow
+        ? shallowRef(rawValue)
+        : ref(rawValue);
+
+      Object.defineProperty(instance, key, {
+        get: () => internalState.value,
+        set: (val) => {
+          internalState.value = val;
+        },
+        enumerable: true,
+        configurable: true,
+      });
+    }
   });
 
-  // 只针对已经“Ref化”的对象或普通属性进行深度处理
-  // 使用 Reflect.ownKeys 获取所有属性，包括不可枚举的
+  // 递归处理子对象
   Reflect.ownKeys(instance).forEach((key) => {
     if (key === "__virid_responsive_processed__") return;
-    const val = instance[key]; // 这里会触发上面定义的 get()
-    if (val && typeof val === "object" && !isRef(val)) {
-      // 递归处理子对象
+    const val = instance[key];
+    if (val && typeof val === "object") {
       bindResponsive(val);
     }
   });
 }
-
 /**
  * 递归物理护盾：将对象及其所有后代变为硬只读
  */

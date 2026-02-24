@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 import { type MessageInternal } from "./internal";
-import { BaseMessage, ErrorMessage, WarnMessage } from "./types";
+import { BaseMessage, ErrorMessage, InfoMessage, WarnMessage } from "./types";
 // 描述 dispatch 的结构
 export interface IMessagePublisher {
   dispatch(message: BaseMessage): void;
@@ -59,5 +59,8 @@ export class MessageWriter {
 
   public static warn(context: string): void {
     this.write(new WarnMessage(context));
+  }
+  public static info(context: string): void {
+    this.write(new InfoMessage(context));
   }
 }

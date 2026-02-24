@@ -61,9 +61,11 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       // 关闭时自动删除自己
       win.once("closed", () => {
         ROUTER_MAP.delete(__virid_source);
-        console.log(`[Virid Main] Window unregistered: ${__virid_source}`);
+        MessageWriter.info(
+          `[Virid Main] Window unregistered: ${__virid_source}`,
+        );
       });
-      console.log(`[Virid Main] Window registered: ${__virid_source}`);
+      MessageWriter.info(`[Virid Main] Window registered: ${__virid_source}`);
       return;
     }
     //分发消息

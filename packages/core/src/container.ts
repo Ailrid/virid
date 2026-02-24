@@ -33,7 +33,12 @@ export class ViridContainer {
 
   public get<T>(identifier: Newable<T>, onActivate: (instance: T) => T): T {
     const binding = this.bindings.get(identifier);
-    const TargetCtor = binding ? binding.ctor : identifier;
+    if (!binding) {
+      throw new Error(
+        `[Virid Container] Unbound Constructor: No binding found for ${identifier.name}`,
+      );
+    }
+    const TargetCtor = binding.ctor;
 
     // 获取/创建 实例
     let instance: T;

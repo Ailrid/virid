@@ -2,6 +2,7 @@ import { type ViridApp } from "./app";
 import {
   AtomicModifyMessage,
   ErrorMessage,
+  InfoMessage,
   MessageWriter,
   SystemContext,
   WarnMessage,
@@ -19,6 +20,7 @@ const clr = {
   cyan: "\x1b[36m",
   gray: "\x1b[90m",
   bold: "\x1b[1m",
+  green: "\x1b[32m",
 };
 
 /**
@@ -38,6 +40,19 @@ function withContext(
   (fn as any).ccsContext = context;
   return fn;
 }
+/**
+ * 注册全局默认信息处理系统
+ */
+const globalInfoHandler = (err: InfoMessage) => {
+  const header = `${clr.green}${clr.bold} ✔ [Virid Info] ${clr.reset}`;
+  const context = `${clr.magenta}${err.context}${clr.reset}`;
+
+  console.log(
+    `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
+      `  ${clr.green}Details:${clr.reset}`,
+    err.context || "Unknown Info",
+  );
+};
 
 /**
  * 注册全局默认错误处理系统
@@ -50,7 +65,7 @@ const globalErrorHandler = (err: ErrorMessage) => {
     `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
       `  ${clr.red}Context:${clr.reset} ${context}\n` +
       `  ${clr.red}Details:${clr.reset}`,
-    err.error || "Unknown Error",
+    err.error || err || "Unknown Error",
   );
 };
 
@@ -122,6 +137,11 @@ export function initializeGlobalSystems(app: ViridApp) {
   app.register(
     ErrorMessage,
     withContext(ErrorMessage, globalErrorHandler, "GlobalErrorHandler"),
+    -999,
+  );
+  app.register(
+    InfoMessage,
+    withContext(InfoMessage, globalInfoHandler, "GlobalInfoHandler"),
     -999,
   );
   activeApp = app;

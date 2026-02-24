@@ -62,6 +62,14 @@ export class WarnMessage extends EventMessage {
     super();
   }
 }
+/**
+ * 基础信息消息：不可合并，必须被精准捕获
+ */
+export class InfoMessage extends EventMessage {
+  constructor(public readonly context: string) {
+    super();
+  }
+}
 
 /**
  * 原子修改消息：不可合并，带上组件类型、修改逻辑和语义标签
