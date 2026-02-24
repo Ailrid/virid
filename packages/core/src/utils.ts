@@ -50,7 +50,7 @@ const globalInfoHandler = (err: InfoMessage) => {
   console.log(
     `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
       `  ${clr.green}Details:${clr.reset}`,
-    err.context || "unknownn Info",
+    err.context || "unknown Info",
   );
 };
 
@@ -65,7 +65,7 @@ const globalErrorHandler = (err: ErrorMessage) => {
     `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
       `  ${clr.red}Context:${clr.reset} ${context}\n` +
       `  ${clr.red}Details:${clr.reset}`,
-    err.error || err || "unknownn Error",
+    err.error || err || "unknown Error",
   );
 };
 

@@ -6,8 +6,8 @@
 import { MessageWriter } from "./io";
 
 export type Newable<
-  TInstance = unknownn,
-  TArgs extends unknownn[] = any[],
+  TInstance = unknown,
+  TArgs extends unknown[] = any[],
 > = new (...args: TArgs) => TInstance;
 
 type AnyConstructor = abstract new (...args: any[]) => any;
