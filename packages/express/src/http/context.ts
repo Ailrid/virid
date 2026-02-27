@@ -19,6 +19,10 @@ export const httpContextStore = new Map<number, HttpContext>();
  * @param ctx 当前请求的 HttpContext
  */
 export function handleResult(res: any, context: HttpContext) {
+  if (!res) {
+    context.dec();
+    return;
+  }
   // 支持数组形式的批量返回
   const results = Array.isArray(res) ? res : [res];
   results.forEach((item) => {

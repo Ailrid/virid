@@ -122,11 +122,11 @@ export function HttpSystem(
       return;
     }
     // Message必须是继承自HttpRequestMessage
-    const eventClass = params.eventClass || messageMetadata.eventClass;
-    if (!(eventClass instanceof HttpRequestMessage)) {
+    const eventClass = params.eventClass ?? messageMetadata.eventClass;
+    if (!HttpRequestMessage.isPrototypeOf(eventClass)) {
       MessageWriter.error(
         new Error(
-          `[Virid HttpSystem] Wrong Message Type: ${messageMetadata.eventClass.name} is not a derived subclass of HttpRequestMessage!`,
+          `[Virid HttpSystem] Wrong Message Type: ${eventClass.name} is not a derived subclass of HttpRequestMessage!`,
         ),
       );
       return;
@@ -163,7 +163,7 @@ export function HttpSystem(
         // 执行业务逻辑
         const result = originalMethod.apply(target, args);
         // 返回值必须是一个新的HttpRequestMessage数组，或者一个HttpResponse类型
-        result instanceof Promise
+        return result instanceof Promise
           ? result
               .then((res) => {
                 handleResult(res, context);
@@ -172,6 +172,7 @@ export function HttpSystem(
                 // 异步出错要给客户端发 500
                 handleResult(InternalServerError(), context);
                 // 继续抛出，让 Dispatcher 捕获并打印详细堆栈
+                console.log("扔出去错误");
                 throw error;
               })
           : handleResult(result, context);

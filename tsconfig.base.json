@@ -23,7 +23,7 @@
             ],
             "@virid/vue": [
                 "packages/vue/src/index.ts"
-            ]
+            ],
         },
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

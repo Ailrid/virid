@@ -287,12 +287,12 @@ export class ExecutionTask {
         try {
           const result = hook.handler(this.message, this.hookContext);
           if (result instanceof Promise) {
-            result.catch((e) =>
+            result.catch((e) => {
               MessageWriter.error(
                 e,
                 `[Virid Hook] Async Hook Error:\nIt is prohibited to use asynchronous hooks within Hook:\n${hook.type.name}`,
-              ),
-            );
+              );
+            });
           }
         } catch (e) {
           MessageWriter.error(

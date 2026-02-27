@@ -4,10 +4,9 @@
  * Project: Virid Express
  */
 import { EventMessage } from "@virid/core";
-// 定义一个独一无二的“布标”
 export type RequestId = number & { readonly __brand: unique symbol };
 
-export abstract class HttpRequestMessage extends EventMessage {
+export class HttpRequestMessage extends EventMessage {
   // id 必须是 RequestId 类型
   constructor(private readonly __virid_express_id: RequestId) {
     super();

@@ -16,7 +16,7 @@ import {
   onActivated,
   onDeactivated,
   shallowRef,
-  WritableComputedRef,
+  type WritableComputedRef,
 } from "vue";
 import { type ControllerMessage } from "../decorators";
 import { MessageWriter, type SystemContext } from "@virid/core";

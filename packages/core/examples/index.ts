@@ -55,7 +55,9 @@ class CounterSystem {
     count.count += message.amount;
   }
   // single = true (default): Process each message one by one
-  @System(100)
+  @System({
+    priority: 100,
+  })
   static onIncrementPriority(
     @Message(IncrementMessage) message: IncrementMessage,
     count: CounterComponent,
@@ -69,11 +71,10 @@ class CounterSystem {
   // single = false: Process all messages of this type in the current tick as an array
   // Great for high-performance batch updates or physics/logic merging
   @System()
-  static onIncrementArray(
+  static async onIncrementArray(
     @Message(IncrementMessage, false) message: IncrementMessage[],
   ) {
-    console.log("---------------------System----------------------");
-    console.log("IncrementMessage num :>> ", message.length);
+    throw new Error("Not implemented");
   }
 }
 
