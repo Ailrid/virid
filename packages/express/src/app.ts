@@ -1,17 +1,13 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Amber
+ * Project: Virid Express
  */
-import { type ViridApp, MessageWriter, BaseMessage } from "@virid/core";
-import {
-  amberComponentStore,
-  afterExecuteHooks,
-  afterTickHooks,
-  PluginOptions,
-  activateConfig,
-} from "./amber";
-import { VIRID_METADATA } from "./decorators/constants";
+import { type ViridApp, MessageWriter } from "@virid/core";
+import { type PluginOptions } from "./http";
+
+import { registerHttpSystem, registerHttpRoute } from "./decorators/register";
+
 export interface IViridApp {
   get(identifier: any): any;
 }
@@ -19,23 +15,12 @@ export interface IViridApp {
 let activeApp: IViridApp | null = null;
 
 export function activateApp(app: ViridApp, options: PluginOptions) {
-  //注册钩子
-  app.onAfterTick(afterTickHooks, true);
-  app.onAfterExecute(BaseMessage, afterExecuteHooks, true);
   //看看用户提供的配置
-  if (options) activateConfig(options);
-  const amberInitHook = (instance) => {
-    if (
-      instance &&
-      Reflect.hasMetadata(VIRID_METADATA.VERSION, instance.constructor)
-    ) {
-      //实例化的时候，init第一个版本
-      amberComponentStore.initComponent(instance);
-    }
-    return instance;
-  };
-  app.addActivationHook(amberInitHook);
   activeApp = app;
+  // 注册http相关的系统
+  registerHttpSystem(app);
+  //初始化express的路由
+  registerHttpRoute(options.server);
 }
 
 /**

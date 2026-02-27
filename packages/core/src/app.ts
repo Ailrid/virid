@@ -5,14 +5,14 @@
  */
 import { ViridContainer } from "./container";
 import {
-  BaseMessage,
-  ExecuteHook,
-  MessageIdentifier,
+  type BaseMessage,
+  type ExecuteHook,
+  type MessageIdentifier,
   MessageWriter,
-  Middleware,
+  type Middleware,
   MessageInternal,
-  TickHook,
-  Newable,
+  type TickHook,
+  type Newable,
 } from "./core";
 import { bindObservers } from "./decorators";
 import { initializeGlobalSystems } from "./utils";

@@ -1,0 +1,45 @@
+{
+  "name": "@virid/express",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Add express functionality to virid",
+  "author": "Ailrid",
+  "license": "Apache 2.0",
+  "keywords": [
+    "replay",
+    "redo",
+    "undo",
+    "message"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArisuYuki/virid.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "example": "node --import @swc-node/register/esm-register examples/index.ts"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@virid/core": "workspace:*",
+    "express": "^5.0.0",
+    "@types/express": "^5.0.6"
+  }
+}

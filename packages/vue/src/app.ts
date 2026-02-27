@@ -21,10 +21,11 @@ let activeApp: IViridApp | null = null;
  * 激活真正的 App 实例
  */
 export function activateApp(app: ViridApp) {
-  const bindResponsiveHook = (_context, instance) => {
+  const bindResponsiveHook = (instance) => {
     if (instance) {
       bindResponsive(instance);
     }
+    return instance;
   };
   app.addActivationHook(bindResponsiveHook);
   activeApp = app;

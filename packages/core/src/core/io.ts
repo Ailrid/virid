@@ -4,7 +4,13 @@
  * Project: Virid Core
  */
 import { type MessageInternal } from "./internal";
-import { BaseMessage, ErrorMessage, InfoMessage, WarnMessage } from "./types";
+import {
+  type BaseMessage,
+  type Newable,
+  ErrorMessage,
+  InfoMessage,
+  WarnMessage,
+} from "./types";
 // 描述 dispatch 的结构
 export interface IMessagePublisher {
   dispatch(message: BaseMessage): void;
@@ -37,10 +43,10 @@ export class MessageWriter {
   /**
    * 核心入口：无论是类还是实例，统一交给 Internal 处理
    */
-  public static write<
-    T extends BaseMessage,
-    K extends new (...args: any[]) => T,
-  >(target: K | T, ...args: ConstructorParameters<K>): void {
+  public static write<T extends BaseMessage, K extends Newable<T>>(
+    target: K | T,
+    ...args: ConstructorParameters<K>
+  ): void {
     const instance =
       typeof target === "function"
         ? new (target as any)(...args)

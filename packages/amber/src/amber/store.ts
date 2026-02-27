@@ -5,8 +5,9 @@
  */
 import { MessageWriter } from "@virid/core";
 import { viridApp } from "../app";
-import { VIRID_METADATA, RestoreDirection } from "../decorators";
-import { PluginOptions } from "./types";
+import { VIRID_METADATA } from "../decorators/constants";
+import { RestoreDirection } from "../decorators";
+import { type PluginOptions } from "./types";
 import { _serialization, _deserialization, _diff } from "./utils";
 let config: Required<PluginOptions> = {
   serialization: _serialization,

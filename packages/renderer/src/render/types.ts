@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Electron Renderer
  */
-import { EventMessage, Newable } from "@virid/core";
+import { EventMessage, type Newable } from "@virid/core";
 /**
  * RenderMessage: 由主进程发来的消息
  */
@@ -49,7 +49,4 @@ export interface PluginOption {
    * 窗口的 ID
    */
   windowId: string;
-  messageMap:
-    | Record<string, Newable<FromMainMessage>>
-    | Map<string, Newable<FromMainMessage>>;
 }

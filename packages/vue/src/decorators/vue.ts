@@ -5,8 +5,8 @@
  */
 import { VIRID_METADATA } from "./constants";
 import type { WatchOptions } from "vue";
-import { Newable } from "@virid/core";
-import { ControllerMessage } from "./types";
+import { type Newable } from "@virid/core";
+import { type ControllerMessage } from "./types";
 
 /**
  * @description:实现Watch

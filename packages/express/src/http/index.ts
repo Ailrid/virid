@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Amber
+ * Project: Virid Express
  */
-export * from "./decorators";
 export * from "./types";
+export * from "./utils";

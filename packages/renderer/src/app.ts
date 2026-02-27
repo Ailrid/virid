@@ -8,9 +8,8 @@ import { MessageWriter, type ViridApp } from "@virid/core";
 import {
   middleWare,
   convertToMainMessage,
-  PluginOption,
+  type PluginOption,
   ToMainMessage,
-  registerMessage,
 } from "./render";
 export function activateApp(app: ViridApp, options: PluginOption) {
   // 先检查预加载脚本是否已经加载
@@ -22,17 +21,15 @@ export function activateApp(app: ViridApp, options: PluginOption) {
     );
   }
   // 检查参数是否传递
-  if (!options?.windowId || !options?.messageMap) {
+  if (!options?.windowId) {
     MessageWriter.error(
       new Error(
-        `[Virid Render] Activate Failed:\nPlease provide the windowId:${options?.windowId} and messageMap${options?.messageMap} in options.`,
+        `[Virid Render] Activate Failed:\nPlease provide the windowId:${options?.windowId}.`,
       ),
     );
   }
   //注册自己的id，以后所有发往主进程的消息都会携带自己的id
   ToMainMessage.__virid_source = options.windowId;
-  //注册Map,知道如何把主进程的消息转换成自己的Message
-  registerMessage(options.messageMap);
   //主动向主进程发一个注册消息来注册自己
   window.__VIRID_BRIDGE__.post({
     __virid_source: options.windowId,

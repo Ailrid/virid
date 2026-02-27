@@ -8,7 +8,7 @@ export default defineConfig({
   clean: true,
   minify: true,
   target: "es2020",
-  external: ["@virid/core", "inversify", "reflect-metadata", "electron"],
+  external: ["@virid/core", "reflect-metadata", "electron"],
   // 添加 banner
   banner: {
     js: `/**

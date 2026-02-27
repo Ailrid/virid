@@ -17,7 +17,7 @@ import {
   onDeactivated,
   shallowRef,
 } from "vue";
-import { ControllerMessage } from "../decorators";
+import { type ControllerMessage } from "../decorators";
 import { MessageWriter, type SystemContext } from "@virid/core";
 import { viridApp } from "../app";
 import { createDeepShield } from "./shield";

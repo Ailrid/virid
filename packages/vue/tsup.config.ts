@@ -9,7 +9,7 @@ export default defineConfig({
   minify: true,
   target: "es2020",
 
-  external: ["vue", "@virid/core", "inversify", "reflect-metadata"],
+  external: ["vue", "@virid/core","reflect-metadata"],
   // 添加 banner
   banner: {
     js: `/**

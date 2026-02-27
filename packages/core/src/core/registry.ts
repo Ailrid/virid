@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Core
  */
-import { SystemTask } from "./types";
+import { type SystemTask } from "./types";
 import { MessageWriter } from "./io";
 
 /**

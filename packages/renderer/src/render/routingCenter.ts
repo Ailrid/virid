@@ -3,21 +3,21 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Electron Renderer
  */
-import { MessageWriter } from "@virid/core";
+import { MessageWriter, Newable } from "@virid/core";
 import { type FromMainMessage } from "./types";
-let MESSAGE_MAP = new Map<string, new (...args: any[]) => FromMainMessage>();
+let MESSAGE_MAP = new Map<string, Newable<FromMainMessage>>();
 
-export function registerMessage(
-  registerMap:
-    | Record<string, new (...args: any[]) => FromMainMessage>
-    | Map<string, new (...args: any[]) => FromMainMessage>,
-): void {
-  if (registerMap instanceof Map) {
-    MESSAGE_MAP = registerMap;
-  } else {
-    // 如果是普通对象，转换成 Map
-    MESSAGE_MAP = new Map(Object.entries(registerMap));
-  }
+export function FromIpc(type: string) {
+  return function (target: Newable<FromMainMessage>) {
+    if (MESSAGE_MAP.has(type)) {
+      MessageWriter.error(
+        new Error(
+          `[Virid Main] Duplicate IpcMessage: Registration for type: ${type}`,
+        ),
+      );
+    }
+    MESSAGE_MAP.set(type, target);
+  };
 }
 export function convertToMainMessage(ipcMessage: any): void {
   // 解构

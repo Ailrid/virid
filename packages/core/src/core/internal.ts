@@ -7,10 +7,10 @@ import { Dispatcher } from "./dispatcher";
 import { EventHub } from "./eventHub";
 import {
   BaseMessage,
-  ExecuteHook,
-  TickHook,
-  MessageIdentifier,
-  Middleware,
+  type ExecuteHook,
+  type TickHook,
+  type MessageIdentifier,
+  type Middleware,
 } from "./types";
 import { MessageRegistry } from "./registry";
 import { MessageWriter, activateInstance } from "./io";

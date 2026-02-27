@@ -10,16 +10,16 @@ import { MessageWriter } from "./io";
 import {
   SingleMessage,
   EventMessage,
-  BaseMessage,
-  ExecuteHook,
-  ExecuteHookContext,
-  SystemTask,
-  MessageIdentifier,
-  SystemContext,
-  TickHook,
-  TickHookContext,
+  type BaseMessage,
+  type ExecuteHook,
+  type ExecuteHookContext,
+  type SystemTask,
+  type MessageIdentifier,
+  type SystemContext,
+  type TickHook,
+  type TickHookContext,
 } from "./types";
-import { EventHub } from "./eventHub";
+import { type EventHub } from "./eventHub";
 
 export class Dispatcher {
   private dirtySignalTypes = new Set<any>();
@@ -226,7 +226,7 @@ export class Dispatcher {
           result.catch((e) =>
             MessageWriter.error(
               e,
-              `[Virid Dispatcher] Async Error:\ntargetClass:${task.hookContext.context.targetClass}\nmethodName:${task.hookContext.context.methodName}
+              `[Virid Dispatcher] Async Error:\ntargetClass:${task.hookContext.context.targetClass.name}\nmethodName:${task.hookContext.context.methodName}
                 `,
             ),
           );
@@ -234,7 +234,7 @@ export class Dispatcher {
       } catch (e) {
         MessageWriter.error(
           e as Error,
-          `[Virid Dispatcher] Sync Error:\ntargetClass:${task.hookContext.context.targetClass}\nmethodName:${task.hookContext.context.methodName}
+          `[Virid Dispatcher] Sync Error:\ntargetClass:${task.hookContext.context.targetClass.name}\nmethodName:${task.hookContext.context.methodName}
                 `,
         );
       }

@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Electron Main
  */
-import { Middleware, MessageWriter } from "@virid/core";
+import { type Middleware, MessageWriter } from "@virid/core";
 import { ToRenderMessage } from "./types";
 import { ROUTER_MAP, VIRID_CHANNEL } from "./routingCenter";
 export const middleWare: Middleware = (message, next) => {

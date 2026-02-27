@@ -4,7 +4,7 @@
  * Project: Virid Amber
  */
 import { VIRID_METADATA } from "./constants";
-import { BackupStrategy } from "./types";
+import { type BackupStrategy } from "./types";
 
 /**
  * @description: 标记 Backup 身份并配置自定义备份策略

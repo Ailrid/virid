@@ -4,8 +4,8 @@
  * Project: Virid Amber
  */
 export const VIRID_METADATA = {
-  BACKUP: "virid:backup",
-  VERSION: "virid:version",
-  CUSTOM_METHOD: "virid:custom-method",
-  MESSAGE: "virid:message",
+  BACKUP: "virid:amber:backup",
+  VERSION: "virid:amber:version",
+  CUSTOM_METHOD: "virid:amber:custom-method",
+  MESSAGE: "virid:core:message",
 } as const;

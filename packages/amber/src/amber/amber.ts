@@ -4,7 +4,7 @@
  * Project: Virid Amber
  */
 import { amberComponentStore, amberTickStore } from "./store";
-import { VIRID_METADATA } from "../decorators";
+import { VIRID_METADATA } from "../decorators/constants";
 
 export class Amber {
   /**

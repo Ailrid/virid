@@ -3,24 +3,22 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Electron Main
  */
-import { MessageWriter } from "@virid/core";
-import { BrowserWindow } from "electron";
+import { MessageWriter, type Newable } from "@virid/core";
+import { type BrowserWindow } from "electron";
 import { type FromRenderMessage } from "./types";
 export const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 export const ROUTER_MAP = new Map<string, BrowserWindow>();
-let MESSAGE_MAP = new Map<string, any>();
+let MESSAGE_MAP = new Map<string, Newable<FromRenderMessage>>();
 
-export function registerMessage(
-  registerMap:
-    | Record<string, new (...args: any[]) => FromRenderMessage>
-    | Map<string, new (...args: any[]) => FromRenderMessage>,
-): void {
-  if (registerMap instanceof Map) {
-    MESSAGE_MAP = registerMap;
-  } else {
-    // 如果是普通对象，转换成 Map
-    MESSAGE_MAP = new Map(Object.entries(registerMap));
-  }
+export function FromRender(type: string) {
+  return function (target: Newable<FromRenderMessage>) {
+    if (MESSAGE_MAP.has(type)) {
+      MessageWriter.warn(
+        `[Virid Main] Duplicate IpcMessage: Registration for type: ${type}`,
+      );
+    }
+    MESSAGE_MAP.set(type, target);
+  };
 }
 //主进程接收消息并发给自己的system
 function ReceiveMessages(message: any): void {

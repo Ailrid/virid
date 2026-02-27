@@ -11,18 +11,16 @@ import {
   processMessage,
   PluginOption,
   ROUTER_MAP,
-  registerMessage,
 } from "./main";
 export function activateApp(app: ViridApp, options: PluginOption) {
   //检查参数
-  if (!options?.electronApp || !options?.messageMap) {
+  if (!options?.electronApp) {
     MessageWriter.error(
       new Error(
-        `[Virid Main] Missing Initialization Parameters:\nelectronApp:${options?.electronApp}\nmessageMap${options?.messageMap}.`,
+        `[Virid Main] Missing Initialization Parameters:\nelectronApp:${options?.electronApp}.`,
       ),
     );
   }
-  registerMessage(options.messageMap);
   //绑定electron主进程回调
   ipcMain.on(VIRID_CHANNEL, (event, message) => {
     const { __virid_target, __virid_source, __virid_messageType } = message;

@@ -47,7 +47,4 @@ export interface PluginOption {
    * 窗口的 ID
    */
   electronApp: App;
-  messageMap:
-    | Record<string, Newable<FromRenderMessage>>
-    | Map<string, Newable<FromRenderMessage>>;
 }

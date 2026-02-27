@@ -7,10 +7,10 @@
  * CCS 核心元数据键名
  */
 export const VIRID_METADATA = {
-  SYSTEM: "virid:system_metadata",
-  MESSAGE: "virid:message",
-  CONTROLLER: "virid:controller",
-  COMPONENT: "virid:component",
-  SAFE: "virid:safe",
-  OBSERVER: "virid:observer",
+  SYSTEM: "virid:core:system_metadata",
+  MESSAGE: "virid:core:message",
+  CONTROLLER: "virid:core:controller",
+  COMPONENT: "virid:core:component",
+  SAFE: "virid:core:safe",
+  OBSERVER: "virid:core:observer",
 } as const;

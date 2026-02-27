@@ -10,9 +10,10 @@ import {
   BaseMessage,
   ErrorMessage,
   WarnMessage,
+  InfoMessage,
 } from "@virid/core";
 import { amberComponentStore, amberTickStore } from "./store";
-import { VIRID_METADATA } from "../decorators";
+import { VIRID_METADATA } from "../decorators/constants";
 
 const dirtyBuffer = new Set<any>();
 
@@ -20,7 +21,12 @@ export const afterExecuteHooks: ExecuteHook<BaseMessage> = (
   message,
   context,
 ) => {
-  if (message instanceof ErrorMessage || message instanceof WarnMessage) return;
+  if (
+    message instanceof ErrorMessage ||
+    message instanceof WarnMessage ||
+    message instanceof InfoMessage
+  )
+    return;
 
   const allParams =
     message instanceof AtomicModifyMessage
