@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Renderer
+ * Project: Virid Renderer
  */
 import { EventMessage, type Newable } from "@virid/core";
 /**
@@ -42,11 +42,4 @@ export abstract class ToMainMessage extends EventMessage {
    * 我应该在目的地转变成什么消息？
    */
   public abstract __virid_messageType: string;
-}
-
-export interface PluginOption {
-  /**
-   * 窗口的 ID
-   */
-  windowId: string;
 }

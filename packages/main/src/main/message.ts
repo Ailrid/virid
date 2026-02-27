@@ -1,10 +1,9 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Main
+ * Project: Virid Main
  */
-import { EventMessage, Newable } from "@virid/core";
-import { type App } from "electron";
+import { EventMessage } from "@virid/core";
 export { type SystemContext } from "@virid/core";
 /**
  * description: 来自渲染进程的消息
@@ -40,11 +39,4 @@ export abstract class ToRenderMessage extends EventMessage {
    * 我应该在目的地转变成什么消息？
    */
   public abstract __virid_messageType: string;
-}
-
-export interface PluginOption {
-  /**
-   * 窗口的 ID
-   */
-  electronApp: App;
 }

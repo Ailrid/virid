@@ -8,9 +8,6 @@
  */
 import { MessageWriter } from "./io";
 import {
-  SingleMessage,
-  EventMessage,
-  type BaseMessage,
   type ExecuteHook,
   type ExecuteHookContext,
   type SystemTask,
@@ -18,8 +15,9 @@ import {
   type SystemContext,
   type TickHook,
   type TickHookContext,
-} from "./types";
-import { type EventHub } from "./eventHub";
+} from "../interfaces";
+import { SingleMessage, EventMessage, type BaseMessage } from "./message";
+import { type EventHub } from "./event-hub";
 
 export class Dispatcher {
   private dirtySignalTypes = new Set<any>();

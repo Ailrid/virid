@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 import { handleResult } from "./ccs";
-import { VIRID_METADATA } from "./constants";
+import { VIRID_METADATA } from "./constant";
 const ARRAY_MUTABLE_METHODS = [
   "push",
   "pop",
@@ -15,14 +15,14 @@ const ARRAY_MUTABLE_METHODS = [
   "reverse",
 ];
 export function bindObservers(instance: any) {
-  if (!instance || typeof instance !== "object") return instance;;
+  if (!instance || typeof instance !== "object") return instance;
   if (
     Object.prototype.hasOwnProperty.call(
       instance,
       "__virid_observer_processed__",
     )
   )
-    return instance;;
+    return instance;
 
   Object.defineProperty(instance, "__virid_observer_processed__", {
     value: true,
@@ -87,8 +87,7 @@ export function bindObservers(instance: any) {
 
   // 处理未标记但属于子组件的对象
   Reflect.ownKeys(instance).forEach((key) => {
-    if (key === "__virid_observer_processed__")
-      return;
+    if (key === "__virid_observer_processed__") return;
     const desc = Object.getOwnPropertyDescriptor(instance, key);
     if (desc && desc.get) return;
     const val = instance[key];

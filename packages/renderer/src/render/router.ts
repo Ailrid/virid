@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Renderer
+ * Project: Virid Renderer
  */
 import { MessageWriter, Newable } from "@virid/core";
-import { type FromMainMessage } from "./types";
+import { type FromMainMessage } from "./message";
 let MESSAGE_MAP = new Map<string, Newable<FromMainMessage>>();
 
 export function FromIpc(type: string) {

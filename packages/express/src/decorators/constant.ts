@@ -3,11 +3,12 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Express
  */
+import { VIRID_METADATA } from "@virid/core";
 
-export const VIRID_METADATA = {
-  HTTPROUTE: "virid:express:http_route",
-  HTTPSYSTEM: "virid:express:http_system",
-  MESSAGE: "virid:core:message",
+export const VIRID_EXPRESS_METADATA = {
+  ...VIRID_METADATA,
+  HTTPROUTE: "virid:express:route",
+  HTTPSYSTEM: "virid:express:system",
   BODY: "virid:express:body",
   QUERY: "virid:express:query",
   HEADERS: "virid:express:header",

@@ -7,18 +7,18 @@ import { viridApp } from "../app";
 import {
   BaseMessage,
   MessageWriter,
-  SystemContext,
   EventMessage,
   SingleMessage,
-  type Newable,
 } from "../core";
-import { VIRID_METADATA } from "./constants";
+import { VIRID_METADATA } from "./constant";
 import {
+  type SystemContext,
+  type Newable,
   type SystemParams,
   type MessageMetadata,
   type ObserverMetadata,
   type SafeMetadata,
-} from "./types";
+} from "../interfaces";
 // 统一处理返回值：System 可以直接 return 一个消息来实现“链式反应”
 export const handleResult = (res: any) => {
   if (!res) return;

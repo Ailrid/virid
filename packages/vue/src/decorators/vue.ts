@@ -3,10 +3,19 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Vue
  */
-import { VIRID_METADATA } from "./constants";
+import { VIRID_VUE_METADATA } from "./constant";
 import type { WatchOptions } from "vue";
 import { type Newable } from "@virid/core";
-import { type ControllerMessage } from "./types";
+import { type ControllerMessage } from "./message";
+import {
+  type WatchMetadata,
+  type ProjectMetadata,
+  type InheritMetadata,
+  type UseMetadata,
+  type ResponsiveMetadata,
+  type OnHookMetadata,
+  type ListenerMetadata,
+} from "../interfaces";
 
 /**
  * @description:实现Watch
@@ -14,21 +23,22 @@ import { type ControllerMessage } from "./types";
 
 // 重载 1: 监听 Controller 自身变量
 export function Watch<T>(
-  source: (instance: T) => any,
+  source: (instance: T) => void | Promise<void>,
   options?: WatchOptions,
 ): any;
 
 // 重载 2: 监听全局 Component 变量
 export function Watch<C>(
   component: new (...args: any[]) => C,
-  source: (comp: C) => any,
+  source: (comp: C) => void | Promise<void>,
   options?: WatchOptions,
 ): any;
 
 // 实现逻辑
 export function Watch(arg1: any, arg2?: any, arg3?: any) {
   return (target: any, methodName: string) => {
-    const existing = Reflect.getMetadata(VIRID_METADATA.WATCH, target) || [];
+    const existing: WatchMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.WATCH, target) || [];
 
     if (typeof arg2 === "function") {
       // 重载 2: Watch(Component, (c) => c.prop, options)
@@ -43,13 +53,14 @@ export function Watch(arg1: any, arg2?: any, arg3?: any) {
       // 重载 1: Watch((i) => i.prop, options)
       existing.push({
         type: "local",
+        componentClass: null,
         source: arg1,
         options: arg2,
         methodName,
       });
     }
 
-    Reflect.defineMetadata(VIRID_METADATA.WATCH, existing, target);
+    Reflect.defineMetadata(VIRID_VUE_METADATA.WATCH, existing, target);
   };
 }
 /**
@@ -67,24 +78,21 @@ export function Project<C>(
 
 // 实现逻辑
 export function Project(arg1: any, arg2?: any) {
-  return (
-    target: any,
-    propertyKey: string,
-    descriptor?: PropertyDescriptor,
-  ) => {
-    const existing = Reflect.getMetadata(VIRID_METADATA.PROJECT, target) || [];
+  return (target: any, key: string, descriptor?: PropertyDescriptor) => {
+    const existing: ProjectMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.PROJECT, target) || [];
 
     const metadata = {
-      propertyKey,
+      key,
       isAccessor: !!(descriptor?.get || descriptor?.set),
       // 这里的逻辑和 Watch 保持高度一致
       type: typeof arg2 === "function" ? "component" : "local",
       componentClass: typeof arg2 === "function" ? arg1 : null,
       source: typeof arg2 === "function" ? arg2 : arg1,
-    };
+    } as const;
 
     existing.push(metadata);
-    Reflect.defineMetadata(VIRID_METADATA.PROJECT, existing, target);
+    Reflect.defineMetadata(VIRID_VUE_METADATA.PROJECT, existing, target);
   };
 }
 /**
@@ -92,11 +100,12 @@ export function Project(arg1: any, arg2?: any) {
  * 用法：@Responsive()
  */
 export function Responsive(shallow = false) {
-  return (target: any, propertyKey: string) => {
+  return (target: any, key: string) => {
     // 记录哪些属性需要变成响应式
-    const props = Reflect.getMetadata(VIRID_METADATA.RESPONSIVE, target) || [];
-    props.push({ propertyKey, shallow });
-    Reflect.defineMetadata(VIRID_METADATA.RESPONSIVE, props, target);
+    const props: ResponsiveMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.RESPONSIVE, target) || [];
+    props.push({ key, shallow });
+    Reflect.defineMetadata(VIRID_VUE_METADATA.RESPONSIVE, props, target);
   };
 }
 
@@ -114,10 +123,10 @@ export function OnHook(
     | "onSetup",
 ) {
   return (target: any, methodName: string) => {
-    const existing =
-      Reflect.getMetadata(VIRID_METADATA.LIFE_CIRCLE, target) || [];
+    const existing: OnHookMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.LIFE_CIRCLE, target) || [];
     existing.push({ hookName, methodName });
-    Reflect.defineMetadata(VIRID_METADATA.LIFE_CIRCLE, existing, target);
+    Reflect.defineMetadata(VIRID_VUE_METADATA.LIFE_CIRCLE, existing, target);
   };
 }
 /**
@@ -125,11 +134,11 @@ export function OnHook(
  * 用法：@Use(() => useRoute()) public route!: RouteLocationNormalized
  */
 export function Use(hookFactory: () => any) {
-  return (target: any, propertyKey: string) => {
-    const existing =
-      Reflect.getMetadata(VIRID_METADATA.USE_HOOKS, target) || [];
-    existing.push({ propertyKey, hookFactory });
-    Reflect.defineMetadata(VIRID_METADATA.USE_HOOKS, existing, target);
+  return (target: any, key: string) => {
+    const existing: UseMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.HOOK, target) || [];
+    existing.push({ key, hookFactory });
+    Reflect.defineMetadata(VIRID_VUE_METADATA.HOOK, existing, target);
   };
 }
 /**
@@ -137,14 +146,15 @@ export function Use(hookFactory: () => any) {
  * 用法：@Inherit(Controller,(instance) => instance.xxxx) public data!: SomeType
  */
 export function Inherit<T>(
-  token: new (...args: any[]) => T,
+  token: Newable<T>,
   id: string,
   selector?: (instance: T) => any,
 ) {
-  return (target: any, propertyKey: string) => {
-    const metadata = Reflect.getMetadata(VIRID_METADATA.INHERIT, target) || [];
-    metadata.push({ propertyKey, token, id, selector });
-    Reflect.defineMetadata(VIRID_METADATA.INHERIT, metadata, target);
+  return (target: any, key: string) => {
+    const metadata: InheritMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.INHERIT, target) || [];
+    metadata.push({ key, token, id, selector });
+    Reflect.defineMetadata(VIRID_VUE_METADATA.INHERIT, metadata, target);
   };
 }
 
@@ -166,14 +176,15 @@ export function Listener<T extends ControllerMessage>(
   priority: number = 0,
   single = true,
 ) {
-  return (target: any, propertyKey: string) => {
+  return (target: any, key: string) => {
     // 获取该 Controller 原型上已有的监听器元数据
-    const listeners =
-      Reflect.getMetadata(VIRID_METADATA.CONTROLLER_LISTENERS, target) || [];
+    const listeners: ListenerMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, target) ||
+      [];
 
-    // 存入当前方法的配置：哪个方法(propertyKey) 听 哪个消息(eventClass)
+    // 存入当前方法的配置：哪个方法(key) 听 哪个消息(eventClass)
     listeners.push({
-      propertyKey,
+      key,
       eventClass,
       priority,
       single,
@@ -181,7 +192,7 @@ export function Listener<T extends ControllerMessage>(
 
     // 将元数据重新定义回类原型，供 useController 在实例化时扫描
     Reflect.defineMetadata(
-      VIRID_METADATA.CONTROLLER_LISTENERS,
+      VIRID_VUE_METADATA.LISTENER,
       listeners,
       target,
     );

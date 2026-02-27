@@ -27,3 +27,7 @@ export interface BackupStrategy<T = any, C = any> {
   onAfterBackup?: (newData: C) => void;
   onRestore?: (oldData: C, newData: C, direction: RestoreDirection) => void;
 }
+
+export type VersionMetadata = number;
+export type BackupMetadata = boolean;
+export type CustomMethodMetadata = BackupStrategy;

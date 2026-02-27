@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Main
+ * Project: Virid Main
  */
 import { MessageWriter, type Newable } from "@virid/core";
 import { type BrowserWindow } from "electron";
-import { type FromRenderMessage } from "./types";
+import { type FromRenderMessage } from "./message";
 export const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 export const ROUTER_MAP = new Map<string, BrowserWindow>();
 let MESSAGE_MAP = new Map<string, Newable<FromRenderMessage>>();

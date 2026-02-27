@@ -5,9 +5,13 @@
  */
 import { MessageWriter } from "@virid/core";
 import { viridApp } from "../app";
-import { VIRID_METADATA } from "../decorators/constants";
-import { RestoreDirection } from "../decorators";
-import { type PluginOptions } from "./types";
+import { VIRID_AMBER_METADATA } from "../decorators/constant";
+import { RestoreDirection, type PluginOptions } from "../interfaces";
+import {
+  type VersionMetadata,
+  type CustomMethodMetadata,
+} from "../interfaces";
+
 import { _serialization, _deserialization, _diff } from "./utils";
 let config: Required<PluginOptions> = {
   serialization: _serialization,
@@ -112,8 +116,8 @@ class AmberTickStore {
         amberComponentStore.seal(compClass);
 
         // 收集钩子
-        const customMethod = Reflect.getMetadata(
-          VIRID_METADATA.CUSTOM_METHOD,
+        const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+          VIRID_AMBER_METADATA.CUSTOM_METHOD,
           compClass,
         );
         if (customMethod?.onRestore) {
@@ -174,11 +178,11 @@ class AmberComponentStore {
       return null;
     }
 
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const serializeFn = customMethod?.serialization || config.serialization;
+    const serializeFn = customMethod?.serialize || config.serialization;
     try {
       return serializeFn(instance);
     } catch (e) {
@@ -210,12 +214,12 @@ class AmberComponentStore {
       );
       return;
     }
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
     const deserializeFn =
-      customMethod?.deserialization || config.deserialization;
+      customMethod?.deserialize || config.deserialization;
     try {
       deserializeFn(instance, data);
     } catch (e) {
@@ -247,8 +251,8 @@ class AmberComponentStore {
       );
       return false;
     }
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
     const diffFn = customMethod?.diff || config.diff;
@@ -268,11 +272,11 @@ class AmberComponentStore {
    */
   public initComponent(instance: any) {
     const compClass = instance.constructor;
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const serializeFn = customMethod?.serialization || config.serialization;
+    const serializeFn = customMethod?.serialize || config.serialization;
     let data;
     try {
       data = serializeFn(instance);
@@ -291,7 +295,7 @@ class AmberComponentStore {
     this.currentHistory.set(compClass, data);
 
     // 初始版本设为 0
-    Reflect.defineMetadata(VIRID_METADATA.VERSION, 0, compClass);
+    Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, 0, compClass);
   }
   /**
    * 获取组件当前逻辑版本对应的快照数据
@@ -339,8 +343,8 @@ class AmberComponentStore {
       return;
     }
 
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
     if (customMethod?.onBeforeBackup) {
@@ -348,8 +352,8 @@ class AmberComponentStore {
     }
 
     // 剪枝
-    const currentLogicalVersion =
-      Reflect.getMetadata(VIRID_METADATA.VERSION, compClass) || 0;
+    const currentLogicalVersion:VersionMetadata =
+      Reflect.getMetadata(VIRID_AMBER_METADATA.VERSION, compClass) || 0;
     const latestLogicalVersion = baseVersion + stack.length - 1;
     if (currentLogicalVersion < latestLogicalVersion) {
       stack.splice(currentLogicalVersion - baseVersion + 1);
@@ -376,7 +380,7 @@ class AmberComponentStore {
     const newLogicalVersion =
       this.biasVersions.get(compClass)! + stack.length - 1;
     Reflect.defineMetadata(
-      VIRID_METADATA.VERSION,
+      VIRID_AMBER_METADATA.VERSION,
       newLogicalVersion,
       compClass,
     );
@@ -409,8 +413,8 @@ class AmberComponentStore {
     // 状态对比准备
     const oldData = this.getCurrentData(compClass);
     const newData = stack[physicalIndex];
-    const currentVersion =
-      Reflect.getMetadata(VIRID_METADATA.VERSION, compClass) || 0;
+    const currentVersion:VersionMetadata =
+      Reflect.getMetadata(VIRID_AMBER_METADATA.VERSION, compClass) || 0;
 
     const direction =
       targetVersion < currentVersion
@@ -422,11 +426,11 @@ class AmberComponentStore {
 
     // 时空指针同步
     this.currentHistory.set(compClass, newData);
-    Reflect.defineMetadata(VIRID_METADATA.VERSION, targetVersion, compClass);
+    Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, targetVersion, compClass);
 
     // 触发业务钩子
-    const customMethod = Reflect.getMetadata(
-      VIRID_METADATA.CUSTOM_METHOD,
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
+      VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
     if (customMethod?.onRestore) {
@@ -450,7 +454,7 @@ class AmberComponentStore {
     this.currentHistory.set(compClass, newData);
 
     // 元数据归零
-    Reflect.defineMetadata(VIRID_METADATA.VERSION, 0, compClass);
+    Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, 0, compClass);
   }
 
   public resetComponent(compClass: any) {

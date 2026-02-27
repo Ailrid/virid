@@ -13,7 +13,7 @@ import {
   bindInherit,
 } from "./bind";
 import { onUnmounted, useAttrs } from "vue";
-import { VIRID_METADATA } from "../decorators/constants";
+import { VIRID_VUE_METADATA } from "../decorators/constant";
 import { MessageWriter } from "@virid/core";
 import { viridApp } from "../app";
 /**
@@ -34,7 +34,10 @@ export function useController<T>(
   }
 
   // 检查身份 Controller
-  const isController = Reflect.hasMetadata(VIRID_METADATA.CONTROLLER, token);
+  const isController = Reflect.hasMetadata(
+    VIRID_VUE_METADATA.CONTROLLER,
+    token,
+  );
   if (!isController) {
     // 确保非 Controller 的实例不能被其他 Controller 访问
     MessageWriter.error(

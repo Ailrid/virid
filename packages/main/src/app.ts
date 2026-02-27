@@ -1,17 +1,13 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Main
+ * Project: Virid Main
  */
 const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 import { type ViridApp, MessageWriter } from "@virid/core";
 import { BrowserWindow, ipcMain } from "electron";
-import {
-  middleWare,
-  processMessage,
-  PluginOption,
-  ROUTER_MAP,
-} from "./main";
+import { middleWare, processMessage, ROUTER_MAP } from "./main";
+import { type PluginOption } from "./interfaces";
 export function activateApp(app: ViridApp, options: PluginOption) {
   //检查参数
   if (!options?.electronApp) {

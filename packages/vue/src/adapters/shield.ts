@@ -1,5 +1,10 @@
+/*
+ * Copyright (c) 2026-present Ailrid.
+ * Licensed under the Apache License, Version 2.0.
+ * Project: Virid Vue
+ */
 import { MessageWriter } from "@virid/core";
-import { VIRID_METADATA } from "../decorators/constants";
+import { VIRID_VUE_METADATA } from "../decorators/constant";
 
 // 在文件顶部定义缓存池
 const shieldCache = new WeakMap<any, any>();
@@ -31,7 +36,7 @@ export function createDeepShield(
         return (...args: any[]) => {
           // 检查该方法是否有 @Safe 标记
           const safeMethods =
-            Reflect.getMetadata(VIRID_METADATA.SAFE, obj.constructor) ||
+            Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj.constructor) ||
             new Set();
 
           if (!safeMethods.has(prop)) {

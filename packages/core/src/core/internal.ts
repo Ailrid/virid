@@ -4,14 +4,14 @@
  * Project: Virid Core
  */
 import { Dispatcher } from "./dispatcher";
-import { EventHub } from "./eventHub";
+import { EventHub } from "./event-hub";
 import {
-  BaseMessage,
   type ExecuteHook,
   type TickHook,
   type MessageIdentifier,
   type Middleware,
-} from "./types";
+} from "../interfaces";
+import { BaseMessage } from "./message";
 import { MessageRegistry } from "./registry";
 import { MessageWriter, activateInstance } from "./io";
 

@@ -4,9 +4,9 @@
  * Project: Virid Express
  */
 import { MessageRegistry, MessageWriter, type ViridApp } from "@virid/core";
-import { type HttpMethod, type HttpRouteInfo } from "./types";
+import { type HttpMethod, type HttpRouteInfo } from "../interfaces";
 import { type Express, type Request, type Response } from "express";
-import { httpContextStore } from "../http/contextStore";
+import { httpContextStore } from "../http/context";
 import { HttpContext, type RequestId } from "../http";
 // 临时的注册器
 export const stagingSystemRegister = new MessageRegistry();

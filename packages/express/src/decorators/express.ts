@@ -22,7 +22,7 @@ import {
   type ParamMetadata,
   type TransformPipe,
   CookieMetadata,
-} from "./types";
+} from "../interfaces";
 import {
   HttpContext,
   HttpError,
@@ -30,9 +30,9 @@ import {
   InternalServerError,
   parseRawCookie,
 } from "../http";
-import { handleResult, httpContextStore } from "../http/contextStore";
+import { handleResult, httpContextStore } from "../http/context";
 import { httpRouteRegistry, stagingSystemRegister } from "./register";
-import { VIRID_METADATA } from "./constants";
+import { VIRID_EXPRESS_METADATA } from "./constant";
 import { viridApp } from "../app";
 import { getAutoPipe } from "../http";
 export function HttpRoute(config: HttpRouteConfig) {
@@ -82,7 +82,7 @@ export function HttpSystem(
     // 获得元数据
     const types = Reflect.getMetadata("design:paramtypes", target, key);
     const messageMetadata: MessageMetadata | null =
-      Reflect.getMetadata(VIRID_METADATA.MESSAGE, target, key) || null;
+      Reflect.getMetadata(VIRID_EXPRESS_METADATA.MESSAGE, target, key) || null;
     const httpMetadata = getHttpMetadata(target, key, types);
     // 参数检查
     if (!types) {
@@ -208,7 +208,7 @@ export function HttpSystem(
 
 export function Body() {
   return (target: any, key: string, index: number) => {
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.BODY, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.BODY, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Body] Multiple Body Are Not Allowed: ${key} has multiple @Body() decorators!`,
@@ -217,7 +217,12 @@ export function Body() {
       return;
     }
     const bodyMetadata = { index } as BodyMetadata;
-    Reflect.defineMetadata(VIRID_METADATA.BODY, bodyMetadata, target, key);
+    Reflect.defineMetadata(
+      VIRID_EXPRESS_METADATA.BODY,
+      bodyMetadata,
+      target,
+      key,
+    );
   };
 }
 
@@ -227,7 +232,7 @@ export function Body() {
 
 export function Headers() {
   return (target: any, key: string, index: number) => {
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.HEADERS, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.HEADERS, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Headers] Multiple Header Are Not Allowed: ${key} has multiple @Headers() decorators!`,
@@ -236,7 +241,12 @@ export function Headers() {
       return;
     }
     const headerMetadata = { index } as HeaderMetadata;
-    Reflect.defineMetadata(VIRID_METADATA.HEADERS, headerMetadata, target, key);
+    Reflect.defineMetadata(
+      VIRID_EXPRESS_METADATA.HEADERS,
+      headerMetadata,
+      target,
+      key,
+    );
   };
 }
 
@@ -246,7 +256,7 @@ export function Headers() {
 
 export function Cookies() {
   return (target: any, key: string, index: number) => {
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.COOKIES, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.COOKIES, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Cookies] Multiple Header Are Not Allowed: ${key} has multiple @Cookies() decorators!`,
@@ -256,7 +266,7 @@ export function Cookies() {
     }
     const cookiesMetadata = { index } as CookieMetadata;
     Reflect.defineMetadata(
-      VIRID_METADATA.COOKIES,
+      VIRID_EXPRESS_METADATA.COOKIES,
       cookiesMetadata,
       target,
       key,
@@ -270,7 +280,7 @@ export function Cookies() {
 export function Req() {
   return (target: any, key: string, index: number) => {
     // 检查是否已经定义过 Request 元数据，防止一个方法注入多个 Request 参数
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.REQUEST, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.REQUEST, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Req] Multiple Request Objects Are Not Allowed: ${key} has multiple @Req() decorators!`,
@@ -280,7 +290,7 @@ export function Req() {
     }
     const requestMetadata: RequestMetadata = { index };
     Reflect.defineMetadata(
-      VIRID_METADATA.REQUEST,
+      VIRID_EXPRESS_METADATA.REQUEST,
       requestMetadata,
       target,
       key,
@@ -294,7 +304,7 @@ export function Req() {
 export function Res() {
   return (target: any, key: string, index: number) => {
     // 检查是否已经定义过 Response 元数据
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.RESPONSE, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.RESPONSE, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Res] Multiple Response Objects Are Not Allowed: ${key} has multiple @Res() decorators!`,
@@ -304,7 +314,7 @@ export function Res() {
     }
     const responseMetadata: ResponseMetadata = { index };
     Reflect.defineMetadata(
-      VIRID_METADATA.RESPONSE,
+      VIRID_EXPRESS_METADATA.RESPONSE,
       responseMetadata,
       target,
       key,
@@ -318,7 +328,7 @@ export function Res() {
 export function Ctx() {
   return (target: any, key: string, index: number) => {
     // 检查是否已经定义过 context 元数据
-    if (Reflect.hasOwnMetadata(VIRID_METADATA.CONTEXT, target, key)) {
+    if (Reflect.hasOwnMetadata(VIRID_EXPRESS_METADATA.CONTEXT, target, key)) {
       MessageWriter.error(
         new Error(
           `[Virid Express Ctx] Multiple Context Objects Are Not Allowed: ${key} has multiple @Ctx() decorators!`,
@@ -328,7 +338,7 @@ export function Ctx() {
     }
     const contextMetadata: ContextMetadata = { index };
     Reflect.defineMetadata(
-      VIRID_METADATA.CONTEXT,
+      VIRID_EXPRESS_METADATA.CONTEXT,
       contextMetadata,
       target,
       key,
@@ -342,9 +352,14 @@ export function Ctx() {
 export function Query(query: string, pipe?: TransformPipe<any>) {
   return (target: any, key: string, index: number) => {
     const existingMetadata: QueryMetadata =
-      Reflect.getOwnMetadata(VIRID_METADATA.QUERY, target, key) || [];
+      Reflect.getOwnMetadata(VIRID_EXPRESS_METADATA.QUERY, target, key) || [];
     const newMetadata = [...existingMetadata, { index, query, pipe }];
-    Reflect.defineMetadata(VIRID_METADATA.QUERY, newMetadata, target, key);
+    Reflect.defineMetadata(
+      VIRID_EXPRESS_METADATA.QUERY,
+      newMetadata,
+      target,
+      key,
+    );
   };
 }
 
@@ -354,9 +369,15 @@ export function Query(query: string, pipe?: TransformPipe<any>) {
 export function Params(key?: string, pipe?: TransformPipe<any>) {
   return (target: any, keyName: string, index: number) => {
     const existingMetadata: ParamMetadata =
-      Reflect.getOwnMetadata(VIRID_METADATA.PARAMS, target, keyName) || [];
+      Reflect.getOwnMetadata(VIRID_EXPRESS_METADATA.PARAMS, target, keyName) ||
+      [];
     const newMetadata = [...existingMetadata, { index, key, pipe }];
-    Reflect.defineMetadata(VIRID_METADATA.PARAMS, newMetadata, target, keyName);
+    Reflect.defineMetadata(
+      VIRID_EXPRESS_METADATA.PARAMS,
+      newMetadata,
+      target,
+      keyName,
+    );
   };
 }
 /**
@@ -365,38 +386,38 @@ export function Params(key?: string, pipe?: TransformPipe<any>) {
 function getHttpMetadata(target: any, key: string, types: any[]) {
   // 获取所有的元数据配置
   const bodyMeta: BodyMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.BODY,
+    VIRID_EXPRESS_METADATA.BODY,
     target,
     key,
   );
   const headerMeta: HeaderMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.HEADERS,
+    VIRID_EXPRESS_METADATA.HEADERS,
     target,
     key,
   );
   const cookiesMeta: CookieMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.COOKIES,
+    VIRID_EXPRESS_METADATA.COOKIES,
     target,
     key,
   );
 
   const resMeta: ResponseMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.RESPONSE,
+    VIRID_EXPRESS_METADATA.RESPONSE,
     target,
     key,
   );
   const reqMeta: RequestMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.REQUEST,
+    VIRID_EXPRESS_METADATA.REQUEST,
     target,
     key,
   );
   const ctxMeta: ContextMetadata = Reflect.getOwnMetadata(
-    VIRID_METADATA.CONTEXT,
+    VIRID_EXPRESS_METADATA.CONTEXT,
     target,
     key,
   );
   const rawQueryMeta: QueryMetadata =
-    Reflect.getOwnMetadata(VIRID_METADATA.QUERY, target, key) || [];
+    Reflect.getOwnMetadata(VIRID_EXPRESS_METADATA.QUERY, target, key) || [];
   const queryMeta = rawQueryMeta.map((item) => {
     // 如果没指定 pipe，根据 types[item.index] 自动分配
     if (!item.pipe) {
@@ -406,7 +427,7 @@ function getHttpMetadata(target: any, key: string, types: any[]) {
     return item;
   });
   const rawParamMeta: ParamMetadata =
-    Reflect.getOwnMetadata(VIRID_METADATA.PARAMS, target, key) || [];
+    Reflect.getOwnMetadata(VIRID_EXPRESS_METADATA.PARAMS, target, key) || [];
   const paramMeta = rawParamMeta.map((item) => {
     if (!item.pipe) {
       const paramType = types[item.index];

@@ -3,25 +3,10 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Express
  */
-import { type Express, type Request, type Response } from "express";
+import { type Request, type Response } from "express";
 import { Readable } from "stream";
-export interface PluginOptions {
-  server: Express;
-}
-import { EventMessage, MessageWriter } from "@virid/core";
-// 定义一个独一无二的“布标”
-export type RequestId = number & { readonly __brand: unique symbol };
+import { MessageWriter } from "@virid/core";
 
-export abstract class HttpRequestMessage extends EventMessage {
-  // id 必须是 RequestId 类型
-  constructor(private readonly __virid_express_id: RequestId) {
-    super();
-  }
-  // 暴露一个只读属性给业务层使用
-  public get requestId(): RequestId {
-    return this.__virid_express_id;
-  }
-}
 
 export class HttpContext {
   public rc: number = 0;
@@ -79,6 +64,7 @@ export class HttpContext {
     }
   }
 }
+
 export abstract class HttpResponse {
   constructor(
     public readonly status: number,

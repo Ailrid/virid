@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Vue
  */
-import { VIRID_METADATA } from "../decorators/constants";
+import { VIRID_VUE_METADATA } from "../decorators/constant";
 import {
   watch,
   computed,
@@ -16,11 +16,22 @@ import {
   onActivated,
   onDeactivated,
   shallowRef,
+  WritableComputedRef,
 } from "vue";
 import { type ControllerMessage } from "../decorators";
 import { MessageWriter, type SystemContext } from "@virid/core";
 import { viridApp } from "../app";
 import { createDeepShield } from "./shield";
+import {
+  type WatchMetadata,
+  type ProjectMetadata,
+  type InheritMetadata,
+  type UseMetadata,
+  type ResponsiveMetadata,
+  type OnHookMetadata,
+  type ListenerMetadata,
+} from "../interfaces";
+
 // controller注册表
 
 export class GlobalRegistry {
@@ -59,17 +70,20 @@ export class GlobalRegistry {
  * @Project 连接component，只读一个component的值
  */
 export function bindProject(proto: any, instance: any) {
-  const projects = Reflect.getMetadata(VIRID_METADATA.PROJECT, proto);
+  const projects: ProjectMetadata = Reflect.getMetadata(
+    VIRID_VUE_METADATA.PROJECT,
+    proto,
+  );
 
-  projects?.forEach((config: any) => {
-    const { propertyKey, isAccessor, type, componentClass, source } = config;
-    let project: any;
+  projects?.forEach((config) => {
+    const { key, isAccessor, type, componentClass, source } = config;
+    let project: WritableComputedRef<any, any>;
 
     // 统一报错 Setter
     const readOnlySetter = (_val: any) => {
       MessageWriter.error(
         new Error(
-          `[Virid Project] Read-only: Property "${propertyKey}" in "${instance.constructor.name}" is a protected projection.\n`,
+          `[Virid Project] Read-only: Property "${key}" in "${instance.constructor.name}" is a protected projection.\n`,
         ),
       );
     };
@@ -79,14 +93,14 @@ export function bindProject(proto: any, instance: any) {
       if (type === "component") {
         MessageWriter.error(
           new Error(
-            `[Virid Project] Architecture Violation: Manual get/set is forbidden on ${componentClass} projection "${propertyKey}". Please use functional source.`,
+            `[Virid Project] Architecture Violation: Manual get/set is forbidden on ${componentClass} projection "${key}". Please use functional source.`,
           ),
         );
         return;
       }
 
       // 只有非 component 类型才走到这里，不套盾，支持读写
-      const rawDescriptor = Object.getOwnPropertyDescriptor(proto, propertyKey);
+      const rawDescriptor = Object.getOwnPropertyDescriptor(proto, key);
       project = computed({
         get: () => rawDescriptor?.get?.call(instance),
         set: (val) => {
@@ -110,7 +124,7 @@ export function bindProject(proto: any, instance: any) {
 
           // 来自 component 的数据套盾
           if (isFromComponent) {
-            return createDeepShield(val, componentClass.name, propertyKey);
+            return createDeepShield(val, componentClass.name, key);
           }
 
           // 来自自己的投影，直接返回
@@ -122,11 +136,11 @@ export function bindProject(proto: any, instance: any) {
 
     const currentDescriptor = Object.getOwnPropertyDescriptor(
       instance,
-      propertyKey,
+      key,
     );
     if (currentDescriptor && currentDescriptor.configurable === false) return;
 
-    Object.defineProperty(instance, propertyKey, {
+    Object.defineProperty(instance, key, {
       get: () => project.value,
       set: (val) => (project.value = val),
       enumerable: true,
@@ -139,7 +153,8 @@ export function bindProject(proto: any, instance: any) {
  */
 
 export function bindWatch(proto: any, instance: any) {
-  const watches: any[] = Reflect.getMetadata(VIRID_METADATA.WATCH, proto) || [];
+  const watches: WatchMetadata =
+    Reflect.getMetadata(VIRID_VUE_METADATA.WATCH, proto) || [];
   const stops: WatchStopHandle[] = [];
 
   watches.forEach((config) => {
@@ -194,10 +209,11 @@ export function bindResponsive(instance: any) {
     enumerable: false,
   });
 
-  const props = Reflect.getMetadata(VIRID_METADATA.RESPONSIVE, instance) || [];
+  const props: ResponsiveMetadata =
+    Reflect.getMetadata(VIRID_VUE_METADATA.RESPONSIVE, instance) || [];
 
-  props.forEach((config: any) => {
-    const key = config.propertyKey;
+  props.forEach((config) => {
+    const key = config.key;
     const descriptor = Object.getOwnPropertyDescriptor(instance, key);
 
     // 【关键逻辑】检查是否已经被 bindObservers 劫持过
@@ -257,9 +273,12 @@ export function bindResponsive(instance: any) {
  * 解析 @OnHook 并将其绑定到 Vue 生命周期
  */
 export function bindHooks(proto: any, instance: any) {
-  const hooks = Reflect.getMetadata(VIRID_METADATA.LIFE_CIRCLE, proto);
+  const hooks: OnHookMetadata = Reflect.getMetadata(
+    VIRID_VUE_METADATA.LIFE_CIRCLE,
+    proto,
+  );
 
-  hooks?.forEach((config: any) => {
+  hooks?.forEach((config) => {
     const { hookName, methodName } = config;
     const fn = instance[methodName].bind(instance);
 
@@ -291,13 +310,16 @@ export function bindHooks(proto: any, instance: any) {
  * 执行并绑定万能 Hooks
  */
 export function bindUseHooks(proto: any, instance: any) {
-  const hooks = Reflect.getMetadata(VIRID_METADATA.USE_HOOKS, proto);
+  const hooks: UseMetadata = Reflect.getMetadata(
+    VIRID_VUE_METADATA.HOOK,
+    proto,
+  );
 
-  hooks?.forEach((config: any) => {
+  hooks?.forEach((config) => {
     // 在 useController 运行期间执行 hookFactory()
     const hookResult = config.hookFactory();
     // 直接赋值给实例
-    instance[config.propertyKey] = hookResult;
+    instance[config.key] = hookResult;
   });
 }
 
@@ -305,12 +327,12 @@ export function bindUseHooks(proto: any, instance: any) {
  * @description: 启动@Listener 为 Controller 实例绑定监听器并返回销毁函数列表
  **/
 export function bindListener(proto: any, instance: any): (() => void)[] {
-  const listenerConfigs: any[] =
-    Reflect.getMetadata(VIRID_METADATA.CONTROLLER_LISTENERS, proto) || [];
+  const listenerConfigs: ListenerMetadata =
+    Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, proto) || [];
   const unbindFunctions: (() => void)[] = [];
 
-  listenerConfigs.forEach(({ propertyKey, eventClass, priority, single }) => {
-    const originalMethod = instance[propertyKey];
+  listenerConfigs.forEach(({ key, eventClass, priority, single }) => {
+    const originalMethod = instance[key];
 
     // 强制只能接受一个参数且是 SingleMessage
     const wrappedHandler = function (msgs: ControllerMessage[]) {
@@ -335,9 +357,9 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
 
     // 给包装后的函数挂载上下文信息（供 Dispatcher 读取）
     const taskContext: SystemContext = {
-      params: eventClass,
+      params: [eventClass],
       targetClass: instance.constructor,
-      methodName: propertyKey,
+      methodName: key,
       originalMethod: originalMethod,
     };
     (wrappedHandler as any).ccsContext = taskContext;
@@ -353,12 +375,15 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
  * @description: 启动@Inherit 使能够只读其他的controller
  **/
 export function bindInherit(proto: any, instance: any) {
-  const inherits = Reflect.getMetadata(VIRID_METADATA.INHERIT, proto);
+  const inherits: InheritMetadata = Reflect.getMetadata(
+    VIRID_VUE_METADATA.INHERIT,
+    proto,
+  );
   if (!inherits) return;
 
   // @ts-ignore : token
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  inherits.forEach(({ propertyKey, token, id, selector }) => {
+  inherits.forEach(({ key, _token, id, selector }) => {
     // 为每个继承属性创建一个私有的 computed 引用
     // 这个 computed 就像一个隧道，一头连着 Registry，一头连着子组件
     const tunnel = computed(() => {
@@ -374,16 +399,16 @@ export function bindInherit(proto: any, instance: any) {
       return selector ? selector(target) : target;
     });
 
-    Object.defineProperty(instance, propertyKey, {
+    Object.defineProperty(instance, key, {
       get: () => {
         const val = tunnel.value; // 访问 computed.value
         // 返回时依然套上护盾，确保“弱引用”也是“只读引用”
-        return val ? createDeepShield(val, propertyKey, "") : null;
+        return val ? createDeepShield(val, key, "") : null;
       },
       set: () => {
         MessageWriter.error(
           new Error(
-            `[Virid Inherit] No Modification:\nAttempted to set read-only Inherit property: ${propertyKey}`,
+            `[Virid Inherit] No Modification:\nAttempted to set read-only Inherit property: ${key}`,
           ),
         );
       },

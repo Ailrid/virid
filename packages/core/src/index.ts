@@ -17,6 +17,7 @@
  */
 export * from "./core";
 export * from "./decorators";
+export * from "./interfaces";
 import { viridApp, type ViridApp } from "./app";
 export { type ViridApp, type ViridPlugin } from "./app";
 

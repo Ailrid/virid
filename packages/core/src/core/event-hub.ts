@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 import { MessageWriter } from "./io";
-import { EventMessage, SingleMessage } from "./types";
+import { EventMessage, SingleMessage } from "./message";
 
 /**
  * @description:  事件中心，存储和分发消息 - 物理隔离 SIGNAL 与 EVENT

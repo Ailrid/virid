@@ -3,6 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Express
  */
-export * from "./http-response";
-export * from "./utils";
-export * from "./message";
+import { type Express } from "express";
+export interface PluginOptions {
+  server: Express;
+}

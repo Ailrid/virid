@@ -15,9 +15,10 @@
  *
  * Description: Electron main process adapter for Virid, responsible for sending, receiving, and broadcasting rendering process messages.
  */
-import { ViridPlugin, type ViridApp } from "@virid/core";
-import { type PluginOption } from "./main";
 export * from "./main";
+export * from "./interfaces";
+import { ViridPlugin, type ViridApp } from "@virid/core";
+import { type PluginOption } from "./interfaces";
 import { activateApp } from "./app";
 export const MainPlugin: ViridPlugin<PluginOption> = {
   name: "@virid/main",

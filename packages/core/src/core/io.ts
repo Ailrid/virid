@@ -6,11 +6,11 @@
 import { type MessageInternal } from "./internal";
 import {
   type BaseMessage,
-  type Newable,
   ErrorMessage,
   InfoMessage,
   WarnMessage,
-} from "./types";
+} from "./message";
+import { type Newable } from "../interfaces";
 // 描述 dispatch 的结构
 export interface IMessagePublisher {
   dispatch(message: BaseMessage): void;

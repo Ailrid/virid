@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Main
+ * Project: Virid Main
  */
 import { type Middleware, MessageWriter } from "@virid/core";
-import { ToRenderMessage } from "./types";
-import { ROUTER_MAP, VIRID_CHANNEL } from "./routingCenter";
+import { ToRenderMessage } from "./message";
+import { ROUTER_MAP, VIRID_CHANNEL } from "./router";
 export const middleWare: Middleware = (message, next) => {
   //如果消息是继承自MainRequestMessage，拦截并发往对应的渲染进程
   if (message instanceof ToRenderMessage) {

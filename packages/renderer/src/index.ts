@@ -17,8 +17,9 @@
  */
 import { ViridPlugin, type ViridApp } from "@virid/core";
 export { ToMainMessage, FromMainMessage } from "./render";
+export * from "./interfaces";
 import { activateApp } from "./app";
-import { type PluginOption } from "./render";
+import { type PluginOption } from "./interfaces";
 export const RenderPlugin: ViridPlugin<PluginOption> = {
   name: "@virid/render",
   install(app: ViridApp, options: PluginOption) {

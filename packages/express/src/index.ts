@@ -17,7 +17,7 @@
  */
 import { ViridPlugin, type ViridApp } from "@virid/core";
 import { activateApp } from "./app";
-import { PluginOptions } from "./http";
+import { PluginOptions } from "./interfaces";
 
 export * from "./http";
 export * from "./decorators";

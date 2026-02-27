@@ -3,8 +3,8 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Amber
  */
-import { VIRID_METADATA } from "./constants";
-import { type BackupStrategy } from "./types";
+import { VIRID_AMBER_METADATA } from "./constant";
+import { type BackupStrategy } from "../interfaces";
 
 /**
  * @description: 标记 Backup 身份并配置自定义备份策略
@@ -15,12 +15,16 @@ export function Backup<T extends new (...args: any[]) => any, C = any>(
 ) {
   return (target: T) => {
     // 标记需要备份
-    Reflect.defineMetadata(VIRID_METADATA.BACKUP, true, target);
+    Reflect.defineMetadata(VIRID_AMBER_METADATA.BACKUP, true, target);
     // 初始化版本号
-    Reflect.defineMetadata(VIRID_METADATA.VERSION, 0, target);
+    Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, 0, target);
     // 如果用户给了自定义方法，存入元数据
     if (strategy) {
-      Reflect.defineMetadata(VIRID_METADATA.CUSTOM_METHOD, strategy, target);
+      Reflect.defineMetadata(
+        VIRID_AMBER_METADATA.CUSTOM_METHOD,
+        strategy,
+        target,
+      );
     }
   };
 }

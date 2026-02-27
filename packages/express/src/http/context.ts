@@ -10,7 +10,7 @@ import {
   StreamFileResponse,
   HttpError,
   StreamResponse,
-} from "./types";
+} from "./http-response";
 export const httpContextStore = new Map<number, HttpContext>();
 
 /**

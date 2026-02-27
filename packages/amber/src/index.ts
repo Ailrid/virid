@@ -17,10 +17,10 @@
  */
 import { ViridPlugin, type ViridApp } from "@virid/core";
 import { activateApp } from "./app";
-import { PluginOptions } from "./amber";
-
+import { PluginOptions } from "./interfaces";
 export * from "./amber";
 export * from "./decorators";
+export * from "./interfaces";
 export const AmberPlugin: ViridPlugin<PluginOptions> = {
   name: "@virid/amber",
   install(app: ViridApp, options) {

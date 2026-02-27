@@ -1,16 +1,12 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Renderer
+ * Project: Virid Renderer
  */
 
 import { MessageWriter, type ViridApp } from "@virid/core";
-import {
-  middleWare,
-  convertToMainMessage,
-  type PluginOption,
-  ToMainMessage,
-} from "./render";
+import { middleWare, convertToMainMessage, ToMainMessage } from "./render";
+import { type PluginOption } from "./interfaces";
 export function activateApp(app: ViridApp, options: PluginOption) {
   // 先检查预加载脚本是否已经加载
   if (!window.__VIRID_BRIDGE__) {

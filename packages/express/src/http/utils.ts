@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2026-present Ailrid.
+ * Licensed under the Apache License, Version 2.0.
+ * Project: Virid Express
+ */
 import { MessageWriter } from "packages/core/dist";
 import { HttpError } from ".";
-import { type TransformPipe } from "../decorators/types";
+import { type TransformPipe } from "../interfaces";
 
 export function ParseIntPipe(val: string) {
   const res = parseInt(val, 10);
@@ -42,19 +47,19 @@ export function getAutoPipe<T>(type: T): TransformPipe<T> | undefined {
   return autoPipeMap.get(type);
 }
 
-
-
 /**
  * 将 cookie 字符串转换为对象
  */
-export function parseRawCookie(cookieHeader: string | undefined): Record<string, string> {
+export function parseRawCookie(
+  cookieHeader: string | undefined,
+): Record<string, string> {
   const result: Record<string, string> = {};
-  
+
   if (!cookieHeader) return result;
-  const pairs = cookieHeader.split(';');
+  const pairs = cookieHeader.split(";");
 
   for (const pair of pairs) {
-    const indexOfEq = pair.indexOf('=');
+    const indexOfEq = pair.indexOf("=");
     if (indexOfEq === -1) continue;
 
     // 提取 key 和 value，并进行 trim 处理
@@ -69,7 +74,7 @@ export function parseRawCookie(cookieHeader: string | undefined): Record<string,
 
     try {
       // 只在必要时进行 URL 解码
-      result[key] = value.includes('%') ? decodeURIComponent(value) : value;
+      result[key] = value.includes("%") ? decodeURIComponent(value) : value;
     } catch (e) {
       // 如果解码失败（比如恶意构造的序列），保留原样，防止崩溃
       result[key] = value;

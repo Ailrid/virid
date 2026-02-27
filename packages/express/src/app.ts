@@ -4,7 +4,7 @@
  * Project: Virid Express
  */
 import { type ViridApp, MessageWriter } from "@virid/core";
-import { type PluginOptions } from "./http";
+import { type PluginOptions } from "./interfaces";
 
 import { registerHttpSystem, registerHttpRoute } from "./decorators/register";
 

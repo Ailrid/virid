@@ -1,13 +1,17 @@
+/*
+ * Copyright (c) 2026-present Ailrid.
+ * Licensed under the Apache License, Version 2.0.
+ * Project: Virid Core
+ */
 import { type ViridApp } from "./app";
 import {
   AtomicModifyMessage,
   ErrorMessage,
   InfoMessage,
   MessageWriter,
-  SystemContext,
   WarnMessage,
 } from "./core";
-
+import { type SystemContext } from "./interfaces";
 /**
  * 简单的色彩辅助函数
  */
@@ -109,12 +113,6 @@ const atomicModifyHandler = (modifications: AtomicModifyMessage<any>) => {
   }
 };
 
-export interface IViridApp {
-  get(identifier: any): any;
-}
-
-let activeApp: IViridApp | null = null;
-
 /**
  * 激活真正的 App 实例
  */
@@ -146,6 +144,11 @@ export function initializeGlobalSystems(app: ViridApp) {
   );
   activeApp = app;
 }
+export interface IViridApp {
+  get(identifier: any): any;
+}
+
+let activeApp: IViridApp | null = null;
 
 /**
  * viridApp 代理

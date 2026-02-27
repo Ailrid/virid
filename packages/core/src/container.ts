@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 
-import { Newable } from "./core";
+import { Newable } from "./interfaces";
 
 interface Binding {
   type: "singleton" | "transient";

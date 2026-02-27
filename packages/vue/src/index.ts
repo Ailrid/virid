@@ -18,6 +18,7 @@
 import { ViridPlugin, type ViridApp } from "@virid/core";
 export * from "./adapters";
 export * from "./decorators";
+export * from "./interfaces";
 import { activateApp } from "./app";
 export const VuePlugin: ViridPlugin = {
   name: "@virid/vue",

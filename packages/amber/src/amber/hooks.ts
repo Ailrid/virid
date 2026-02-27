@@ -13,7 +13,7 @@ import {
   InfoMessage,
 } from "@virid/core";
 import { amberComponentStore, amberTickStore } from "./store";
-import { VIRID_METADATA } from "../decorators/constants";
+import { VIRID_AMBER_METADATA } from "../decorators/constant";
 
 const dirtyBuffer = new Set<any>();
 
@@ -34,7 +34,7 @@ export const afterExecuteHooks: ExecuteHook<BaseMessage> = (
       : context.context.params;
 
   allParams.forEach((paramClass) => {
-    if (Reflect.hasMetadata(VIRID_METADATA.BACKUP, paramClass)) {
+    if (Reflect.hasMetadata(VIRID_AMBER_METADATA.BACKUP, paramClass)) {
       dirtyBuffer.add(paramClass);
     }
   });

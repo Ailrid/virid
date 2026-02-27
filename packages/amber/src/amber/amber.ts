@@ -4,14 +4,14 @@
  * Project: Virid Amber
  */
 import { amberComponentStore, amberTickStore } from "./store";
-import { VIRID_METADATA } from "../decorators/constants";
+import { VIRID_AMBER_METADATA } from "../decorators/constant";
 
 export class Amber {
   /**
    * 获取组件当前的逻辑版本号
    */
   public static getVersion(compClass: any): number {
-    return Reflect.getMetadata(VIRID_METADATA.VERSION, compClass) || 0;
+    return Reflect.getMetadata(VIRID_AMBER_METADATA.VERSION, compClass) || 0;
   }
 
   public static canUndo(compClass: any): boolean {

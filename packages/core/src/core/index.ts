@@ -6,5 +6,5 @@
 //  统一导出
 export { MessageInternal } from "./internal";
 export { MessageRegistry } from "./registry";
-export * from "./types";
+export * from "./message";
 export * from "./io";

@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2026-present Ailrid.
  * Licensed under the Apache License, Version 2.0.
- * Project: Virid Electron Renderer
+ * Project: Virid Renderer
  */
 import { type Middleware, MessageWriter } from "@virid/core";
-import { ToMainMessage } from "./types";
+import { ToMainMessage } from "./message";
 export const middleWare: Middleware = (message, next) => {
   //如果消息继承自ToMainMessage，拦截并发往主进程
   if (message instanceof ToMainMessage) {

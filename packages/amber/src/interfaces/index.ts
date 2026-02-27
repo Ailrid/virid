@@ -3,4 +3,5 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Amber
  */
+export * from "./amber";
 export * from "./decorator";

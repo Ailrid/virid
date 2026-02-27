@@ -8,10 +8,10 @@ import {
   amberComponentStore,
   afterExecuteHooks,
   afterTickHooks,
-  PluginOptions,
   activateConfig,
 } from "./amber";
-import { VIRID_METADATA } from "./decorators/constants";
+import type { PluginOptions } from "./interfaces";
+import { VIRID_AMBER_METADATA } from "./decorators/constant";
 export interface IViridApp {
   get(identifier: any): any;
 }
@@ -27,7 +27,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
   const amberInitHook = (instance) => {
     if (
       instance &&
-      Reflect.hasMetadata(VIRID_METADATA.VERSION, instance.constructor)
+      Reflect.hasMetadata(VIRID_AMBER_METADATA.VERSION, instance.constructor)
     ) {
       //实例化的时候，init第一个版本
       amberComponentStore.initComponent(instance);
