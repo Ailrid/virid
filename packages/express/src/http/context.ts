@@ -95,6 +95,7 @@ function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
       if (!res.headersSent) res.status(500).end();
       cleanup();
     });
+    stream.on("close", cleanup);
     return;
   }
   //其他情况，直接返回

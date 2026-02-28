@@ -41,7 +41,7 @@ export const handleResult = (res: any) => {
 export function System(
   params: SystemParams = {
     priority: 0,
-    eventClass: null,
+    messageClass: null,
   },
 ) {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
@@ -69,7 +69,7 @@ export function System(
       return;
     }
     // 不能同时使用@message() 和 SystemParams
-    if (params.eventClass && messageMetadata) {
+    if (params.messageClass && messageMetadata) {
       MessageWriter.error(
         new Error(
           `[Virid System] Multiple Messages Are Not Allowed: Cannot use @ message() and SystemParams simultaneously in ${key}`,
@@ -78,7 +78,7 @@ export function System(
       return;
     }
     // @message() 和 SystemParams至少得有一个
-    if (!params.eventClass && !messageMetadata) {
+    if (!params.messageClass && !messageMetadata) {
       MessageWriter.error(
         new Error(
           `[Virid System] System Parameter Loss:\nPlease declare the message type using the Message decorator`,
@@ -91,16 +91,16 @@ export function System(
       const args = types.map((type: any, index: number) => {
         // 先看看这个参数是不是标记过的Event
         if (messageMetadata && messageMetadata.index == index) {
-          const { eventClass, single } = messageMetadata;
+          const { messageClass, single } = messageMetadata;
           // 基础校验：判断当前投递的消息实例是否属于装饰器声明的类或其子类
           const sample = Array.isArray(currentMessage)
             ? currentMessage[0]
             : currentMessage;
-          if (!(sample instanceof eventClass)) {
+          if (!(sample instanceof messageClass)) {
             const receivedName = (sample as object).constructor.name;
             // 如果类型不匹配，说明 Dispatcher 路由逻辑或元数据配置有问题
             throw new Error(
-              `[Virid System] Type Mismatch: Expected ${eventClass.name}, but received ${receivedName}`,
+              `[Virid System] Type Mismatch: Expected ${messageClass.name}, but received ${receivedName}`,
             );
           }
           // 处理 SingleMessage (合并且批处理类型)
@@ -121,7 +121,7 @@ export function System(
             return currentMessage;
           }
           throw new Error(
-            `[Virid System] unknown Message Types: Message ${eventClass.name} is not a subclass of SingleMessage or EventMessage!`,
+            `[Virid System] unknown Message Types: Message ${messageClass.name} is not a subclass of SingleMessage or EventMessage!`,
           );
         }
         // 处理普通的依赖注入
@@ -152,8 +152,8 @@ export function System(
     // 修改方法定义
     descriptor.value = wrappedSystem;
     // 注册到调度中心
-    const eventClass = params.eventClass || messageMetadata.eventClass;
-    viridApp.register(eventClass, wrappedSystem, params.priority);
+    const messageClass = params.messageClass || messageMetadata.messageClass;
+    viridApp.register(messageClass, wrappedSystem, params.priority);
   };
 }
 
@@ -161,7 +161,7 @@ export function System(
  * @description: 标记参数为 MessageReader 并锁定其消息类型
  */
 export function Message<T extends BaseMessage>(
-  eventClass: Newable<T>,
+  messageClass: Newable<T>,
   single = true,
 ) {
   return (target: any, key: string, index: number) => {
@@ -175,7 +175,7 @@ export function Message<T extends BaseMessage>(
     }
     const messageMetadata: MessageMetadata = {
       index,
-      eventClass,
+      messageClass,
       single,
     };
     Reflect.defineMetadata(

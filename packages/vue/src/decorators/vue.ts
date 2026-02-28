@@ -172,7 +172,7 @@ export function Env() {
  * @description: Listener 装饰器 - 标记 Controller 的成员方法为消息监听器
  */
 export function Listener<T extends ControllerMessage>(
-  eventClass: Newable<T>,
+  messageClass: Newable<T>,
   priority: number = 0,
   single = true,
 ) {
@@ -182,10 +182,10 @@ export function Listener<T extends ControllerMessage>(
       Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, target) ||
       [];
 
-    // 存入当前方法的配置：哪个方法(key) 听 哪个消息(eventClass)
+    // 存入当前方法的配置：哪个方法(key) 听 哪个消息(messageClass)
     listeners.push({
       key,
-      eventClass,
+      messageClass,
       priority,
       single,
     });

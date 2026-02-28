@@ -97,10 +97,10 @@ export class MessageInternal {
   }
 
   register(
-    eventClass: any,
+    messageClass: any,
     systemFn: (...args: any[]) => any,
     priority: number = 0,
   ): () => void {
-    return this.registry.register(eventClass, systemFn, priority);
+    return this.registry.register(messageClass, systemFn, priority);
   }
 }

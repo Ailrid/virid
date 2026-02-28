@@ -20,11 +20,11 @@ let _internalHttpIdCounter = 0;
  */
 export function registerHttpSystem(app: ViridApp) {
   for (const [
-    eventClass,
+    messageClass,
     systemTasks,
   ] of stagingSystemRegister.systemTaskMap.entries()) {
     for (const task of systemTasks) {
-      app.register(eventClass, task.fn, task.priority);
+      app.register(messageClass, task.fn, task.priority);
     }
   }
   stagingSystemRegister.systemTaskMap.clear();

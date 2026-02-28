@@ -331,17 +331,17 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
     Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, proto) || [];
   const unbindFunctions: (() => void)[] = [];
 
-  listenerConfigs.forEach(({ key, eventClass, priority, single }) => {
+  listenerConfigs.forEach(({ key, messageClass, priority, single }) => {
     const originalMethod = instance[key];
 
     // 强制只能接受一个参数且是 SingleMessage
     const wrappedHandler = function (msgs: ControllerMessage[]) {
       const sample = Array.isArray(msgs) ? msgs[0] : msgs;
-      if (!(sample instanceof eventClass)) {
+      if (!(sample instanceof messageClass)) {
         // 如果类型不匹配，说明 Dispatcher 路由逻辑或元数据配置有问题
         MessageWriter.error(
           new Error(
-            `[Virid Listener] Type Mismatch: Expected ${eventClass.name}, but received ${sample?.constructor.name}`,
+            `[Virid Listener] Type Mismatch: Expected ${messageClass.name}, but received ${sample?.constructor.name}`,
           ),
         );
         return null;
@@ -357,14 +357,14 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
 
     // 给包装后的函数挂载上下文信息（供 Dispatcher 读取）
     const taskContext: SystemContext = {
-      params: [eventClass],
+      params: [messageClass],
       targetClass: instance.constructor,
       methodName: key,
       originalMethod: originalMethod,
     };
     (wrappedHandler as any).ccsContext = taskContext;
 
-    const unregister = viridApp.register(eventClass, wrappedHandler, priority);
+    const unregister = viridApp.register(messageClass, wrappedHandler, priority);
     unbindFunctions.push(unregister);
   });
 

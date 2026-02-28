@@ -8,11 +8,11 @@ import { Newable } from "./common";
 
 export interface SystemParams {
   priority?: number;
-  eventClass?: Newable<BaseMessage> | null;
+  messageClass?: Newable<BaseMessage> | null;
 }
 export interface MessageMetadata {
   index: number;
-  eventClass: Newable<BaseMessage>;
+  messageClass: Newable<BaseMessage>;
   single: boolean;
 }
 

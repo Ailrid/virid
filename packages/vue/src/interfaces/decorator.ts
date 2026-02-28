@@ -60,7 +60,7 @@ export type InheritMetadata = InheritItem[];
 
 export interface ListenerItem {
   key: string;
-  eventClass: Newable<any>;
+  messageClass: Newable<any>;
   priority: number;
   single: boolean;
 }

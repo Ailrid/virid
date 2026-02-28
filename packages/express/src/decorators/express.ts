@@ -74,7 +74,7 @@ export function HttpRoute(config: HttpRouteConfig) {
 export function HttpSystem(
   params: SystemParams = {
     priority: 0,
-    eventClass: null,
+    messageClass: null,
   },
 ) {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
@@ -104,7 +104,7 @@ export function HttpSystem(
     }
 
     // 不能同时使用@message() 和 SystemParams
-    if (params.eventClass && messageMetadata) {
+    if (params.messageClass && messageMetadata) {
       MessageWriter.error(
         new Error(
           `[Virid HttpSystem] Multiple Messages Are Not Allowed: Cannot use @ message() and SystemParams simultaneously in ${key}`,
@@ -113,7 +113,7 @@ export function HttpSystem(
       return;
     }
     // @message() 和 SystemParams至少得有一个
-    if (!params.eventClass && !messageMetadata) {
+    if (!params.messageClass && !messageMetadata) {
       MessageWriter.error(
         new Error(
           `[Virid HttpSystem] System Parameter Loss:\nPlease declare the message type using the Message decorator`,
@@ -122,11 +122,11 @@ export function HttpSystem(
       return;
     }
     // Message必须是继承自HttpRequestMessage
-    const eventClass = params.eventClass ?? messageMetadata.eventClass;
-    if (!HttpRequestMessage.isPrototypeOf(eventClass)) {
+    const messageClass = params.messageClass ?? messageMetadata.messageClass;
+    if (!HttpRequestMessage.isPrototypeOf(messageClass)) {
       MessageWriter.error(
         new Error(
-          `[Virid HttpSystem] Wrong Message Type: ${eventClass.name} is not a derived subclass of HttpRequestMessage!`,
+          `[Virid HttpSystem] Wrong Message Type: ${messageClass.name} is not a derived subclass of HttpRequestMessage!`,
         ),
       );
       return;
@@ -148,11 +148,11 @@ export function HttpSystem(
           // 如果是message，则注入
           // 三个条件缺一不可
           if (messageMetadata && messageMetadata.index == index) {
-            if (!(currentMessage instanceof eventClass)) {
+            if (!(currentMessage instanceof messageClass)) {
               // 如果类型不匹配，说明 Dispatcher 路由逻辑或元数据配置有问题
               const receivedName = (currentMessage as object).constructor.name;
               throw new Error(
-                `[Virid Express HttpSystem] Type Mismatch: Expected ${eventClass.name}, but received ${receivedName}`,
+                `[Virid Express HttpSystem] Type Mismatch: Expected ${messageClass.name}, but received ${receivedName}`,
               );
             }
             return currentMessage;
@@ -172,7 +172,6 @@ export function HttpSystem(
                 // 异步出错要给客户端发 500
                 handleResult(InternalServerError(), context);
                 // 继续抛出，让 Dispatcher 捕获并打印详细堆栈
-                console.log("扔出去错误");
                 throw error;
               })
           : handleResult(result, context);
@@ -199,7 +198,7 @@ export function HttpSystem(
     // 修改方法定义
     descriptor.value = wrappedSystem;
     // 注册到调度中心
-    stagingSystemRegister.register(eventClass, wrappedSystem, params.priority);
+    stagingSystemRegister.register(messageClass, wrappedSystem, params.priority);
   };
 }
 

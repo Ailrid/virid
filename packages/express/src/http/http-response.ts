@@ -7,7 +7,6 @@ import { type Request, type Response } from "express";
 import { Readable } from "stream";
 import { MessageWriter } from "@virid/core";
 
-
 export class HttpContext {
   public rc: number = 0;
   private isClosed: boolean = false;
@@ -67,22 +66,22 @@ export class HttpContext {
 
 export abstract class HttpResponse {
   constructor(
-    public readonly status: number,
-    public readonly data: any = null,
-    public readonly headers: Record<string, string> = {},
+    public status: number,
+    public data: any = null,
+    public headers: Record<string, string> = {},
   ) {}
 }
 
 // --- 2xx Success ---
 export class OkResponse extends HttpResponse {
-  constructor(data: any) {
-    super(200, data);
+  constructor(data: any, headers: Record<string, string> = {}) {
+    super(200, data, headers);
   }
 }
 
 export class CreatedResponse extends HttpResponse {
-  constructor(data: any) {
-    super(201, data);
+  constructor(data: any, headers: Record<string, string> = {}) {
+    super(201, data, headers);
   }
 }
 
@@ -142,11 +141,36 @@ export class CustomResponseResponse extends HttpResponse {
     super(status, data, headers);
   }
 }
-
+/**
+ * @description: Express sendFile 配置项的强类型定义
+ */
+export interface StreamFileOptions {
+  /** 根目录（如果 path 是相对路径则必填） */
+  root?: string;
+  /** * 对以 . 开头的文件处理策略:
+   * - allow: 允许发送
+   * - deny: 拒绝并返回 403
+   * - ignore: 当作不存在返回 404
+   */
+  dotfiles?: "allow" | "deny" | "ignore";
+  /** 是否发送 ETag */
+  etag?: boolean;
+  /** 扩展的 HTTP 响应头 */
+  headers?: Record<string, string>;
+  /** 缓存最大时长 (毫秒) */
+  maxAge?: number | string;
+  /** 是否在 Cache-Control 中添加 immutable */
+  immutable?: boolean;
+  /** 是否根据文件系统设置 Last-Modified */
+  lastModified?: boolean;
+  /** 是否支持断点续传 (Range 请求) */
+  acceptRanges?: boolean;
+  /** 还有一些不常用的（如 cacheControl, extensions）也可以按需添加 */
+}
 export class StreamFileResponse extends HttpResponse {
   constructor(
     public readonly filePath: string,
-    public readonly options: any = { dotfiles: "allow" },
+    public readonly options: StreamFileOptions = { dotfiles: "allow" },
   ) {
     super(200);
   }
@@ -165,10 +189,12 @@ export class StreamResponse {
 // --- 辅助工厂函数 ---
 
 /** 200 OK */
-export const Ok = (data: any) => new OkResponse(data);
+export const Ok = (data: any, headers: Record<string, string> = {}) =>
+  new OkResponse(data, headers);
 
 /** 201 Created */
-export const Created = (data: any) => new CreatedResponse(data);
+export const Created = (data: any, headers: Record<string, string> = {}) =>
+  new CreatedResponse(data, headers);
 
 /** 204 No Content */
 export const NoContent = () => new NoContentResponse();
@@ -190,8 +216,14 @@ export const NotFound = (msg = "Not Found") => new NotFoundResponse(msg);
 export const InternalServerError = (msg = "Internal Server Error") =>
   new InternalServerErrorResponse(msg);
 
+export const CustomResponse = (
+  status: number,
+  data: any,
+  headers: Record<string, string> = {},
+) => new CustomResponseResponse(status, data, headers);
+
 /** 发送本地文件 (自动处理 Range/206) */
-export const StreamFile = (path: string, options?: any) =>
+export const StreamFile = (path: string, options?: StreamFileOptions) =>
   new StreamFileResponse(path, options);
 /**
  * 发送流响应

@@ -3,4 +3,4 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Vue
  */
-export { useController } from "./hooks";
+export { useController } from "./hook";

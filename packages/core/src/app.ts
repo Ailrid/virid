@@ -106,11 +106,11 @@ export class ViridApp {
     this.messageInternal.onAfterTick(hook, front);
   }
   register(
-    eventClass: any,
+    messageClass: any,
     systemFn: (...args: any[]) => any,
     priority: number = 0,
   ): () => void {
-    return this.messageInternal.register(eventClass, systemFn, priority);
+    return this.messageInternal.register(messageClass, systemFn, priority);
   }
   use<T>(plugin: ViridPlugin<T>, options: T): this {
     if (installedPlugins.has(plugin.name)) {

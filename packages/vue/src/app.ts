@@ -7,7 +7,7 @@ import { type ViridApp } from "@virid/core";
 import { bindResponsive } from "./adapters/bind";
 export interface IViridApp {
   register(
-    eventClass: any,
+    messageClass: any,
     systemFn: (...args: any[]) => any,
     priority: number,
   ): () => void;

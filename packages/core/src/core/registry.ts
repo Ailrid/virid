@@ -17,22 +17,22 @@ export class MessageRegistry {
    * 这种模式能完美适配 Controller 的生命周期销毁
    */
   register(
-    eventClass: any,
+    messageClass: any,
     systemFn: (...args: any[]) => any,
     priority: number = 0,
   ): () => void {
-    const systems = this.systemTaskMap.get(eventClass) || [];
+    const systems = this.systemTaskMap.get(messageClass) || [];
     const existingIndex = systems.findIndex((s) => s.fn === systemFn);
     if (existingIndex === -1) {
       systems.push({ fn: systemFn, priority });
       systems.sort((a, b) => b.priority - a.priority);
-      this.systemTaskMap.set(eventClass, systems);
+      this.systemTaskMap.set(messageClass, systems);
     } else {
       // 检查重复注册
       const funcName = systemFn.name || "Anonymous";
       MessageWriter.error(
         new Error(
-          `[Virid Error] System Already Registered:\nClass ${eventClass.name}\nFunction ${funcName}`,
+          `[Virid Error] System Already Registered:\nClass ${messageClass.name}\nFunction ${funcName}`,
         ),
       );
       return () => {};
@@ -42,14 +42,14 @@ export class MessageRegistry {
      * 返回卸载函数
      */
     return () => {
-      const currentSystems = this.systemTaskMap.get(eventClass);
+      const currentSystems = this.systemTaskMap.get(messageClass);
       if (currentSystems) {
         const index = currentSystems.findIndex((s) => s.fn === systemFn);
         if (index !== -1) {
           currentSystems.splice(index, 1);
           // 如果该消息类型没有任何监听者了，清理掉 Key，保持内存干净
           if (currentSystems.length === 0) {
-            this.systemTaskMap.delete(eventClass);
+            this.systemTaskMap.delete(messageClass);
           }
         }
       }
