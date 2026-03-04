@@ -49,3 +49,4 @@ For detailed implementation details and quick-start examples, please refer to th
 - 👉 **[@virid/renderer](packages/renderer/README.md)** – Learn how to dispatch messages from the **Renderer process** directly to the **Main process**.
 - 👉 **[@virid/main](packages/main/README.md)** – Learn how the **Main process** handles and routes messages from Renderer processes.
 - 👉 **[@virid/amber](packages/amber/README.md)** – Learn how to implement **message replay** and **Undo/Redo** functionality.
+-  👉 **[Comprehensive Example](https://github.com/Ailrid/starry)** – Learn how to use virid to build the entire application
