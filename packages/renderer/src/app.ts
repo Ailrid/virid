@@ -5,7 +5,7 @@
  */
 
 import { MessageWriter, type ViridApp } from "@virid/core";
-import { middleWare, convertToMainMessage, ToMainMessage } from "./render";
+import { middleWare, convertFromMainMessage, ToMainMessage } from "./renderer";
 import { type PluginOption } from "./interfaces";
 export function activateApp(app: ViridApp, options: PluginOption) {
   // 先检查预加载脚本是否已经加载
@@ -36,7 +36,7 @@ export function activateApp(app: ViridApp, options: PluginOption) {
     },
   });
   // 订阅ipc通道，所有返回的消息，全部转换按照注册表转换成自己的消息类型
-  window.__VIRID_BRIDGE__.subscribe(convertToMainMessage);
+  window.__VIRID_BRIDGE__.subscribe(convertFromMainMessage);
   //注册自己的中间件函数，把ToMainMessage类型的消息拦截发往electron主进程
   app.useMiddleware(middleWare);
 }

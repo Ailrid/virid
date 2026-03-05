@@ -224,16 +224,20 @@ export class Dispatcher {
           result.catch((e) =>
             MessageWriter.error(
               e,
-              `[Virid Dispatcher] Async Error:\ntargetClass:${task.hookContext.context.targetClass.name}\nmethodName:${task.hookContext.context.methodName}
-                `,
+              `[Virid Dispatcher]: Async System Error.\n` +
+                `SystemLocation: ${task.hookContext.context.targetClass.name}.${task.hookContext.context.methodName}\n` +
+                `MessageName:    ${task.message.constructor.name}\n` +
+                `MessageData:    ${JSON.stringify(task.message)}`,
             ),
           );
         }
       } catch (e) {
         MessageWriter.error(
           e as Error,
-          `[Virid Dispatcher] Sync Error:\ntargetClass:${task.hookContext.context.targetClass.name}\nmethodName:${task.hookContext.context.methodName}
-                `,
+          `[Virid Dispatcher]: Sync System Error.\n` +
+            `SystemLocation: ${task.hookContext.context.targetClass.name}.${task.hookContext.context.methodName}\n` +
+            `MessageName:    ${task.message.constructor.name}\n` +
+            `MessageData:    ${JSON.stringify(task.message)}`,
         );
       }
     }

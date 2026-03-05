@@ -19,7 +19,7 @@ export function FromIpc(type: string) {
     MESSAGE_MAP.set(type, target);
   };
 }
-export function convertToMainMessage(ipcMessage: any): void {
+export function convertFromMainMessage(ipcMessage: any): void {
   // 解构
   const { __virid_source, __virid_target, __virid_messageType, payload } =
     ipcMessage;

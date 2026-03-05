@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Renderer
  */
-import { EventMessage, type Newable } from "@virid/core";
+import { EventMessage} from "@virid/core";
 /**
  * RenderMessage: 由主进程发来的消息
  */

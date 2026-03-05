@@ -142,8 +142,6 @@ export function HttpSystem(
         );
       }
       try {
-        //每进入一个Httpsystem,增加引用计数指针
-        context.inc();
         const args = types.map((type: any, index: number) => {
           // 如果是message，则注入
           // 三个条件缺一不可

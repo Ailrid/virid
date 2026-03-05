@@ -16,8 +16,9 @@
  * Description: Electron renderer process adapter for virid, responsible for forwarding and receiving messages from the main process.
  */
 import { ViridPlugin, type ViridApp } from "@virid/core";
-export { ToMainMessage, FromMainMessage } from "./render";
+export { ToMainMessage, FromMainMessage } from "./renderer";
 export * from "./interfaces";
+export * from "./renderer";
 import { activateApp } from "./app";
 import { type PluginOption } from "./interfaces";
 export const RenderPlugin: ViridPlugin<PluginOption> = {
