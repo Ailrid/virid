@@ -5,8 +5,7 @@
  */
 import { VIRID_VUE_METADATA } from "./constant";
 import type { WatchOptions } from "vue";
-import { type Newable } from "@virid/core";
-import { type ControllerMessage } from "./message";
+import { MessageWriter, type Newable, BaseMessage } from "@virid/core";
 import {
   type WatchMetadata,
   type ProjectMetadata,
@@ -16,21 +15,20 @@ import {
   type OnHookMetadata,
   type ListenerMetadata,
 } from "../interfaces";
-
 /**
  * @description:实现Watch
  */
 
 // 重载 1: 监听 Controller 自身变量
 export function Watch<T>(
-  source: (instance: T) => void | Promise<void>,
+  source: (instance: T) => any | Promise<any>,
   options?: WatchOptions,
 ): any;
 
 // 重载 2: 监听全局 Component 变量
 export function Watch<C>(
-  component: new (...args: any[]) => C,
-  source: (comp: C) => void | Promise<void>,
+  component: Newable<C>,
+  source: (comp: C) => any | Promise<any>,
   options?: WatchOptions,
 ): any;
 
@@ -75,20 +73,29 @@ export function Project<C>(
   component: new (...args: any[]) => C,
   source: (comp: C) => any,
 ): any;
-
+// 重载 3: 内部get set 投影 @Project() public get name() {}
+export function Project<T>(): any;
 // 实现逻辑
-export function Project(arg1: any, arg2?: any) {
+export function Project(arg1?: any, arg2?: any) {
   return (target: any, key: string, descriptor?: PropertyDescriptor) => {
     const existing: ProjectMetadata =
       Reflect.getMetadata(VIRID_VUE_METADATA.PROJECT, target) || [];
-
+    const isAccessor = !!(descriptor?.get || descriptor?.set);
+    if (!arg1 && !arg2 && !isAccessor) {
+      MessageWriter.error(
+        new Error(
+          `[Virid Project] Invalid Usage: @Project() can only be used on getter or setter.`,
+        ),
+      );
+      return;
+    }
     const metadata = {
       key,
-      isAccessor: !!(descriptor?.get || descriptor?.set),
+      isAccessor: isAccessor,
       // 这里的逻辑和 Watch 保持高度一致
       type: typeof arg2 === "function" ? "component" : "local",
       componentClass: typeof arg2 === "function" ? arg1 : null,
-      source: typeof arg2 === "function" ? arg2 : arg1,
+      source: typeof arg2 === "function" ? arg2 : isAccessor ? null : arg1,
     } as const;
 
     existing.push(metadata);
@@ -171,7 +178,7 @@ export function Env() {
 /**
  * @description: Listener 装饰器 - 标记 Controller 的成员方法为消息监听器
  */
-export function Listener<T extends ControllerMessage>(
+export function Listener<T extends BaseMessage>(
   messageClass: Newable<T>,
   priority: number = 0,
   single = true,
@@ -179,8 +186,7 @@ export function Listener<T extends ControllerMessage>(
   return (target: any, key: string) => {
     // 获取该 Controller 原型上已有的监听器元数据
     const listeners: ListenerMetadata =
-      Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, target) ||
-      [];
+      Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, target) || [];
 
     // 存入当前方法的配置：哪个方法(key) 听 哪个消息(messageClass)
     listeners.push({
@@ -191,10 +197,6 @@ export function Listener<T extends ControllerMessage>(
     });
 
     // 将元数据重新定义回类原型，供 useController 在实例化时扫描
-    Reflect.defineMetadata(
-      VIRID_VUE_METADATA.LISTENER,
-      listeners,
-      target,
-    );
+    Reflect.defineMetadata(VIRID_VUE_METADATA.LISTENER, listeners, target);
   };
 }

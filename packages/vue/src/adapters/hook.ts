@@ -54,8 +54,7 @@ export function useController<T>(
   bindProject(proto, instance);
   // @Use装饰器
   bindUseHooks(proto, instance);
-  // @Watch装饰器
-  const stops = bindWatch(proto, instance);
+
   // @Listener装饰器
   // 运行时动态挂载监听器
   const unbindList = bindListener(proto, instance);
@@ -64,6 +63,8 @@ export function useController<T>(
   // @Inherit装饰器
   bindInherit(proto, instance);
   //绑定全局注册表
+  // @Watch装饰器
+  const stops = bindWatch(proto, instance);
   //如果有id,就去注册
   let unbindRegister = () => true;
   if (options?.id) {

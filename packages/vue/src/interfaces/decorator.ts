@@ -9,7 +9,7 @@ import { WatchOptions } from "vue";
 export interface WatchItem {
   type: "component" | "local";
   componentClass: Newable<any> | null;
-  source: (instance: any) => void | Promise<void>;
+  source: (instance: any) => any | Promise<any>;
   options: WatchOptions;
   methodName: string;
 }

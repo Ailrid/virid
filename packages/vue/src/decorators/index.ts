@@ -4,4 +4,3 @@
  * Project: Virid Vue
  */
 export * from "./vue";
-export * from "./message";

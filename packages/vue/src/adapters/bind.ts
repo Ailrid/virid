@@ -18,8 +18,12 @@ import {
   shallowRef,
   type WritableComputedRef,
 } from "vue";
-import { type ControllerMessage } from "../decorators";
-import { MessageWriter, type SystemContext } from "@virid/core";
+import {
+  MessageWriter,
+  type SystemContext,
+  EventMessage,
+  SingleMessage,
+} from "@virid/core";
 import { viridApp } from "../app";
 import { createDeepShield } from "./shield";
 import {
@@ -134,10 +138,7 @@ export function bindProject(proto: any, instance: any) {
       });
     }
 
-    const currentDescriptor = Object.getOwnPropertyDescriptor(
-      instance,
-      key,
-    );
+    const currentDescriptor = Object.getOwnPropertyDescriptor(instance, key);
     if (currentDescriptor && currentDescriptor.configurable === false) return;
 
     Object.defineProperty(instance, key, {
@@ -335,8 +336,13 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
     const originalMethod = instance[key];
 
     // 强制只能接受一个参数且是 SingleMessage
-    const wrappedHandler = function (msgs: ControllerMessage[]) {
-      const sample = Array.isArray(msgs) ? msgs[0] : msgs;
+    const wrappedHandler = function (
+      currentMessage: SingleMessage[] | EventMessage,
+    ) {
+      const sample = Array.isArray(currentMessage)
+        ? currentMessage[0]
+        : currentMessage;
+      let params;
       if (!(sample instanceof messageClass)) {
         // 如果类型不匹配，说明 Dispatcher 路由逻辑或元数据配置有问题
         MessageWriter.error(
@@ -346,13 +352,28 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
         );
         return null;
       }
-      // 只有当确实有消息时才触发，没消息不空跑
-      const message: ControllerMessage | ControllerMessage[] =
-        single && Array.isArray(msgs) ? msgs[msgs.length - 1] : msgs;
-      if (msgs.length > 0) {
-        // 直接注入快照数组副本，实现所有权转移
-        originalMethod.apply(instance, [message]);
+      // 处理 SingleMessage (合并且批处理类型)
+      if (sample instanceof SingleMessage) {
+        // 如果用户标记了 single: true，则只取最后一条（最新的一条）
+        if (single) {
+          params = Array.isArray(currentMessage)
+            ? currentMessage[currentMessage.length - 1]
+            : currentMessage;
+        }
+        // 否则默认返回整个数组（批处理模式）
+        params = Array.isArray(currentMessage)
+          ? currentMessage
+          : [currentMessage];
       }
+      // 处理 EventMessage (顺序单发类型)
+      else if (sample instanceof EventMessage) {
+        params = [currentMessage];
+      } else {
+        throw new Error(
+          `[Virid System] unknown Message Types: Message ${messageClass.name} is not a subclass of SingleMessage or EventMessage!`,
+        );
+      }
+      originalMethod.apply(instance, params);
     };
 
     // 给包装后的函数挂载上下文信息（供 Dispatcher 读取）
@@ -362,9 +383,13 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
       methodName: key,
       originalMethod: originalMethod,
     };
-    (wrappedHandler as any).ccsContext = taskContext;
+    (wrappedHandler as any).systemContext = taskContext;
 
-    const unregister = viridApp.register(messageClass, wrappedHandler, priority);
+    const unregister = viridApp.register(
+      messageClass,
+      wrappedHandler,
+      priority,
+    );
     unbindFunctions.push(unregister);
   });
 

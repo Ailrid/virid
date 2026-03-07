@@ -36,9 +36,8 @@ export function createDeepShield(
         return (...args: any[]) => {
           // 检查该方法是否有 @Safe 标记
           const safeMethods =
-            Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj.constructor) ||
+            Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj) ||
             new Set();
-
           if (!safeMethods.has(prop)) {
             const errorMsg = [
               `[Virid Shield]`,

@@ -42,12 +42,13 @@ export function registerHttpRoute(server: Express) {
     server[expressMethod](path, (req: Request, res: Response) => {
       // 实例化 Message
       const newId = _internalHttpIdCounter++ >>> 0;
-      const message = new httpMessage(newId as RequestId);
+
       //存一下上下文信息
       httpContextStore.set(
         newId,
         new HttpContext(newId, req, res, Date.now(), path),
       );
+      const message = new httpMessage(newId as RequestId);
       // finish 代表响应已发送，close 代表连接意外中断，两者都应清理
       res.once("finish", () => httpContextStore.delete(newId));
       res.once("close", () => httpContextStore.delete(newId));
