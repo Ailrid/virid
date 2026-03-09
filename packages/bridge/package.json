@@ -37,6 +37,6 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "electron": "^40.2.1"
+    "electron": "^30.0.0"
   }
 }

@@ -6,7 +6,9 @@
 import { type Request, type Response } from "express";
 import { Readable } from "stream";
 import { MessageWriter } from "@virid/core";
-
+interface HttpHeaders {
+  [key: string]: string | string[];
+}
 export class HttpContext {
   public rc: number = 0;
   private isClosed: boolean = false;
@@ -68,19 +70,19 @@ export abstract class HttpResponse {
   constructor(
     public status: number,
     public data: any = null,
-    public headers: Record<string, string> = {},
+    public headers: HttpHeaders = {},
   ) {}
 }
 
 // --- 2xx Success ---
 export class OkResponse extends HttpResponse {
-  constructor(data: any, headers: Record<string, string> = {}) {
+  constructor(data: any, headers: HttpHeaders = {}) {
     super(200, data, headers);
   }
 }
 
 export class CreatedResponse extends HttpResponse {
-  constructor(data: any, headers: Record<string, string> = {}) {
+  constructor(data: any, headers: HttpHeaders = {}) {
     super(201, data, headers);
   }
 }
@@ -137,7 +139,7 @@ export class InternalServerErrorResponse extends HttpResponse {
 
 // --- 万能类 (Custom) ---
 export class CustomResponseResponse extends HttpResponse {
-  constructor(status: number, data: any, headers: Record<string, string> = {}) {
+  constructor(status: number, data: any, headers: HttpHeaders = {}) {
     super(status, data, headers);
   }
 }
@@ -156,7 +158,7 @@ export interface StreamFileOptions {
   /** 是否发送 ETag */
   etag?: boolean;
   /** 扩展的 HTTP 响应头 */
-  headers?: Record<string, string>;
+  headers?: HttpHeaders;
   /** 缓存最大时长 (毫秒) */
   maxAge?: number | string;
   /** 是否在 Cache-Control 中添加 immutable */
@@ -182,18 +184,18 @@ export class StreamResponse {
     public readonly options: {
       contentType?: string;
       status?: number;
-      headers?: Record<string, string>;
+      headers?: HttpHeaders;
     } = {},
   ) {}
 }
 // --- 辅助工厂函数 ---
 
 /** 200 OK */
-export const Ok = (data: any, headers: Record<string, string> = {}) =>
+export const Ok = (data: any, headers: HttpHeaders = {}) =>
   new OkResponse(data, headers);
 
 /** 201 Created */
-export const Created = (data: any, headers: Record<string, string> = {}) =>
+export const Created = (data: any, headers: HttpHeaders = {}) =>
   new CreatedResponse(data, headers);
 
 /** 204 No Content */
@@ -219,7 +221,7 @@ export const InternalServerError = (msg = "Internal Server Error") =>
 export const CustomResponse = (
   status: number,
   data: any,
-  headers: Record<string, string> = {},
+  headers: HttpHeaders = {},
 ) => new CustomResponseResponse(status, data, headers);
 
 /** 发送本地文件 (自动处理 Range/206) */

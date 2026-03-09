@@ -24,7 +24,7 @@ import { viridApp } from "../app";
 export function useController<T>(
   token: new (...args: any[]) => T,
   options?: { id?: string; context?: any },
-): Readonly<T> {
+): T {
   const instance = viridApp.get(token) as any;
 
   //注入vue的乱七八糟的context

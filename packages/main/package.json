@@ -34,7 +34,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "electron": "^40.2.1",
+    "electron": "^30.0.0",
     "@virid/core": "workspace:*"
   },
   "scripts": {
