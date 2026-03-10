@@ -8,8 +8,6 @@ import {
 } from "@virid/core";
 import { AmberPlugin, Backup, Amber, amberTickStore } from "@virid/amber"; // 假设在项目根目录运行
 
-// --- 1. 定义测试环境 ---
-
 class ChangeMessage extends SingleMessage {
   constructor(public value: number) {
     super();
@@ -18,11 +16,32 @@ class ChangeMessage extends SingleMessage {
 
 @Component()
 @Backup({
-  // 增加一个钩子观察恢复情况
   onRestore: (old, now, dir) => {
     console.log(
       `[Hook] 组件恢复方向: ${dir}, 数据从 ${old.count} -> ${now.count}`,
     );
+  },
+  onAfterBackup(newData: { count: number }) {
+    console.log(`[Hook] 组件已备份: count=${newData.count}`);
+  },
+  onBeforeBackup(oldData: { count: number }) {
+    console.log(`[Hook] 组件已备份: count=${oldData.count}`);
+  },
+  diff(oldData: number, component: PlayerComponent) {
+    return oldData !== component.count;
+  },
+  serialize(player: PlayerComponent) {
+    return {
+      count: player.count,
+    };
+  },
+  deserialize(
+    component: PlayerComponent,
+    newData: {
+      count: number;
+    },
+  ) {
+    component.count = newData.count;
   },
 })
 class PlayerComponent {
