@@ -65,3 +65,9 @@ export interface ListenerItem {
   single: boolean;
 }
 export type ListenerMetadata = ListenerItem[];
+
+export interface ListenerConfig<T> {
+  messageClass: Newable<T>;
+  priority?: number;
+  single?: boolean;
+}

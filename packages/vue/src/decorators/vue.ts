@@ -14,6 +14,7 @@ import {
   type ResponsiveMetadata,
   type OnHookMetadata,
   type ListenerMetadata,
+  type ListenerConfig,
 } from "../interfaces";
 /**
  * @description:实现Watch
@@ -178,11 +179,11 @@ export function Env() {
 /**
  * @description: Listener 装饰器 - 标记 Controller 的成员方法为消息监听器
  */
-export function Listener<T extends BaseMessage>(
-  messageClass: Newable<T>,
-  priority: number = 0,
+export function Listener<T extends BaseMessage>({
+  messageClass,
+  priority = 0,
   single = true,
-) {
+}: ListenerConfig<T>) {
   return (target: any, key: string) => {
     // 获取该 Controller 原型上已有的监听器元数据
     const listeners: ListenerMetadata =

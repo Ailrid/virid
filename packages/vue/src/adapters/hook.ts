@@ -50,18 +50,17 @@ export function useController<T>(
 
   //绑定各种魔法装饰器
   const proto = Object.getPrototypeOf(instance);
-  // @Project装饰器
-  bindProject(proto, instance);
   // @Use装饰器
   bindUseHooks(proto, instance);
-
+  // @Inherit装饰器
+  bindInherit(proto, instance);
+  // @Project装饰器
+  bindProject(proto, instance);
   // @Listener装饰器
   // 运行时动态挂载监听器
   const unbindList = bindListener(proto, instance);
   // 生命周期钩子
   bindHooks(proto, instance);
-  // @Inherit装饰器
-  bindInherit(proto, instance);
   //绑定全局注册表
   // @Watch装饰器
   const stops = bindWatch(proto, instance);
