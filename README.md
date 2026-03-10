@@ -20,14 +20,15 @@ By thoroughly decoupling logic from views, `virid` solves the problems of "state
 
 ## 📦 Module composition
 
-| **Module**            | **Role**                    | **Key Features**                                                                        |
-| --------------------- | --------------------------- | --------------------------------------------------------------------------------------- |
-| **`@virid/core`**     | **Logic Kernel**            | Deterministic Tick mechanism, Double-buffered message pool, Inversion of Control (IoC). |
-| **`@virid/vue`**      | **UI Projection**           | Reactive Projections, Dependency Tethering, Lifecycle Bridging.                         |
-| **`@virid/bridge`**   | **IPC Transport**           | Underlying messaging layer for Electron cross-process communication.                    |
-| **`@virid/renderer`** | **Renderer Bridge**         | Renderer-side message dispatching, Main-process message deserialization.                |
-| **`@virid/main`**     | **Main Bridge**             | Intelligent message routing, Multi-window message forwarding & arbitration.             |
-| **`@virid/amber`**    | **Causal State Management** | Message replay, Temporal state recovery, Multi-track Undo/Redo.                         |
+| **Module**            | **Role**                               | **Key Features**                                             |
+| --------------------- | -------------------------------------- | ------------------------------------------------------------ |
+| **`@virid/core`**     | **Logic Kernel**                       | **Deterministic Tick mechanism, Double-buffered message pool, Inversion of Control (IoC).** |
+| **`@virid/vue`**      | **UI Projection**                      | **Reactive Projections, Dependency Tethering, Lifecycle Bridging.** |
+| **`@virid/bridge`**   | **IPC Transport**                      | **Underlying messaging layer for Electron cross-process communication.** |
+| **`@virid/renderer`** | **Renderer Bridge**                    | **Renderer-side message dispatching, Main-process message deserialization.** |
+| **`@virid/main`**     | **Main Bridge**                        | **Intelligent message routing, Multi-window message forwarding & arbitration.** |
+| **`@virid/amber`**    | **Causal State Management**            | **Message replay, Temporal state recovery, Multi-track Undo/Redo.** |
+| **`@virid/express`**  | **HTTP request to message conversion** | **Convert express requests into messages and process them in the system, providing dependency injection functionality similar to NestJS** |
 
 ### 🎯 Key Advantages
 
@@ -49,4 +50,5 @@ For detailed implementation details and quick-start examples, please refer to th
 - 👉 **[@virid/renderer](packages/renderer/README.md)** – Learn how to dispatch messages from the **Renderer process** directly to the **Main process**.
 - 👉 **[@virid/main](packages/main/README.md)** – Learn how the **Main process** handles and routes messages from Renderer processes.
 - 👉 **[@virid/amber](packages/amber/README.md)** – Learn how to implement **message replay** and **Undo/Redo** functionality.
+- 👉 **[@virid/express](packages/express/README.md)** –Learn how to **control express** in virid.
 -  👉 **[Comprehensive Example](https://github.com/Ailrid/starry)** – Learn how to use virid to build the entire application
