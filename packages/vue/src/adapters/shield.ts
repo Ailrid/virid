@@ -34,21 +34,14 @@ export function createDeepShield(
       // 函数拦截
       if (typeof value === "function") {
         return (...args: any[]) => {
-          // 检查该方法是否有 @Safe 标记
-          const safeMethods =
-            Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj) ||
-            new Set();
-          if (!safeMethods.has(prop)) {
+          if (!isShieldException(obj, prop)) {
             const errorMsg = [
-              `[Virid Shield]`,
-              `------------------------------------------------`,
-              `Code: ${rootName}....${currentPath}()`,
-              `Result: Rejected`,
-              `Reason: This method is NOT marked with @Safe.`,
-              `------------------------------------------------`,
+              `[Virid Shield] Rejected`,
+              `Method: ${rootName}....${currentPath}()`,
+              `Reason: Unauthorized access to unsafe method.`,
             ].join("\n");
             MessageWriter.error(new Error(errorMsg));
-            return null; // 拒绝执行
+            return null;
           }
 
           // 安全执行：如果是 Safe 的，执行它
@@ -96,4 +89,55 @@ export function createDeepShield(
   });
   shieldCache.set(target, proxy);
   return proxy;
+}
+
+/**
+ * 判断一个方法是否应该跳过护盾拦截
+ */
+function isShieldException(obj: any, prop: string | symbol): boolean {
+  // 内置协议 (Symbol 和基础 Object 方法)
+  const PROTOCOL_WHITELIST = new Set<string | symbol>([
+    Symbol.iterator,
+    Symbol.asyncIterator,
+    Symbol.toStringTag,
+    "toString",
+    "valueOf",
+    "toJSON",
+    "constructor",
+  ]);
+  if (PROTOCOL_WHITELIST.has(prop)) return true;
+
+  // 集合类(Map/Set/Array) 的只读方法白名单
+  const constructorName = obj.constructor?.name;
+  const READONLY_COLLECTIONS: Record<string, Set<string | symbol>> = {
+    Map: new Set([
+      "get",
+      "has",
+      "keys",
+      "values",
+      "entries",
+      "forEach",
+      "size",
+    ]),
+    Set: new Set(["has", "keys", "values", "entries", "forEach", "size"]),
+    Array: new Set([
+      "length",
+      "map",
+      "filter",
+      "reduce",
+      "slice",
+      "find",
+      "includes",
+      "findIndex",
+      "every",
+      "some",
+    ]),
+  };
+  if (READONLY_COLLECTIONS[constructorName]?.has(prop)) return true;
+
+  // 手动标记的 @Safe 装饰器方法
+  const safeMethods = Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj);
+  if (safeMethods instanceof Set && safeMethods.has(prop)) return true;
+
+  return false;
 }

@@ -67,7 +67,7 @@ export function useController<T>(
   //如果有id,就去注册
   let unbindRegister = () => true;
   if (options?.id) {
-    unbindRegister = GlobalRegistry.set(options?.id, instance);
+    unbindRegister = GlobalRegistry.set(options.id, instance);
   }
   onUnmounted(() => {
     stops.forEach((stop) => stop());
