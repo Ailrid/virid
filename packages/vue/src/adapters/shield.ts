@@ -90,12 +90,11 @@ export function createDeepShield(
   shieldCache.set(target, proxy);
   return proxy;
 }
-
 /**
  * 判断一个方法是否应该跳过护盾拦截
  */
 function isShieldException(obj: any, prop: string | symbol): boolean {
-  // 内置协议 (Symbol 和基础 Object 方法)
+  // 1. 内置协议 (Symbol 和基础 Object 方法)
   const PROTOCOL_WHITELIST = new Set<string | symbol>([
     Symbol.iterator,
     Symbol.asyncIterator,
@@ -107,8 +106,10 @@ function isShieldException(obj: any, prop: string | symbol): boolean {
   ]);
   if (PROTOCOL_WHITELIST.has(prop)) return true;
 
-  // 集合类(Map/Set/Array) 的只读方法白名单
+  // 2. 集合类(Map/Set/Array) 的只读方法白名单
   const constructorName = obj.constructor?.name;
+
+  // 核心修复：补充 Array 的只读操作方法
   const READONLY_COLLECTIONS: Record<string, Set<string | symbol>> = {
     Map: new Set([
       "get",
@@ -131,11 +132,35 @@ function isShieldException(obj: any, prop: string | symbol): boolean {
       "findIndex",
       "every",
       "some",
+      "at",
+      "join",
+      "concat",
+      "flat",
+      "flatMap",
+      "indexOf",
+      "lastIndexOf",
+    ]),
+    String: new Set([
+      "length",
+      "slice",
+      "substring",
+      "substr",
+      "split",
+      "includes",
+      "startsWith",
+      "endsWith",
+      "indexOf",
+      "replace",
+      "replaceAll",
+      "trim",
+      "toLowerCase",
+      "toUpperCase",
     ]),
   };
+
   if (READONLY_COLLECTIONS[constructorName]?.has(prop)) return true;
 
-  // 手动标记的 @Safe 装饰器方法
+  // 3. 手动标记的 @Safe 装饰器方法
   const safeMethods = Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj);
   if (safeMethods instanceof Set && safeMethods.has(prop)) return true;
 

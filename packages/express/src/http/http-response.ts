@@ -11,7 +11,7 @@ interface HttpHeaders {
 }
 export class HttpContext {
   public rc: number = 0;
-  private isClosed: boolean = false;
+  public isClosed: boolean = false;
 
   constructor(
     public readonly id: number,
@@ -174,19 +174,20 @@ export class StreamFileResponse extends HttpResponse {
     public readonly filePath: string,
     public readonly options: StreamFileOptions = { dotfiles: "allow" },
   ) {
-    super(200);
+    super(206, options);
   }
 }
 
-export class StreamResponse {
+export class StreamResponse extends HttpResponse {
   constructor(
     public readonly stream: Readable,
     public readonly options: {
-      contentType?: string;
       status?: number;
       headers?: HttpHeaders;
     } = {},
-  ) {}
+  ) {
+    super(options.status, {}, options.headers);
+  }
 }
 // --- 辅助工厂函数 ---
 

@@ -57,6 +57,11 @@ export function handleResult(res: any, context: HttpContext) {
 
 function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
   const { res } = ctx;
+  //其他情况，直接返回
+  if (response.headers) {
+    Object.entries(response.headers).forEach(([k, v]) => res.setHeader(k, v));
+  }
+  if (response.status) res.status(response.status);
   if (response instanceof StreamFileResponse) {
     //返回异步流，强行增加一个rc续命
     ctx.inc();
@@ -70,23 +75,20 @@ function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
       }
       //强制删除context
       httpContextStore.delete(ctx.id);
+      ctx.isClosed = true;
       ctx.dec();
     });
     return;
   }
   if (response instanceof StreamResponse) {
-    const { stream, status, headers } = response;
+    const { stream } = response;
     ctx.inc();
-    // 写入状态和头
-    res.status(status || 200);
-    if (headers) {
-      Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
-    }
     // 管道传输
     stream.pipe(res);
     // 监听结束，收割上下文
     const cleanup = () => {
       httpContextStore.delete(ctx.id);
+      ctx.isClosed = true;
       ctx.dec(); // 触发最后的 finalize
     };
     stream.on("end", cleanup);
@@ -98,10 +100,7 @@ function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
     stream.on("close", cleanup);
     return;
   }
-  //其他情况，直接返回
-  if (response.headers) {
-    Object.entries(response.headers).forEach(([k, v]) => res.setHeader(k, v));
-  }
+
   res.status(response.status).json(response.data);
   //强制删除context
   httpContextStore.delete(ctx.id);
