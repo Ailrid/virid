@@ -1,7 +1,7 @@
 {
   "name": "@virid/main",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Electron main process adapter for Virid, responsible for sending, receiving, and broadcasting rendering process messages",
   "author": "Ailrid",
   "license": "Apache 2.0",

@@ -1,7 +1,7 @@
 {
   "name": "@virid/amber",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Add replay, redo, undo and other functions to virid",
   "author": "Ailrid",
   "license": "Apache 2.0",

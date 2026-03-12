@@ -1,7 +1,7 @@
 {
   "name": "@virid/bridge",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Electron application preloading script",
   "license": "Apache 2.0",
   "author": "Ailrid",
