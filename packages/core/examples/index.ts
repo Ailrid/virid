@@ -21,6 +21,10 @@ const app = createVirid();
 app.onBeforeTick(() => {
   console.log("----------------onBeforeTick------------------");
 });
+
+app.onAfterTick((context) => {
+  console.log("----------------onAfterTick------------------");
+});
 // Add execution hook
 app.onBeforeExecute(BaseMessage, (message, context) => {
   console.log("----------------onBeforeExecute------------------");
@@ -45,7 +49,9 @@ class CounterComponent {
 //Define System
 class CounterSystem {
   // single = true (default): Process each message one by one
-  @System()
+  @System({
+    priority: 0,
+  })
   static onIncrement(
     @Message(IncrementMessage) message: IncrementMessage,
     count: CounterComponent,
