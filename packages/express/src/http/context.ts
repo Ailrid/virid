@@ -66,14 +66,14 @@ function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
     //返回异步流，强行增加一个rc续命
     ctx.inc();
     res.sendFile(response.filePath, response.options, (err) => {
-      if (err) {
-        // 记录错误
+      if (!res.headersSent) {
         MessageWriter.error(
           err,
-          `[Virid Express] StreamFile Error: ${response.filePath}`,
+          `[Virid Express] SteamFile Error: Path: ${response.filePath}`,
         );
       }
       //强制删除context
+      ctx.res.end();
       httpContextStore.delete(ctx.id);
       ctx.isClosed = true;
       ctx.dec();
@@ -87,14 +87,17 @@ function handleHttpResponse(response: HttpResponse, ctx: HttpContext) {
     stream.pipe(res);
     // 监听结束，收割上下文
     const cleanup = () => {
+      if (!httpContextStore.has(ctx.id)) return;
+      ctx.res.end();
       httpContextStore.delete(ctx.id);
       ctx.isClosed = true;
       ctx.dec(); // 触发最后的 finalize
     };
     stream.on("end", cleanup);
     stream.on("error", (err) => {
-      MessageWriter.error(err, `[Virid Express] Stream Error`);
-      if (!res.headersSent) res.status(500).end();
+      if (!res.headersSent) {
+        MessageWriter.error(err, `[Virid Express] Stream Error`);
+      }
       cleanup();
     });
     stream.on("close", cleanup);
