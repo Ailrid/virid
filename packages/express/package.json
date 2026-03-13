@@ -1,7 +1,7 @@
 {
   "name": "@virid/express",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Add express functionality to virid",
   "author": "Ailrid",
   "license": "Apache 2.0",
