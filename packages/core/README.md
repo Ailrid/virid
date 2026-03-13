@@ -1,19 +1,22 @@
 # @virid/core
 
-`@virid/core` is the logical heart of the entire Virid ecosystem. It provides a deterministic message distribution and scheduling mechanism designed to decouple business logic from complex UI frameworks and runtime environments.
+`@virid/core` serves as the logical heartbeat of the entire Virid ecosystem. It provides a deterministic message distribution and scheduling mechanism, designed to completely decouple business logic from complex UI frameworks and runtime environments.
 
-## 🌟 Core Design Philosophy
+⚠️ **Warning:** This framework heavily incorporates design philosophies from **Rust**, **Bevy**, and **NestJS**. It has a steep learning curve and requires the configuration of `reflect-metadata` with experimental metadata support enabled.
 
-- **Absolute Environment Independence**: This package does not depend on any browser, Node.js specific APIs, or third-party libraries (relying only on `reflect-metadata` for decorator functionality). This ensures the core can run seamlessly in Electron main processes, Worker threads, Web rendering layers, or even pure server environments.
-- **Deterministic Scheduling**: It introduces a "Tick" mechanism similar to game engines, utilizing a double-buffered message pool to ensure the predictability of logic execution order.
+### 🌟 Core Design Philosophy
+
+- **Absolute Environment Independence:** This package does not rely on any browser-specific APIs, Node.js internals, or third-party libraries (with the sole exception of `reflect-metadata` for decorator functionality). This ensures the kernel can run seamlessly within Electron main processes, Worker threads, Web rendering layers, or even pure server-side environments.
+- **Deterministic Scheduling:** By introducing a game-engine-inspired **Tick mechanism**, the framework utilizes double-buffered message pools to ensure the execution order of logic remains strictly predictable.
+- **Strong Typing & Ownership:** All systems are built with robust type safety, enforcing the use of modern TypeScript types and classes as unique identifiers. It features a runtime "modification shield" to intercept any illegal write operations. Move beyond a reliance on hot-reloading; as the saying goes: *If it compiles, it works.*
 
 ## 🛠️ Core Functional Overview
 
 ### 1. Message-Driven & Dispatcher Mechanism
 
-In Virid, all state changes must be triggered by sending a `Message` command.
+In `Virid`, all state changes must be triggered by sending a `Message` command.
 
-- **Automatic Scheduling**: By defining specific types of `Message` and corresponding `System` handlers, the engine automatically invokes the registered logic in the next microtask cycle (Tick).
+- **Automatic Scheduling**: By defining specific types of `Message` and corresponding `System` handlers, the engine automatically invokes the registered logic in the next microtask cycle (`Tick`).
 - **Message Types**:
   - **`SingleMessage`**: Messages of the same type within the same Tick are automatically merged, suitable for state synchronization.
   - **`EventMessage`**: Sequentially appended, ensuring the integrity of action sequences.
@@ -23,12 +26,10 @@ In Virid, all state changes must be triggered by sending a `Message` command.
 
 ### 2. Dependency Injection System (DI)
 
-Virid implements a lightweight, decorator-based DI system, allowing Systems to access data entities with minimal effort.
+`Virid` implements a lightweight, decorator-based DI system, allowing Systems to access data entities with minimal effort.
 
 - **Data Entities (Component)**: Classes marked with the `@Component()` decorator are defined as data containers.
 - **Automatic Injection**: Once registered via `app.bindComponent()`, the Dispatcher automatically injects the corresponding instances based on the parameter types of the System function.
-
-TypeScript
 
 ```ts
 class IncrementMessage extends SingleMessage {
@@ -96,101 +97,136 @@ MyMessage.send(); // Parameters correspond to the constructor
 - **Logic**: Sequential, no merging. Every `EventMessage` triggers a System execution strictly.
 - **Example**: Same as `EventMessage`
 
+## 3. Data & Logic Definitions (Decorators)
+
+### `@Controller()`
+
+- **Function:** Marks a class as a UI Controller. Instances of this class are tied to the lifecycle of Vue components—created when the component is mounted and destroyed when it is unmounted. For details, see `@virid/vue`.
+
+- **Design:** Used in conjunction with `bindController`. Once registered, instances can be retrieved in `@virid/vue` using the `useController` hook.
+
+- **Example:**
+
+```ts
+@Controller()
+class PageController {}
+
+// Registration is required before use
+app.bindController(PageController);
+```
+
 ------
 
-### 3. Data & Logic Definitions (Decorators)
+### `@Component()`
 
-#### `@Component()`
+- **Function:** Marks a class as a Data Entity. This class acts as a global singleton and persists throughout the application lifecycle.
 
-- **Function**: Marks a class as a **Data Entity**.
-- **Usage**: Used with `bindComponent` to enable dependency injection in Systems.
-- **Example**:
+- **Design:** Used with `bindComponent`. Once registered, it can be declared as a parameter type in a `@System` to enable automatic Dependency Injection (DI).
+
+- **Example:**
 
 ```ts
 @Component()
 class CounterComponent {
-  public count = 0;
+public count = 0;
 }
+
+// Registration is required before use
+app.bindComponent(CounterComponent); 
 ```
 
-#### `@System(params?)`
+------
 
-- **Function**: Registers a static method as a logic handler with automatic dependency assembly.
-- **Parameters**:
-  - `priority`: Higher values execute earlier in a Tick.
-  - `messageClass`: The message type that triggers this System (cannot coexist with `@Message`).
-- **Note**: Returning a Message (or array) from a System implements automatic logic chaining.
-- **Examples**:
+### `@System(params?)`
+
+- **Function:** Registers a static method as a business logic processor. It implements **"Automatic Dependency Wiring."** By simply specifying the `Component` type in the parameters, the engine automatically injects the corresponding instance during execution.
+
+- **Parameters:**
+
+  - `priority`: Execution priority. Higher values execute earlier within the same **Tick**.
+  - `messageClass`: The specific message type that triggers this System. (Cannot be used simultaneously with the `@Message` decorator on parameters).
+
+- **Example:**
+
 
 ```ts
-import {
-  System,
-  Message,
-} from "@virid/core";
+import { System, Message } from "@virid/core";
 
 class CounterSystem {
-  // Priority can be set for the system
-  @System({ priority: 0})
-  static onIncrement(
-    @Message(IncrementMessage) message: IncrementMessage,
-    count: CounterComponent,
-  ) {
-    count.count += message.amount;
-  }
-  //You don't need to use @ Message if you already used messageClass
-  @System({messageClass:IncrementMessage})
-  static onIncrement(
-    count: CounterComponent,
-  ) {
-    count.count += 1;
-  }
-   @System()
-   static onProcess(msg: SomeMessage) {
-      // Directly return the message to achieve logical chain triggering, without the need to 		//manually call the Message Writer
-      // You can also return a message array to trigger continuously
-      return new NextStepMessage(); 
-   }
+// Setting priority; CounterComponent is automatically injected
+@System({ priority: 0 })
+static onIncrement(
+  @Message(IncrementMessage) message: IncrementMessage,
+  count: CounterComponent,
+) {
+  count.count += message.amount;
 }
-//Send messages directly through. send
+
+// Alternative: Define messageClass in the System decorator
+@System({ messageClass: IncrementMessage })
+static onQuickAdd(count: CounterComponent) {
+  count.count += 1;
+}
+
+@System()
+static onProcess(msg: SomeMessage) {
+  // Return a message (or an array of messages) to trigger a logic chain
+  // This removes the need to manually call a MessageWriter
+  return new NextStepMessage(); 
+}
+}
+
+// Triggering logic via the .send() method
 IncrementMessage.send(5);
 ```
 
-#### `@Message(Class, single?)`
+------
 
-- **Function**: Parameter decorator defining the message type for the System.
-- **Batch Mode**: Set `single: false` to receive an array of all messages of that type in the current Tick (ideal for high-performance batch processing).
-- **Example**: Same as `System`
+### `@Message(Class, single?)`
 
-#### @Observer(callback)
+- **Function:** A parameter-level decorator that explicitly defines which message type the System is listening to.
+- **Batch Mode:** If `single: false` is set, the System receives an **array** of all messages of that type sent within the current Tick. This is ideal for high-performance batch processing (e.g., physics calculations or log aggregation).
+- **Example:** See the `@System` section above.
 
-- **Function** : Attribute level change monitoring, used to handle side effects that are not instruction driven
-- **Logic**  : When the attribute marked in 'Component' changes, the engine will automatically trigger the specified callback function.
-- **Example** :
+------
 
-```ts
-@Component()
-class PlayerComponent {
-  //Automatically send a synchronization message or execute a callback when progress changes
-  @Observer((old, val) => new SyncLyricMessage(val))
-  public progress = 0;
-}
-```
+### `@Observer(callback)`
 
-#### `@Safe()`
+- **Function:** A property-level decorator for change detection, used to handle "non-command-driven" side effects.
 
-- **Function**: Method access marking. In Virid, The UI layer is restricted from directly modifying logic data. `@Safe()` explicitly authorizes the view layer to call specific "read-only" or "safe-calculation" methods.
-- **Example** :
+- **Logic:** When a decorated property in a `Component` changes, the engine automatically triggers the specified callback function.
+
+- **Example:**
+
 
 ```ts
 @Component()
 class PlayerComponent {
-  // 如果不加Safe，virid将会禁止在任何vue的controller中调用该方法
-  @Safe()
-  public someMethod(){}
+// Automatically send a sync message or execute a callback when 'progress' changes
+@Observer((old, val) => new SyncLyricMessage(val))
+public progress = 0;
 }
 ```
 
 ------
+
+### `@Safe()`
+
+- **Function:** A method access modifier. In Virid, external environments (UI layers) are strictly prohibited from directly modifying logic-layer data; all modifications and method calls are intercepted by default. However, "read-only" or "safe calculation" methods can be explicitly authorized via `@Safe()`, allowing the view layer to call them directly.
+
+- **Design:** Primarily serves external projection layers like `@virid/vue`. See **Deep Shield** in the `@virid/vue` documentation for more details.
+
+- **Example:**
+
+
+```ts
+@Component()
+class PlayerComponent {
+// Without @Safe, Virid will block calls to this method from any Vue Controller
+@Safe()
+public someMethod() {}
+}
+```
 
 ### 4. Dispatcher & Hooks
 
