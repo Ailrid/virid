@@ -8,7 +8,7 @@ export { type SystemContext } from "@virid/core";
 /**
  * description: 来自渲染进程的消息
  */
-export abstract class FromRenderMessage extends EventMessage {
+export abstract class FromRendererMessage extends EventMessage {
   //我来自哪？
   public __virid_source: string = "unknown";
 
@@ -27,7 +27,7 @@ export abstract class FromRenderMessage extends EventMessage {
 /**
  * description: 要发送给渲染进程的消息
  */
-export abstract class ToRenderMessage extends EventMessage {
+export abstract class ToRendererMessage extends EventMessage {
   // 我来自哪？
   public static __virid_source = "main";
   /** 我的目的地是哪儿？

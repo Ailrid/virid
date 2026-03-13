@@ -6,7 +6,7 @@ import {
   Message,
   SingleMessage,
 } from "@virid/core";
-import { AmberPlugin, Backup, Amber, amberTickStore } from "@virid/amber"; // 假设在项目根目录运行
+import { AmberPlugin, Backup, Amber, amberTickStore } from "@virid/amber";
 
 class ChangeMessage extends SingleMessage {
   constructor(public value: number) {

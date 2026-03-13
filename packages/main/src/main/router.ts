@@ -5,13 +5,13 @@
  */
 import { MessageWriter, type Newable } from "@virid/core";
 import { type BrowserWindow } from "electron";
-import { type FromRenderMessage } from "./message";
+import { type FromRendererMessage } from "./message";
 export const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 export const ROUTER_MAP = new Map<string, BrowserWindow>();
-let MESSAGE_MAP = new Map<string, Newable<FromRenderMessage>>();
+let MESSAGE_MAP = new Map<string, Newable<FromRendererMessage>>();
 
-export function FromRender(type: string) {
-  return function (target: Newable<FromRenderMessage>) {
+export function FromRenderer(type: string) {
+  return function (target: Newable<FromRendererMessage>) {
     if (MESSAGE_MAP.has(type)) {
       MessageWriter.warn(
         `[Virid Main] Duplicate IpcMessage: Registration for type: ${type}`,

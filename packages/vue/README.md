@@ -2,15 +2,22 @@
 
 `@virid/vue` is the UI adapter for `@virid/core`, responsible for delivering data processed by systems to Vue for display. In this architecture, Vue acts strictly as a **"Data Projection Layer"** and is not responsible for handling complex business logic. Its purpose is to establish a controlled, unidirectional communication tunnel between Vue's reactivity system and the `@virid/core` kernel.
 
-**Vue lets you "see" the world, while `@virid/vue` defines the "laws of physics" for that world.** Within these laws, you have absolute freedom; outside of them, `@virid/vue` protects your system from collapse.
-
 ## 🌟 Core Design Philosophy
 
-In `@virid/vue`, Vue components no longer hold business state directly. Instead, they delegate all authority and functionality to a **Controller** via the `useController` hook. You will not—and should not—use most of Vue's built-in APIs, such as `ref`, `computed`, `watch`, `emit`, `provide`, or `inject`.
+In `@virid/vue`, Vue components no longer hold business state directly. Instead, they delegate all authority and functionality to a **Controller** via the `useController` hook. You will not—and should not—use most of Vue's built-in APIs, such as `ref`, `computed`, `watch`, `emit`, `provide`, or `inject`, state management tools like Pinia also should no longer be used.
 
 - **Physically Isolated Modification Rights:** The Controller acts as the intermediary between Vue and Components. While Vue components can directly observe Component data, any operation that leads to a state change must be converted into a **Message** and sent to a **System** for processing.
 - **Enforced Read-Only (Deep Shield):** In `@virid/vue`, "read-only" is more than just a suggestion. Through the **createDeepShield** mechanism, all data not owned by the current context is forced into a "Deep Read-Only" state. All write operations are prohibited, and even methods cannot be called unless explicitly marked with the `@Safe()` decorator. This physically eliminates the possibility of UI components accidentally polluting external states.
 - **Full Vue Ecosystem Compatibility:** Controllers are pure classes. When combined with `@OnHook` and `@Use` decorators, they can perceive the Vue lifecycle and utilize any hooks from the Vue ecosystem without being tightly coupled to a specific DOM structure.
+
+## 🔌Enable plugins
+
+```ts
+import { createVirid } from '@virid/core'
+import { VuePlugin } from '@virid/vue'
+const app = createVirid()
+app.use(VuePlugin, {})
+```
 
 ## 🛠️ @virid/vue Core API Overview
 

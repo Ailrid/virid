@@ -1,14 +1,23 @@
 #  @virid/vue
 
-`@virid/vue` 是 ` @virid/core` 的UI 适配器，负责将`system`处理完成的数据交付给`Vue`显示。`Vue`在此过程中仅仅是是一个 **“数据投影层”**，不负责处理任何复杂的逻辑,其宗旨是在 `Vue` 的响应式系统与 `@virid/core`核心之间建立一条受控的、单向的通讯隧道。`Vue` 负责让你‘看到’世界，而 `@virid/vue` 负责定义`Vue`世界的‘物理法则’。在法则之内，你拥有绝对的自由；在法则之外，`@virid/vue`会保护你的系统免于坍塌。
+`@virid/vue` 是 ` @virid/core` 的UI 适配器，负责将`system`处理完成的数据交付给`Vue`显示。`Vue`在此过程中仅仅是是一个 **“数据投影层”**，不负责处理任何复杂的逻辑,其宗旨是在 `Vue` 的响应式系统与 `@virid/core`核心之间建立一条受控的、单向的通讯隧道。
 
 ## 🌟 核心设计理念
 
-在 `@virid/vue` 中，`Vue` 组件不再直接持有业务状态，而是通过 `useController` 将**所有权限和功能**委托给一个 **Controller**。**你不会，也不应该**使用`Vue`提供的绝大部分API，例如`ref`,`computed`,`watch` `emit`，`privode`, `inject`等
+在 `@virid/vue` 中，`Vue` 组件不再直接持有业务状态，而是通过 `useController` 将**所有权限和功能**委托给一个 **Controller**。**你不会，也不应该**使用`Vue`提供的绝大部分API，例如`ref`,`computed`,`watch` `emit`，`privode`, `inject`等，也不应该再使用`Pinia`之类的状态管理工具。
 
 - **物理隔离的修改权**：`Controller` 充当 `Vue` 与 `Component` 之间的中介。Vue 组件可以直接观察 `Component` 数据，但所有导致状态变更的操作必须转化为 `Message` 发送给 System 处理。
 - **强制只读**：在`@virid/vue`中，只读不仅仅只是建议，过 `createDeepShield` 机制，**所有非自身所有**的数据，都被强制转化为 **“深度只读”** 禁止任何写操作，甚至连方法也无法任意调用，除非被@Safe装饰器标记。在物理层面杜绝了 UI 组件意外污染非自身的可能性。
 - **Vue生态全适配**：`Controller` 本身是纯粹的类，配合 `@OnHook` 与`@Use`装饰器，它可以感知 `Vue` 的生命周期并使用所有`Vue`生态的钩子，但又不与特定的 DOM 结构绑定。
+
+## 🔌启用插件
+
+```ts
+import { createVirid } from '@virid/core'
+import { VuePlugin } from '@virid/vue'
+const app = createVirid()
+app.use(VuePlugin, {})
+```
 
 ## 🛠️ @virid/vue 核心 API 概览
 

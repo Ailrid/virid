@@ -4,21 +4,21 @@
  * Project: Virid Main
  */
 import { type Middleware, MessageWriter } from "@virid/core";
-import { ToRenderMessage } from "./message";
+import { ToRendererMessage } from "./message";
 import { ROUTER_MAP, VIRID_CHANNEL } from "./router";
 export const middleWare: Middleware = (message, next) => {
   //如果消息是继承自MainRequestMessage，拦截并发往对应的渲染进程
-  if (message instanceof ToRenderMessage) {
+  if (message instanceof ToRendererMessage) {
     const { __virid_target, __virid_messageType, ...payload } = message;
     //不准自己发给自己
     if (__virid_target == "main") {
       MessageWriter.warn(
-        `[Virid Main] Prohibit Sending To Oneself: ${__virid_target} is not allowed in ToRenderMessage.`,
+        `[Virid Main] Prohibit Sending To Oneself: ${__virid_target} is not allowed in ToRendererMessage.`,
       );
     }
     // 准备要发送的数据包
     const packet = {
-      __virid_source: ToRenderMessage.__virid_source,
+      __virid_source: ToRendererMessage.__virid_source,
       __virid_target,
       __virid_messageType,
       payload,
