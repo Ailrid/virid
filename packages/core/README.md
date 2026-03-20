@@ -286,7 +286,7 @@ app.onAfterTick((context) => {
 
 ------
 
-### 🔬 Advanced: Atomic Operations
+### 🔬 Advanced
 
 #### **AtomicModifyMessage**
 
@@ -306,4 +306,45 @@ AtomicModifyMessage.send(
 );
 ```
 
-------
+#### **DebounceMessage**
+
+**Function:** Provides a framework-level native debouncing solution with built-in lifecycle management.
+
+**Scenario:** When you need to throttle the frequency of message triggers or merge the data content of consecutive messages, this class offers an out-of-the-box mechanism to handle "intent evolution" without manual timer management.
+
+**Example:**
+
+```ts
+ // Derive your own message from the DebounceMessage class
+ class MoveMessage extends DebounceMessage {
+   readonly debounceTime = 100; // Set the debounce window to 100ms 
+
+   constructor(
+     public x: number,
+     public y: number,
+   ) {
+     super();
+   }
+
+   // This callback is triggered when debouncing occurs, 
+   // providing the instance of the previously sent Message.
+   debounceCallback(previousMessage: MoveMessage) {
+     console.log(
+       `[Debounce] Merge displacement: Original(${previousMessage.x}, ${previousMessage.y}) -> New(${this.x}, ${this.y})`,
+     );
+     // Accumulate the state from the previous message
+     this.x += previousMessage.x;
+     this.y += previousMessage.y;
+   }
+ }
+
+ // Usage:
+ // Only the "evolved" message with a combined value will 
+ // reach the System after the user stops sending for 100ms.
+ MoveMessage.send(10, 0);
+```
+
+
+
+
+

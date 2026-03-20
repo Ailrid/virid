@@ -64,7 +64,7 @@ class CounterSystem {
 
 ### 4. 工业级健壮性
 
-- **死循环防御**：`Dispatcher` 内部设有 `internalDepth` 计数器。若逻辑链路产生超过 100 层的递归触发，系统将自动熔断并报错，防止环境假死。
+- **死循环熔断**：`Dispatcher` 内部设有 `internalDepth` 计数器。若逻辑链路产生超过 100 层的递归触发，系统将自动熔断并报错，防止环境假死。
 - **执行优先级**：支持通过 `@System({ priority: number })` 明确多个系统处理同一消息时的先后顺序。
 
 ## 🛠️ @virid/core 核心 API 概览
@@ -258,7 +258,7 @@ app.onAfterTick((context) => {
 
 ------
 
-## 🔬 进阶：原子化修改 (Atomic Operations)
+## 🔬 进阶
 
 #### `AtomicModifyMessage`
 
@@ -274,5 +274,34 @@ app.onAfterTick((context) => {
       },
       "Check CounterComponent",
     );
+```
+
+#### `DebounceMessage`
+
+- **功能**：框架级原生防抖功能，提供简易的防抖触发和简单的防抖回调。
+- **场景**：当你需要限制Message触发频率，或者需要融合前后两次Message的内容时使用，即可0行代码获得框架级原生支持。
+- **示例**：
+
+```ts
+// 从DebounceMessage类型派生一个自己的消息
+class MoveMessage extends DebounceMessage {
+  readonly debounceTime = 100; // 设置防抖时间为100ms 
+
+  constructor(
+    public x: number,
+    public y: number,
+  ) {
+    super();
+  }
+
+  // 当触发防抖时，该回调会被调用，并传入上次发送的Message实例
+  debounceCallback(previousMessage: MoveMessage) {
+    console.log(
+      `[Debounce] Merge displacement: Original(${previousMessage.x}, ${previousMessage.y}) -> New(${this.x}, ${this.y})`,
+    );
+    this.x += previousMessage.x;
+    this.y += previousMessage.y;
+  }
+}
 ```
 

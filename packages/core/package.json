@@ -36,7 +36,8 @@
   },
   "scripts": {
     "build": "tsup --config tsup.config.ts",
-    "example": "node --import @swc-node/register/esm-register examples/index.ts"
+    "example/index": "node --import @swc-node/register/esm-register examples/index.ts",
+    "example/debounce": "node --import @swc-node/register/esm-register examples/debounce.ts"
   },
   "dependencies": {},
   "peerDependencies": {
