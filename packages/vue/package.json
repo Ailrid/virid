@@ -1,7 +1,7 @@
 {
   "name": "@virid/vue",
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Vue adapter for virid, projecting logic sovereignty to reactive UI",
   "author": "Ailrid",
   "license": "Apache 2.0",
