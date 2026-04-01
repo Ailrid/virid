@@ -7,7 +7,7 @@ import { MessageWriter, Newable } from "@virid/core";
 import { type FromMainMessage } from "./message";
 let MESSAGE_MAP = new Map<string, Newable<FromMainMessage>>();
 
-export function FromIpc(type: string) {
+export function FromMain(type: string) {
   return function (target: Newable<FromMainMessage>) {
     if (MESSAGE_MAP.has(type)) {
       MessageWriter.error(
