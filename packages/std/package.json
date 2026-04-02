@@ -1,0 +1,42 @@
+{
+  "name": "@virid/std",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "The virid standard library provides commonly used features in development",
+  "author": "Ailrid",
+  "license": "Apache 2.0",
+  "keywords": [
+    "virid",
+    "std"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ailrid/virid.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "dev": "tsup --config tsup.config.ts --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@virid/core": "workspace:*"
+  }
+}

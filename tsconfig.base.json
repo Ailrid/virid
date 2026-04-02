@@ -21,6 +21,9 @@
             "@virid/bridge": [
                 "packages/bridge/src/index.ts"
             ],
+            "@virid/std": [
+                "packages/std/src/index.ts"
+            ],
             "@virid/vue": [
                 "packages/vue/src/index.ts"
             ],
