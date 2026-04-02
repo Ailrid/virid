@@ -204,7 +204,7 @@ class PlayerComponent {
 ###  `@Safe()`
 
 - **功能**：方法访问权限标记，在`Virid`中外部环境（UI 层）严禁直接修改逻辑层数据,所有的修改和方法调用都会被拦截。但对于某些“只读类”或“安全计算类”方法，可以通过 `@Safe()` 显式授权，允许视图层直接调用。
-- **设计**：主要服务于 `@virid/vue` 等外部投影层，详情见`@virid/vue`中的`Deep Shield`
+- **设计**：主要服务于 `@virid/vue` 等外部投影层，详情见`@virid/vue`中的`Borrow Checker`
 - **示例**：
 
 ```ts
@@ -257,51 +257,3 @@ app.onAfterTick((context) => {
   - `MessageWriter.info(context)`: 写入一个信息，它会自动触发 `InfoMessage`。
 
 ------
-
-## 🔬 进阶
-
-#### `AtomicModifyMessage`
-
-- **功能**：提供一种“即插即用”的临时逻辑修改方案。
-- **场景**：当你需要对某个 `Component` 进行一次性的观察或微调，又不想专门写一个 `System` 时，可以使用此消息在下一帧执行一段闭包逻辑。
-- **示例**：
-
-```ts
- AtomicModifyMessage.send(
-      CounterComponent,
-      (comp) => {
-        console.log("----------------AtomicModifyMessage------------------");
-      },
-      "Check CounterComponent",
-    );
-```
-
-#### `DebounceMessage`
-
-- **功能**：框架级原生防抖功能，提供简易的防抖触发和简单的防抖回调。
-- **场景**：当你需要限制Message触发频率，或者需要融合前后两次Message的内容时使用，即可0行代码获得框架级原生支持。
-- **示例**：
-
-```ts
-// 从DebounceMessage类型派生一个自己的消息
-class MoveMessage extends DebounceMessage {
-  readonly debounceTime = 100; // 设置防抖时间为100ms 
-
-  constructor(
-    public x: number,
-    public y: number,
-  ) {
-    super();
-  }
-
-  // 当触发防抖时，该回调会被调用，并传入上次发送的Message实例
-  debounceCallback(previousMessage: MoveMessage) {
-    console.log(
-      `[Debounce] Merge displacement: Original(${previousMessage.x}, ${previousMessage.y}) -> New(${this.x}, ${this.y})`,
-    );
-    this.x += previousMessage.x;
-    this.y += previousMessage.y;
-  }
-}
-```
-

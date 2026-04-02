@@ -65,69 +65,58 @@ export class InfoMessage extends EventMessage {
   }
 }
 
-/**
- * 原子修改消息：不可合并，带上组件类型、修改逻辑和语义标签
- */
-export class AtomicModifyMessage<T extends Newable<any>> extends EventMessage {
-  constructor(
-    public readonly ComponentClass: T, // 你要改哪个组件？
-    public readonly recipe: (comp: InstanceType<T>) => void, // 你打算怎么改？
-    public readonly label: string, // 为什么要改？
-  ) {
-    super();
-  }
-}
 
-// 存储 { 类名: 当前活跃的消息实例 }
-const debounceMap = new Map<any, any>();
-// 存储 { 类名: 用于清理的 Timer }
-const timerMap = new Map<any, any>();
 
-export abstract class DebounceMessage extends SingleMessage {
-  /**
-   * 子类必须定义防抖时间（毫秒）
-   */
-  abstract readonly debounceTime: number;
+// // 存储 { 类名: 当前活跃的消息实例 }
+// const debounceMap = new Map<any, any>();
+// // 存储 { 类名: 用于清理的 Timer }
+// const timerMap = new Map<any, any>();
 
-  constructor() {
-    super();
-  }
+// export abstract class DebounceMessage extends SingleMessage {
+//   /**
+//    * 子类必须定义防抖时间（毫秒）
+//    */
+//   abstract readonly debounceTime: number;
 
-  static send<T extends Newable<DebounceMessage>>(
-    this: T,
-    ...args: ConstructorParameters<T>
-  ) {
-    // 提前实例化
-    const instance = new this(...args) as InstanceType<T>;
-    const debounceTime = instance.debounceTime;
+//   constructor() {
+//     super();
+//   }
 
-    const previousMessage = debounceMap.get(this);
-    if (previousMessage) {
-      instance.debounceCallback(previousMessage);
+//   static send<T extends Newable<DebounceMessage>>(
+//     this: T,
+//     ...args: ConstructorParameters<T>
+//   ) {
+//     // 提前实例化
+//     const instance = new this(...args) as InstanceType<T>;
+//     const debounceTime = instance.debounceTime;
 
-      // 有了新消息，就取消掉之前的清理定时器
-      const oldTimer = timerMap.get(this);
-      if (oldTimer) clearTimeout(oldTimer);
-    }
+//     const previousMessage = debounceMap.get(this);
+//     if (previousMessage) {
+//       instance.debounceCallback(previousMessage);
 
-    // 更新 Map 记录当前最新的消息
-    debounceMap.set(this, instance);
+//       // 有了新消息，就取消掉之前的清理定时器
+//       const oldTimer = timerMap.get(this);
+//       if (oldTimer) clearTimeout(oldTimer);
+//     }
 
-    // 只有在 debounceTime 毫秒内没有新消息进来，才会彻底从 Map 中移除
-    const timer = setTimeout(() => {
-      debounceMap.delete(this);
-      timerMap.delete(this);
-    }, debounceTime);
+//     // 更新 Map 记录当前最新的消息
+//     debounceMap.set(this, instance);
 
-    timerMap.set(this, timer);
+//     // 只有在 debounceTime 毫秒内没有新消息进来，才会彻底从 Map 中移除
+//     const timer = setTimeout(() => {
+//       debounceMap.delete(this);
+//       timerMap.delete(this);
+//     }, debounceTime);
 
-    MessageWriter.write(instance as any);
-  }
+//     timerMap.set(this, timer);
 
-  /**
-   * 子类实现：决定如何处理前一个还在“窗口期”内的消息
-   */
-  debounceCallback(previousMessage: this): void {
-    return;
-  }
-}
+//     MessageWriter.write(instance as any);
+//   }
+
+//   /**
+//    * 子类实现：决定如何处理前一个还在“窗口期”内的消息
+//    */
+//   debounceCallback(previousMessage: this): void {
+//     return;
+//   }
+// }

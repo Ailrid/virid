@@ -5,7 +5,6 @@
  */
 import { type ViridApp } from "./app";
 import {
-  AtomicModifyMessage,
   ErrorMessage,
   InfoMessage,
   MessageWriter,
@@ -86,47 +85,13 @@ const globalWarnHandler = (warn: WarnMessage) => {
   );
 };
 
-/**
- * 注册修改处理器
- */
-const atomicModifyHandler = (modifications: AtomicModifyMessage<any>) => {
-  const rawComponent = activeApp.get(modifications.ComponentClass);
 
-  if (!rawComponent) {
-    console.error(
-      `[Virid Modify] Component Not Found:\n Component ${modifications.ComponentClass.name} not found in Registry.`,
-    );
-    return;
-  }
-  // 执行修改逻辑
-  try {
-    modifications.recipe(rawComponent);
-    // 记录显式的审计日志
-    MessageWriter.warn(
-      `[Virid Modify] Successfully:\nModify on ${modifications.ComponentClass.name}\nlabel: ${modifications.label}`,
-    );
-  } catch (e) {
-    MessageWriter.error(
-      e as Error,
-      `[Virid Error] Modify Failed:\n${modifications.label}`,
-    );
-  }
-};
 
 /**
  * 激活真正的 App 实例
  */
 export function initializeGlobalSystems(app: ViridApp) {
-  // 确保全局处理器优先级最高
-  app.register(
-    AtomicModifyMessage,
-    withContext(
-      AtomicModifyMessage<any>,
-      atomicModifyHandler,
-      "GlobalAtomicModifier",
-    ),
-    1000, // 修改器优先级通常极高，确保状态第一时间更新
-  );
+
   app.register(
     WarnMessage,
     withContext(WarnMessage, globalWarnHandler, "GlobalWarnHandler"),
