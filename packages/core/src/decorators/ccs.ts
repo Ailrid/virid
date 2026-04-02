@@ -207,7 +207,6 @@ export function Safe() {
  */
 export function Observer(
   callback: (oldVal: any, newVale: any) => void | BaseMessage | BaseMessage,
-  [],
 ) {
   return (target: any, key: string) => {
     // 记录哪些属性需要变成响应式
