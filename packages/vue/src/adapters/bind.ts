@@ -25,7 +25,7 @@ import {
   SingleMessage,
 } from "@virid/core";
 import { viridApp } from "../app";
-import { createDeepShield } from "./shield";
+import { createBorrowChecker } from "./borrow-checker";
 import {
   type WatchMetadata,
   type ProjectMetadata,
@@ -128,7 +128,7 @@ export function bindProject(proto: any, instance: any) {
 
           // 来自 component 的数据套盾
           if (isFromComponent) {
-            return createDeepShield(val, componentClass.name, key);
+            return createBorrowChecker(val, componentClass.name, key);
           }
 
           // 来自自己的投影，直接返回
@@ -428,7 +428,7 @@ export function bindInherit(proto: any, instance: any) {
       get: () => {
         const val = tunnel.value; // 访问 computed.value
         // 返回时依然套上护盾，确保“弱引用”也是“只读引用”
-        return val ? createDeepShield(val, key, "") : null;
+        return val ? createBorrowChecker(val, key, "") : null;
       },
       set: () => {
         MessageWriter.error(

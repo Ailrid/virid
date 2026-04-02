@@ -7,11 +7,11 @@ import { MessageWriter } from "@virid/core";
 import { VIRID_VUE_METADATA } from "../decorators/constant";
 
 // 在文件顶部定义缓存池
-const shieldCache = new WeakMap<any, any>();
+const borrowCache = new WeakMap<any, any>();
 /**
- * 递归物理护盾：将对象及其所有后代变为硬只读
+ * 递归借用检查代理：将对象及其所有后代变为硬只读
  */
-export function createDeepShield(
+export function createBorrowChecker(
   target: any,
   rootName: string,
   path: string = "",
@@ -23,8 +23,8 @@ export function createDeepShield(
   ) {
     return target;
   }
-  if (shieldCache.has(target)) {
-    return shieldCache.get(target);
+  if (borrowCache.has(target)) {
+    return borrowCache.get(target);
   }
 
   const proxy = new Proxy(target, {
@@ -46,12 +46,12 @@ export function createDeepShield(
 
           // 安全执行：如果是 Safe 的，执行它
           const result = value.apply(obj, args);
-          // 对返回值递归套盾
-          return createDeepShield(result, rootName, `${currentPath}()`);
+          // 对返回值递归借用检查
+          return createBorrowChecker(result, rootName, `${currentPath}()`);
         };
       }
-      // 自动给子对象也穿上护盾
-      return createDeepShield(value, rootName, currentPath);
+      // 自动给子对象也加上借用检查
+      return createBorrowChecker(value, rootName, currentPath);
     },
 
     set(_obj, prop) {
@@ -59,12 +59,13 @@ export function createDeepShield(
 
       // 优雅地失败，并给出修复建议
       const errorMsg = [
-        `[Virid Shield]`,
+        `[Virid Borrow Checker]`,
         `------------------------------------------------`,
         `Component: ${rootName}`,
         `Code: ${rootName}....${currentPath}`,
         `Result: Rejected`,
         `Reason: This object is write protected and cannot be modified.`,
+        `Stack: ${new Error().stack}`,
         `------------------------------------------------`,
       ].join("\n");
       MessageWriter.error(new Error(errorMsg));
@@ -87,7 +88,7 @@ export function createDeepShield(
       return false;
     },
   });
-  shieldCache.set(target, proxy);
+  borrowCache.set(target, proxy);
   return proxy;
 }
 /**

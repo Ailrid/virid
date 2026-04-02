@@ -7,7 +7,7 @@
 In `@virid/vue`, Vue components no longer hold business state directly. Instead, they delegate all authority and functionality to a **Controller** via the `useController` hook. You will not—and should not—use most of Vue's built-in APIs, such as `ref`, `computed`, `watch`, `emit`, `provide`, or `inject`, state management tools like Pinia also should no longer be used.
 
 - **Physically Isolated Modification Rights:** The Controller acts as the intermediary between Vue and Components. While Vue components can directly observe Component data, any operation that leads to a state change must be converted into a **Message** and sent to a **System** for processing.
-- **Enforced Read-Only (Deep Shield):** In `@virid/vue`, "read-only" is more than just a suggestion. Through the **createDeepShield** mechanism, all data not owned by the current context is forced into a "Deep Read-Only" state. All write operations are prohibited, and even methods cannot be called unless explicitly marked with the `@Safe()` decorator. This physically eliminates the possibility of UI components accidentally polluting external states.
+- **Enforced Read-Only (Borrow Checker):** In `@virid/vue`, "read-only" is more than just a suggestion. Through the **createBorrowChecker** mechanism, all data not owned by the current context is forced into a "Deep Read-Only" state. All write operations are prohibited, and even methods cannot be called unless explicitly marked with the `@Safe()` decorator. This physically eliminates the possibility of UI components accidentally polluting external states.
 - **Full Vue Ecosystem Compatibility:** Controllers are pure classes. When combined with `@OnHook` and `@Use` decorators, they can perceive the Vue lifecycle and utilize any hooks from the Vue ecosystem without being tightly coupled to a specific DOM structure.
 
 ## 🔌Enable plugins
@@ -298,17 +298,17 @@ In `@virid/vue`, Controllers are not passive observers; they can actively listen
 
 ------
 
-## 🛡️ Physical Read-Only Shield (Deep Shield)
+## 🛡️ Borrow Checker
 
 In `@virid/vue`, "prohibiting the modification of external data" is not a suggestion—it is an absolute law.
 
-To ensure determinism, all external data retrieved via `@Project` or `@Inherit` is automatically wrapped in a **recursive physical shield**. This shield intercepts all **Write (Set)** operations and **Illegal Method Calls**, providing detailed error messages regarding the violation path and cause.
+To ensure determinism, all external data retrieved via `@Project` or `@Inherit` is automatically wrapped in a **Borrow Checker**. This borrow checker intercepts all **Write (Set)** operations and **Illegal Method Calls**, providing detailed error messages regarding the violation path and cause.
 
 ### 1. Interception Behavior
 
 - **Assignment Interception:** Any attempt to modify an object property will immediately throw an exception.
 - **Mutation Interception:** Calling any method that could modify the original data (e.g., `Array.push`, `Map.set`, `Set.add`) is strictly forbidden.
-- **Deep Recursion:** The shield is applied recursively and cached lazily. No matter how deep the data nesting is, all descendant nodes are protected, and the protection is activated only upon access.
+- **Deep Recursion:** The borrow checker is applied recursively and cached lazily. No matter how deep the data nesting is, all descendant nodes are protected, and the protection is activated only upon access.
 
 ### 2. Safe Method Whitelist
 
