@@ -125,7 +125,7 @@ export class Dispatcher {
       let eventSnapshot: EventMessage[] | undefined;
       try {
         //执行tick钩子,只在第一次才触发
-        if (this.internalDepth == 0) {
+        if (this.internalDepth == 1) {
           this.tickPayload = {};
           this.executeTickHooks(this.beforeTickHooks);
         }
