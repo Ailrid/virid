@@ -206,13 +206,13 @@ export function Safe() {
  * @description: 标识Component里的这个属性被改了之后需要调用一个回调
  */
 export function Observer(
-  callback: (oldVal: any, newVale: any) => void | BaseMessage | BaseMessage,
+  callback: (oldVal: any, newVale: any) => void | BaseMessage | BaseMessage[],
 ) {
-  return (target: any, key: string) => {
+  return (target: any, propertyKey: string) => {
     // 记录哪些属性需要变成响应式
     const observerMetadata: ObserverMetadata =
       Reflect.getMetadata(VIRID_METADATA.OBSERVER, target) || [];
-    observerMetadata.push({ key, callback });
+    observerMetadata.push({ propertyKey, callback });
     Reflect.defineMetadata(VIRID_METADATA.OBSERVER, observerMetadata, target);
   };
 }

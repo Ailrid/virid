@@ -3,6 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Core
  */
+import { type ObserverItem } from "../interfaces";
 import { handleResult } from "./ccs";
 import { VIRID_METADATA } from "./constant";
 const ARRAY_MUTABLE_METHODS = [
@@ -30,10 +31,13 @@ export function bindObservers(instance: any) {
     configurable: true,
   });
 
-  const observerConfigs: any[] =
-    Reflect.getMetadata(VIRID_METADATA.OBSERVER, instance.constructor) || [];
+  const observerConfigs: ObserverItem[] =
+    Reflect.getMetadata(VIRID_METADATA.OBSERVER, instance) || [];
 
   observerConfigs.forEach(({ propertyKey, callback }) => {
+    console.log("instance :>> ", instance);
+    console.log("propertyKey :>> ", propertyKey);
+
     // 创建逻辑单元：一个闭包 Box
     const box = { value: instance[propertyKey] };
     const logicProxy = new Proxy(box, {

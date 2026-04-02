@@ -6,7 +6,6 @@
 import {
   type ExecuteHook,
   type TickHook,
-  AtomicModifyMessage,
   BaseMessage,
   ErrorMessage,
   WarnMessage,
@@ -28,10 +27,7 @@ export const afterExecuteHooks: ExecuteHook<BaseMessage> = (
   )
     return;
 
-  const allParams =
-    message instanceof AtomicModifyMessage
-      ? [...context.context.params, message.ComponentClass]
-      : context.context.params;
+  const allParams = context.context.params;
 
   allParams.forEach((paramClass) => {
     if (Reflect.hasMetadata(VIRID_AMBER_METADATA.BACKUP, paramClass)) {

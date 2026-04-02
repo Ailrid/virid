@@ -17,7 +17,7 @@ export interface MessageMetadata {
 }
 
 export interface ObserverItem {
-  key: string;
+  propertyKey: string;
   callback: (oldVal: any, newVal: any) => void | BaseMessage | BaseMessage;
 }
 export type ObserverMetadata = ObserverItem[];
