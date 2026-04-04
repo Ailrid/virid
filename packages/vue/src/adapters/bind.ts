@@ -222,23 +222,18 @@ export function bindResponsive(instance: any) {
 
     // 在 bindResponsive 内部
     if (existingBox) {
+      console.log("existingBox :>> ", existingBox);
       const rawValue = existingBox.value;
       const vRef = config.shallow ? shallowRef(rawValue) : ref(rawValue);
-      const autoValueProxy = new Proxy(vRef, {
-        get(target, prop) {
-          // 当访问这个代理时，它自动去拿 vRef.value 的内容
-          const inner = target.value;
-          // 如果是函数，需要绑定原始对象
-          const val = Reflect.get(inner, prop);
-          return typeof val === "function" ? val.bind(inner) : val;
+
+      Object.defineProperty(existingBox, "value", {
+        get: () => vRef.value,
+        set: (val) => {
+          vRef.value = val;
         },
-        set(target, prop, newVal) {
-          // 它自动写进 vRef.value
-          return Reflect.set(target.value, prop, newVal);
-        },
+        enumerable: true,
+        configurable: true,
       });
-      // 现在 logicProxy 访问 existingBox.value 拿到的就是这个 autoValueProxy
-      existingBox.value = autoValueProxy;
     } else {
       // 普通属性，按照原逻辑处理
       if (descriptor && descriptor.get) return;

@@ -35,9 +35,6 @@ export function bindObservers(instance: any) {
     Reflect.getMetadata(VIRID_METADATA.OBSERVER, instance) || [];
 
   observerConfigs.forEach(({ propertyKey, callback }) => {
-    console.log("instance :>> ", instance);
-    console.log("propertyKey :>> ", propertyKey);
-
     // 创建逻辑单元：一个闭包 Box
     const box = { value: instance[propertyKey] };
     const logicProxy = new Proxy(box, {
