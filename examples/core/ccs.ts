@@ -44,7 +44,7 @@ class CounterSystem {
     messageClass: IncreaseMessage,
     priority: 10,
   })
-  public increase(counter: Counter) {
+  static increase(counter: Counter) {
     counter.count++;
     MessageWriter.info(
       `Increase message received, current count: ${counter.count}`,
@@ -54,7 +54,7 @@ class CounterSystem {
   @System({
     messageClass: DecreaseMessage,
   })
-  public decrease(counter: Counter) {
+  static decrease(counter: Counter) {
     counter.count--;
     MessageWriter.info(
       `Decrease message received, current count: ${counter.count}`,
@@ -64,7 +64,7 @@ class CounterSystem {
   @System({
     priority: 100,
   })
-  public setValue(
+  static setValue(
     @Message(SetValueMessage) message: SetValueMessage,
     counter: Counter,
   ) {

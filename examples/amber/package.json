@@ -2,13 +2,11 @@
   "name": "@examples/core",
   "private": true,
   "scripts": {
-    "ccs": "node -r @swc-node/register ./ccs.ts",
-    "log": "node -r @swc-node/register ./log.ts",
-    "hook": "node -r @swc-node/register ./hook.ts",
-    "observer": "node -r @swc-node/register ./observer.ts"
+    "amber": "node -r @swc-node/register ./amber.ts"
   },
   "dependencies": {
     "@virid/core": "workspace:*",
+    "@virid/amber": "workspace:*",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
