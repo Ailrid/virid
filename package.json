@@ -1,12 +1,13 @@
 {
   "name": "virid",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@9.0.0",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "eslint . --fix && pnpm -r run build",
+    "build": "NODE_OPTIONS='--no-warnings' pnpm -r run build",
     "clean": "pnpm -r exec rm -rf dist",
     "lint": "eslint . --fix",
     "typecheck": "pnpm -r --parallel exec tsc --noEmit"
@@ -15,7 +16,6 @@
     "@eslint/js": "^10.0.1",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.11",
-    "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
     "reflect-metadata": "^0.2.2",
     "tsup": "^8.5.1",
