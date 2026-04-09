@@ -5,7 +5,7 @@
  */
 import { MessageWriter, Newable } from "@virid/core";
 import { type FromMainMessage } from "./message";
-let MESSAGE_MAP = new Map<string, Newable<FromMainMessage>>();
+const MESSAGE_MAP = new Map<string, Newable<FromMainMessage>>();
 
 export function FromMain(type: string) {
   return function (target: Newable<FromMainMessage>) {

@@ -22,4 +22,4 @@ export interface ObserverItem {
 }
 export type ObserverMetadata = ObserverItem[];
 
-export interface SafeMetadata extends Set<string> {}
+export type SafeMetadata = Set<string>;

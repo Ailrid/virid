@@ -123,7 +123,7 @@ export function HttpSystem(
     }
     // Message必须是继承自HttpRequestMessage
     const messageClass = params.messageClass ?? messageMetadata!.messageClass;
-    if (!HttpRequestMessage.isPrototypeOf(messageClass)) {
+    if (!(messageClass.prototype instanceof HttpRequestMessage)) {
       MessageWriter.error(
         new Error(
           `[Virid HttpSystem] Wrong Message Type: ${messageClass.name} is not a derived subclass of HttpRequestMessage!`,
@@ -196,7 +196,11 @@ export function HttpSystem(
     // 修改方法定义
     descriptor.value = wrappedSystem;
     // 注册到调度中心
-    stagingSystemRegister.register(messageClass, wrappedSystem, params.priority);
+    stagingSystemRegister.register(
+      messageClass,
+      wrappedSystem,
+      params.priority,
+    );
   };
 }
 

@@ -6,18 +6,20 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "cross-env NODE_OPTIONS='' pnpm -r run build",
-    "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules",
-    "clean:all": "pnpm clean && pnpm store prune",
-    "typecheck": "pnpm -r run typecheck",
-    "lint": "pnpm -r run lint -- --fix"
+    "build": "eslint . --fix && pnpm -r run build",
+    "clean": "pnpm -r exec rm -rf dist",
+    "lint": "eslint . --fix",
+    "typecheck": "pnpm -r --parallel exec tsc --noEmit"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.11",
     "cross-env": "^10.1.0",
+    "eslint": "^10.2.0",
     "reflect-metadata": "^0.2.2",
     "tsup": "^8.5.1",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "typescript-eslint": "^8.58.1"
   }
 }

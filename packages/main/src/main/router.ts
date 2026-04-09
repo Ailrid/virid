@@ -8,7 +8,7 @@ import { type BrowserWindow } from "electron";
 import { type FromRendererMessage } from "./message";
 export const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 export const ROUTER_MAP = new Map<string, BrowserWindow>();
-let MESSAGE_MAP = new Map<string, Newable<FromRendererMessage>>();
+const MESSAGE_MAP = new Map<string, Newable<FromRendererMessage>>();
 
 export function FromRenderer(type: string) {
   return function (target: Newable<FromRendererMessage>) {
@@ -36,7 +36,7 @@ function ReceiveMessages(message: any): void {
   // 查找主进程注册的消息类
   const MessageClass = MESSAGE_MAP.get(__virid_messageType);
   // 实例化
-  let instance = new (MessageClass as any)();
+  const instance = new (MessageClass as any)();
   // 数据还原
   if (payload) {
     Object.assign(instance, payload);

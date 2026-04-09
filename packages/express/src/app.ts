@@ -41,8 +41,7 @@ export const viridApp: IViridApp = new Proxy({} as IViridApp, {
       // 使用 Reflect 确保 this 指向正确，或者直接从 activeApp 调用
       const targetMethod = activeApp[prop];
       if (typeof targetMethod === "function") {
-        // @ts-ignore
-        return targetMethod.apply(activeApp, args);
+        return Reflect.apply(targetMethod, activeApp, args);
       }
     };
   },

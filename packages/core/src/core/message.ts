@@ -19,7 +19,6 @@ export abstract class BaseMessage {
  * 可合并的信号基类
  */
 export abstract class SingleMessage extends BaseMessage {
-  // @ts-ignore 只用来区分的标识符
   private readonly __kind = "SingleMessage" as const;
   constructor() {
     super();
@@ -30,7 +29,6 @@ export abstract class SingleMessage extends BaseMessage {
  * 不可合并的消息基类
  */
 export abstract class EventMessage extends BaseMessage {
-  // @ts-ignore 只用来区分的标识符
   private readonly __kind = "EventMessage" as const;
   constructor() {
     super();

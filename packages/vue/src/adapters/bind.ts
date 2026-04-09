@@ -354,11 +354,12 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
           params = Array.isArray(currentMessage)
             ? currentMessage[currentMessage.length - 1]
             : currentMessage;
+        } else {
+          // 否则默认返回整个数组（批处理模式）
+          params = Array.isArray(currentMessage)
+            ? currentMessage
+            : [currentMessage];
         }
-        // 否则默认返回整个数组（批处理模式）
-        params = Array.isArray(currentMessage)
-          ? currentMessage
-          : [currentMessage];
       }
       // 处理 EventMessage (顺序单发类型)
       else if (sample instanceof EventMessage) {
@@ -401,9 +402,7 @@ export function bindInherit(proto: any, instance: any) {
   );
   if (!inherits) return;
 
-  // @ts-ignore : token
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  inherits.forEach(({ key, _token, id, selector }) => {
+  inherits.forEach(({ key, id, selector }) => {
     // 为每个继承属性创建一个私有的 computed 引用
     // 这个 computed 就像一个隧道，一头连着 Registry，一头连着子组件
     const tunnel = computed(() => {

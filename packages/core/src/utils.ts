@@ -4,12 +4,7 @@
  * Project: Virid Core
  */
 import { type ViridApp } from "./app";
-import {
-  ErrorMessage,
-  InfoMessage,
-  MessageWriter,
-  WarnMessage,
-} from "./core";
+import { ErrorMessage, InfoMessage, MessageWriter, WarnMessage } from "./core";
 import { type SystemContext } from "./interfaces";
 /**
  * 简单的色彩辅助函数
@@ -85,13 +80,10 @@ const globalWarnHandler = (warn: WarnMessage) => {
   );
 };
 
-
-
 /**
  * 激活真正的 App 实例
  */
 export function initializeGlobalSystems(app: ViridApp) {
-
   app.register(
     WarnMessage,
     withContext(WarnMessage, globalWarnHandler, "GlobalWarnHandler"),
@@ -134,8 +126,7 @@ export const viridApp: IViridApp = new Proxy({} as IViridApp, {
       // 使用 Reflect 确保 this 指向正确，或者直接从 activeApp 调用
       const targetMethod = activeApp[prop];
       if (typeof targetMethod === "function") {
-        // @ts-ignore
-        return targetMethod.apply(activeApp, args);
+        return Reflect.apply(targetMethod, activeApp, args);
       }
     };
   },
