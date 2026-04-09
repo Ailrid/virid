@@ -24,6 +24,6 @@ export * from "./interfaces";
 export const AmberPlugin: ViridPlugin<PluginOptions> = {
   name: "@virid/amber",
   install(app: ViridApp, options) {
-    activateApp(app, options as PluginOptions);
+    activateApp(app, options);
   },
 };

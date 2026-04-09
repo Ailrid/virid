@@ -23,7 +23,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
   app.onAfterTick(afterTickHooks, true);
   app.onAfterExecute(BaseMessage, afterExecuteHooks, true);
   //看看用户提供的配置
-  if (options) activateConfig(options);
+  activateConfig(options);
   const amberInitHook = (instance: any) => {
     if (
       instance &&
@@ -44,7 +44,6 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
 export const viridApp: IViridApp = new Proxy({} as IViridApp, {
   get(_, prop: keyof IViridApp) {
     return (...args: any[]) => {
-      // 检查实例是否存在
       if (!activeApp) {
         MessageWriter.warn(
           `[Virid Vue] App method "${String(prop)}" called before initialization.`,
@@ -52,8 +51,6 @@ export const viridApp: IViridApp = new Proxy({} as IViridApp, {
         return null;
       }
 
-      // 正常转发调用
-      // 使用 Reflect 确保 this 指向正确，或者直接从 activeApp 调用
       const targetMethod = activeApp[prop];
       if (typeof targetMethod === "function") {
         return Reflect.apply(targetMethod, activeApp, args);

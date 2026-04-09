@@ -4,7 +4,9 @@
  * Project: Virid Amber
  */
 export interface PluginOptions {
-  serialization?: (instance: any) => any;
-  deserialization?: (instance: any, data: any) => any;
-  diff?: (data: any, instance: any) => boolean;
+  serialization: (instance: any) => any;
+  deserialization: (instance: any, data: any) => any;
+  diff: (data: any, instance: any) => boolean;
+  maxComponentLength: number;
+  maxTickLength: number;
 }

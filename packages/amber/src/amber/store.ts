@@ -10,14 +10,12 @@ import { RestoreDirection, type PluginOptions } from "../interfaces";
 import { type VersionMetadata, type CustomMethodMetadata } from "../interfaces";
 
 import { _serialization, _deserialization, _diff } from "./utils";
-let config: Required<PluginOptions> = {
-  serialization: _serialization,
-  deserialization: _deserialization,
-  diff: _diff, // 默认总是备份
-};
+let config: PluginOptions;
 
 export function activateConfig(customConfig: PluginOptions) {
-  config = Object.assign(config, customConfig);
+  config = customConfig;
+  amberComponentStore.maxComponentLength = config.maxComponentLength;
+  amberTickStore.maxTickLength = config.maxTickLength;
 }
 
 class AmberTickStore {
@@ -27,7 +25,7 @@ class AmberTickStore {
   // 记录数组第 0 位对应的真实 Tick 号
   public baseTick = 0;
 
-  public maxTickLength = 20;
+  public maxTickLength: number;
   // 当前处于哪个逻辑 Tick
   public currentTick = 0;
 
@@ -154,12 +152,12 @@ class AmberComponentStore {
   public componentHistory = new Map<any, any[]>();
   // 记录每个组件消失的历史总数
   public biasVersions = new Map<any, number>();
-  public maxComponentHistorySize = 20;
+  public maxComponentLength: number;
   // 记录当前每个组件都是什么版本
   public currentHistory = new Map<any, any>();
   // 记录每个组件消失的历史总数
-  constructor(maxComponentHistorySize: number = 20) {
-    this.maxComponentHistorySize = maxComponentHistorySize;
+  constructor(maxComponentLength: number = 20) {
+    this.maxComponentLength = maxComponentLength;
   }
   /**
    * 将component 的数据进行序列化
@@ -369,7 +367,7 @@ class AmberComponentStore {
     stack.push(newData);
     this.currentHistory.set(compClass, newData);
     // 滑动窗口与元数据更新
-    if (stack.length > this.maxComponentHistorySize) {
+    if (stack.length > this.maxComponentLength) {
       stack.shift();
       this.biasVersions.set(compClass, baseVersion + 1);
     }

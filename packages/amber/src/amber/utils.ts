@@ -3,6 +3,9 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Amber
  */
+
+import { PluginOptions } from "../interfaces";
+
 /**
  * 默认 serialization
  */
@@ -98,3 +101,11 @@ export function _diff(oldData: any, instance: any, depth = 3): boolean {
   }
   return false;
 }
+
+export const defaultOptions: PluginOptions = {
+  serialization: _serialization,
+  deserialization: _deserialization,
+  diff: _diff,
+  maxComponentLength: 20,
+  maxTickLength: 20,
+};

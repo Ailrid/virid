@@ -1,7 +1,7 @@
 {
   "name": "@virid/core",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "A lightweight and powerful message core built using dependency injection and CCS concepts",
   "author": "Ailrid",
   "license": "Apache 2.0",
