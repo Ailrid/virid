@@ -1,0 +1,18 @@
+{
+  "name": "@examples/core",
+  "private": true,
+  "scripts": {
+    "ccs": "node -r @swc-node/register ./ccs.ts",
+    "log": "node -r @swc-node/register ./log.ts",
+    "hook": "node -r @swc-node/register ./hook.ts"
+  },
+  "dependencies": {
+    "@virid/core": "workspace:*",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.11.1",
+    "@swc/core": "^1.15.11",
+    "@types/node": "^25.5.2"
+  }
+}

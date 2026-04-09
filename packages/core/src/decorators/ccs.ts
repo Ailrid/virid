@@ -45,6 +45,13 @@ export function System(
   },
 ) {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
+    if (!(typeof target === "function")) {
+      const error = new Error(
+        `[Virid System] Method Type Error:\nThe Method ${key} is not a static method, please check if there is a static keyword tag`,
+      );
+      MessageWriter.error(error);
+      return;
+    }
     const originalMethod = descriptor.value;
     const types = Reflect.getMetadata("design:paramtypes", target, key);
     const messageMetadata: MessageMetadata =

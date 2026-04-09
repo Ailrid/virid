@@ -7,3 +7,12 @@ export type Newable<
   TInstance = unknown,
   TArgs extends unknown[] = any[],
 > = new (...args: TArgs) => TInstance;
+
+export interface AppConfig {
+  enableLog: boolean;
+}
+
+const defaultConfig = {
+  enableLog: true,
+};
+export { defaultConfig };
