@@ -32,8 +32,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "tsup --config tsup.config.ts",
-    "example": "node --import @swc-node/register/esm-register examples/index.ts"
+    "build": "tsup --config tsup.config.ts"
   },
   "dependencies": {},
   "peerDependencies": {
