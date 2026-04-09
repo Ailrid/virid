@@ -186,7 +186,7 @@ export class StreamResponse extends HttpResponse {
       headers?: HttpHeaders;
     } = {},
   ) {
-    super(options.status, {}, options.headers);
+    super(options.status || 206, {}, options.headers);
   }
 }
 // --- 辅助工厂函数 ---

@@ -60,7 +60,8 @@ export class MessageWriter {
    * 快捷方式：系统内部常用
    */
   public static error(e: Error, context: string = ""): void {
-    this.write(new ErrorMessage(e, context));
+    const error = e instanceof Error ? e : new Error(String(e));
+    this.write(new ErrorMessage(error, context));
   }
 
   public static warn(context: string): void {

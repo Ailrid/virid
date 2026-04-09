@@ -14,7 +14,7 @@ import {
 } from "./bind";
 import { onUnmounted, useAttrs } from "vue";
 import { VIRID_VUE_METADATA } from "../decorators/constant";
-import { MessageWriter } from "@virid/core";
+import { MessageWriter, Newable } from "@virid/core";
 import { viridApp } from "../app";
 /**
  * @description: vue的hooks适配器，注入IOC容器中的Controller实例，并挂在vue的各种方法
@@ -22,7 +22,7 @@ import { viridApp } from "../app";
  * @return {*}
  */
 export function useController<T>(
-  token: new (...args: any[]) => T,
+  token: Newable<T>,
   options?: { id?: string; context?: any },
 ): T {
   const instance = viridApp.get(token) as any;
@@ -45,7 +45,7 @@ export function useController<T>(
         `[Virid Controller] ${token.name} is not a Controller.Use @Controller to inject it.`,
       ),
     );
-    return;
+    return null as T;
   }
 
   //绑定各种魔法装饰器

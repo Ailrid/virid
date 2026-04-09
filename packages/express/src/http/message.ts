@@ -12,7 +12,7 @@ export class HttpRequestMessage extends EventMessage {
   constructor(private readonly __virid_express_id: RequestId) {
     super();
     //从context里捞出来自己的,挂上引用计数+1
-    httpContextStore.get(this.__virid_express_id).inc();
+    httpContextStore.get(this.__virid_express_id)!.inc();
   }
   // 暴露一个只读属性给业务层使用
   public get requestId(): RequestId {

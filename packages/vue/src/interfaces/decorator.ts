@@ -18,7 +18,6 @@ export type WatchMetadata = WatchItem[];
 export interface ProjectItem {
   key: string;
   isAccessor: boolean;
-  // 这里的逻辑和 Watch 保持高度一致
   type: "component" | "local";
   componentClass: Newable<any> | null;
   source: (instance: any) => any;

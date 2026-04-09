@@ -24,7 +24,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
   app.onAfterExecute(BaseMessage, afterExecuteHooks, true);
   //看看用户提供的配置
   if (options) activateConfig(options);
-  const amberInitHook = (instance) => {
+  const amberInitHook = (instance: any) => {
     if (
       instance &&
       Reflect.hasMetadata(VIRID_AMBER_METADATA.VERSION, instance.constructor)

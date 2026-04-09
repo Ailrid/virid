@@ -103,7 +103,7 @@ export function bindProject(proto: any, instance: any) {
         return;
       }
 
-      // 只有非 component 类型才走到这里，不套盾，支持读写
+      // 只有非 component 类型才走到这里，支持读写
       const rawDescriptor = Object.getOwnPropertyDescriptor(proto, key);
       project = computed({
         get: () => rawDescriptor?.get?.call(instance),
@@ -128,7 +128,7 @@ export function bindProject(proto: any, instance: any) {
 
           // 来自 component 的数据套盾
           if (isFromComponent) {
-            return createBorrowChecker(val, componentClass.name, key);
+            return createBorrowChecker(val, componentClass!.name, key);
           }
 
           // 来自自己的投影，直接返回

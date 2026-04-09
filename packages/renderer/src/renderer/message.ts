@@ -16,11 +16,11 @@ export abstract class FromMainMessage extends EventMessage {
    * 'all': 广播给所有窗口（经过主进程中转）
    * string: 指定某个窗口的 ID (windowId)
    */
-  public __virid_target: string;
+  public __virid_target: string = "";
   /**
    * 我应该在目的地转变成什么消息？
    */
-  public __virid_messageType: string;
+  public __virid_messageType: string = "";
 }
 
 /**

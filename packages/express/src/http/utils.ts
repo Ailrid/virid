@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Express
  */
-import { MessageWriter } from "packages/core/dist";
+import { MessageWriter } from "@virid/core";
 import { HttpError } from ".";
 import { type TransformPipe } from "../interfaces";
 

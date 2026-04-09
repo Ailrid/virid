@@ -7,10 +7,7 @@ import { MessageWriter } from "@virid/core";
 import { viridApp } from "../app";
 import { VIRID_AMBER_METADATA } from "../decorators/constant";
 import { RestoreDirection, type PluginOptions } from "../interfaces";
-import {
-  type VersionMetadata,
-  type CustomMethodMetadata,
-} from "../interfaces";
+import { type VersionMetadata, type CustomMethodMetadata } from "../interfaces";
 
 import { _serialization, _deserialization, _diff } from "./utils";
 let config: Required<PluginOptions> = {
@@ -116,7 +113,7 @@ class AmberTickStore {
         amberComponentStore.seal(compClass);
 
         // 收集钩子
-        const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+        const customMethod: CustomMethodMetadata = Reflect.getMetadata(
           VIRID_AMBER_METADATA.CUSTOM_METHOD,
           compClass,
         );
@@ -178,7 +175,7 @@ class AmberComponentStore {
       return null;
     }
 
-    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
@@ -187,7 +184,7 @@ class AmberComponentStore {
       return serializeFn(instance);
     } catch (e) {
       MessageWriter.error(
-        e,
+        e as Error,
         `[Virid Amber] Serialize Error: Component ${compClass.name} serialization error`,
       );
     }
@@ -214,17 +211,16 @@ class AmberComponentStore {
       );
       return;
     }
-    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const deserializeFn =
-      customMethod?.deserialize || config.deserialization;
+    const deserializeFn = customMethod?.deserialize || config.deserialization;
     try {
       deserializeFn(instance, data);
     } catch (e) {
       MessageWriter.error(
-        e,
+        e as Error,
         `[Virid Amber] Deserialize Error: Component ${compClass.name} deserialize error`,
       );
     }
@@ -251,7 +247,7 @@ class AmberComponentStore {
       );
       return false;
     }
-    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
@@ -260,7 +256,7 @@ class AmberComponentStore {
       return diffFn(instance, old_data);
     } catch (e) {
       MessageWriter.error(
-        e,
+        e as Error,
         `[Virid Amber] Diff Error: Component ${compClass.name} diff error`,
       );
     }
@@ -272,7 +268,7 @@ class AmberComponentStore {
    */
   public initComponent(instance: any) {
     const compClass = instance.constructor;
-    const customMethod:CustomMethodMetadata = Reflect.getMetadata(
+    const customMethod: CustomMethodMetadata = Reflect.getMetadata(
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
@@ -282,7 +278,7 @@ class AmberComponentStore {
       data = serializeFn(instance);
     } catch (e) {
       MessageWriter.error(
-        e,
+        e as Error,
         `[Virid Amber] Serialize Error: Component ${compClass.name} serialization error`,
       );
       return;
@@ -334,8 +330,9 @@ class AmberComponentStore {
           `[Virid Amber] Seal Error: Component ${compClass.name} is not initialized.`,
         ),
       );
+      return;
     }
-    const baseVersion = this.biasVersions.get(compClass);
+    const baseVersion = this.biasVersions.get(compClass)!;
 
     const currentSnapshot = this.getCurrentData(compClass);
     // diff判断
@@ -352,7 +349,7 @@ class AmberComponentStore {
     }
 
     // 剪枝
-    const currentLogicalVersion:VersionMetadata =
+    const currentLogicalVersion: VersionMetadata =
       Reflect.getMetadata(VIRID_AMBER_METADATA.VERSION, compClass) || 0;
     const latestLogicalVersion = baseVersion + stack.length - 1;
     if (currentLogicalVersion < latestLogicalVersion) {
@@ -413,7 +410,7 @@ class AmberComponentStore {
     // 状态对比准备
     const oldData = this.getCurrentData(compClass);
     const newData = stack[physicalIndex];
-    const currentVersion:VersionMetadata =
+    const currentVersion: VersionMetadata =
       Reflect.getMetadata(VIRID_AMBER_METADATA.VERSION, compClass) || 0;
 
     const direction =
@@ -426,7 +423,11 @@ class AmberComponentStore {
 
     // 时空指针同步
     this.currentHistory.set(compClass, newData);
-    Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, targetVersion, compClass);
+    Reflect.defineMetadata(
+      VIRID_AMBER_METADATA.VERSION,
+      targetVersion,
+      compClass,
+    );
 
     // 触发业务钩子
     const customMethod: CustomMethodMetadata = Reflect.getMetadata(

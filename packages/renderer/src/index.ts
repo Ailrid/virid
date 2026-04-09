@@ -23,7 +23,7 @@ import { activateApp } from "./app";
 import { type PluginOption } from "./interfaces";
 export const RenderPlugin: ViridPlugin<PluginOption> = {
   name: "@virid/render",
-  install(app: ViridApp, options: PluginOption) {
+  install(app: ViridApp, options) {
     activateApp(app, options);
   },
 };

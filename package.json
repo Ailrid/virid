@@ -7,13 +7,10 @@
   ],
   "scripts": {
     "build": "cross-env NODE_OPTIONS='' pnpm -r run build",
-    "dev": "cross-env NODE_OPTIONS='' pnpm -r run dev",
     "clean": "pnpm -r exec rm -rf dist && rm -rf node_modules",
     "clean:all": "pnpm clean && pnpm store prune",
     "typecheck": "pnpm -r run typecheck",
-    "lint": "pnpm -r run lint -- --fix",
-    "test": "pnpm -r run test",
-    "example": "pnpm --filter @virid/core run example"
+    "lint": "pnpm -r run lint -- --fix"
   },
   "devDependencies": {
     "@swc-node/register": "^1.11.1",
@@ -21,6 +18,6 @@
     "cross-env": "^10.1.0",
     "reflect-metadata": "^0.2.2",
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3"
+    "typescript": "6.0.2"
   }
 }

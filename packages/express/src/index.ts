@@ -24,6 +24,6 @@ export * from "./decorators";
 export const ExpressPlugin: ViridPlugin<PluginOptions> = {
   name: "@virid/express",
   install(app: ViridApp, options) {
-    activateApp(app, options);
+    activateApp(app, options as PluginOptions);
   },
 };

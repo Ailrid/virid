@@ -4,34 +4,10 @@
         "types": [
             "reflect-metadata"
         ],
-        "baseUrl": ".",
-        "paths": {
-            "@virid/core": [
-                "packages/core/src/index.ts"
-            ],
-            "@virid/amber": [
-                "packages/amber/src/index.ts"
-            ],
-            "@virid/main": [
-                "packages/main/src/index.ts"
-            ],
-            "@virid/renderer": [
-                "packages/renderer/src/index.ts"
-            ],
-            "@virid/bridge": [
-                "packages/bridge/src/index.ts"
-            ],
-            "@virid/std": [
-                "packages/std/src/index.ts"
-            ],
-            "@virid/vue": [
-                "packages/vue/src/index.ts"
-            ],
-        },
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "target": "ESNext",
         "lib": [
             "ESNext",

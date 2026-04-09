@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Vue
  */
-import { type ViridApp } from "@virid/core";
+import { type ViridApp, Newable } from "@virid/core";
 import { bindResponsive } from "./adapters/bind";
 export interface IViridApp {
   register(
@@ -12,7 +12,7 @@ export interface IViridApp {
     priority: number,
   ): () => void;
   get(identifier: any): any;
-  bindComponent<T>(identifier: new (...args: any[]) => T);
+  bindComponent<T>(identifier: Newable<T>): void;
 }
 
 let activeApp: IViridApp | null = null;
@@ -21,7 +21,7 @@ let activeApp: IViridApp | null = null;
  * 激活真正的 App 实例
  */
 export function activateApp(app: ViridApp) {
-  const bindResponsiveHook = (instance) => {
+  const bindResponsiveHook = (instance: any) => {
     if (instance) {
       bindResponsive(instance);
     }

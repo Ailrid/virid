@@ -156,7 +156,7 @@ export function Use(hookFactory: () => any) {
 export function Inherit<T>(
   token: Newable<T>,
   id: string,
-  selector?: (instance: T) => any,
+  selector: (instance: T) => any,
 ) {
   return (target: any, key: string) => {
     const metadata: InheritMetadata =

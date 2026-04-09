@@ -15,9 +15,9 @@ import { type BaseMessage, MessageWriter, MessageInternal } from "./core";
 import { bindObservers } from "./decorators";
 import { initializeGlobalSystems } from "./utils";
 
-export interface ViridPlugin<T = any> {
+export interface ViridPlugin<T = void> {
   name: string;
-  install: (app: ViridApp, options?: T) => void;
+  install: (app: ViridApp, options: T) => void;
 }
 
 // 维护一个已安装插件的列表，防止重复安装
@@ -61,7 +61,10 @@ export class ViridApp {
         }
         return nextInstance !== undefined ? nextInstance : currentInstance;
       } catch (e) {
-        MessageWriter.error(e, `[Virid Container] Activation Hook Failed`);
+        MessageWriter.error(
+          e as Error,
+          `[Virid Container] Activation Hook Failed`,
+        );
         return currentInstance;
       }
     }, instance);

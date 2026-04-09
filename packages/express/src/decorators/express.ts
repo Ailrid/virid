@@ -122,7 +122,7 @@ export function HttpSystem(
       return;
     }
     // Message必须是继承自HttpRequestMessage
-    const messageClass = params.messageClass ?? messageMetadata.messageClass;
+    const messageClass = params.messageClass ?? messageMetadata!.messageClass;
     if (!HttpRequestMessage.isPrototypeOf(messageClass)) {
       MessageWriter.error(
         new Error(
