@@ -168,7 +168,7 @@ async function main() {
   // Finally, let's try making changes to CounterB to see if our features can work properly
   Amber.undo(CounterB);
   Amber.redo(CounterB);
-  // The version here should still be 3, why? Because of our IncreaseMessage.send() above; Once triggered a change
+  // The version here should still be 3, why? Because of our IncreaseMessage.send() above
   console.log(`[Version B]: ${Amber.getVersion(CounterB)}`);
   // Should the value not change, 4
   PrintMessage.send("B");

@@ -13,6 +13,7 @@ import {
 } from "./interfaces";
 import { type BaseMessage, MessageWriter, MessageInternal } from "./core";
 import { bindObservers } from "./decorators";
+import { initializeGlobalSystems } from "./utils";
 
 export interface ViridPlugin<T = void> {
   name: string;
@@ -136,4 +137,4 @@ export class ViridApp {
 
 export const viridApp = new ViridApp();
 viridApp.addActivationHook(bindObservers);
-
+initializeGlobalSystems(viridApp);

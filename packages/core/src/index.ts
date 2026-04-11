@@ -20,10 +20,10 @@ export * from "./decorators";
 export * from "./interfaces";
 import { viridApp, type ViridApp } from "./app";
 import { AppConfig, defaultConfig } from "./interfaces";
-import { initializeGlobalSystems } from "./utils";
+import { toggleSwitch } from "./utils";
 export { type ViridApp, type ViridPlugin } from "./app";
 
 export function createVirid(config: AppConfig = defaultConfig): ViridApp {
-  if (config.enableLog) initializeGlobalSystems(viridApp);
+  toggleSwitch(config.enableLog);
   return viridApp;
 }

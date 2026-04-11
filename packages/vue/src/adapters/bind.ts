@@ -352,7 +352,7 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
         // 如果用户标记了 single: true，则只取最后一条（最新的一条）
         if (single) {
           params = Array.isArray(currentMessage)
-            ? currentMessage[currentMessage.length - 1]
+            ? [currentMessage[currentMessage.length - 1]]
             : currentMessage;
         } else {
           // 否则默认返回整个数组（批处理模式）

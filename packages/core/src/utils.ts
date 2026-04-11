@@ -4,8 +4,14 @@
  * Project: Virid Core
  */
 import { type ViridApp } from "./app";
-import { ErrorMessage, InfoMessage, MessageWriter, WarnMessage } from "./core";
+import { ErrorMessage, InfoMessage, WarnMessage } from "./core";
 import { type SystemContext } from "./interfaces";
+let globalSwitch = true;
+
+export function toggleSwitch(enable: boolean) {
+  globalSwitch = enable;
+}
+
 /**
  * 简单的色彩辅助函数
  */
@@ -42,6 +48,7 @@ function withContext(
  * 注册全局默认信息处理系统
  */
 const globalInfoHandler = (err: InfoMessage) => {
+  if (!globalSwitch) return;
   const header = `${clr.green}${clr.bold} ✔ [Virid Info] ${clr.reset}`;
   const context = `${clr.magenta}${err.context}${clr.reset}`;
 
@@ -56,6 +63,7 @@ const globalInfoHandler = (err: InfoMessage) => {
  * 注册全局默认错误处理系统
  */
 const globalErrorHandler = (err: ErrorMessage) => {
+  if (!globalSwitch) return;
   const header = `${clr.red}${clr.bold} ✖ [Virid Error] ${clr.reset}`;
   const context = `${clr.magenta}${err.context}${clr.reset}`;
 
@@ -71,6 +79,7 @@ const globalErrorHandler = (err: ErrorMessage) => {
  * 注册全局默认警告处理系统
  */
 const globalWarnHandler = (warn: WarnMessage) => {
+  if (!globalSwitch) return;
   const header = `${clr.yellow}${clr.bold} ⚠ [Virid Warn] ${clr.reset}`;
   const context = `${clr.cyan}${warn.context}${clr.reset}`;
 
