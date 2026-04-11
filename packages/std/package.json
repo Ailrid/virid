@@ -1,6 +1,7 @@
 {
   "name": "@virid/std",
   "type": "module",
+  "private": true,
   "version": "0.1.0",
   "description": "The virid standard library provides commonly used features in development",
   "author": "Ailrid",
