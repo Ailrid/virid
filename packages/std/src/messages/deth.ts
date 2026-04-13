@@ -84,6 +84,7 @@ function middleWare(message: BaseMessage, next: () => void): void {
       // 时间不够，直接丢弃该消息
       return;
     }
+    return;
   }
   next();
 }

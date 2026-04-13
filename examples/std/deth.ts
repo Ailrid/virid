@@ -3,8 +3,8 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid
  */
-// This example demonstrates how to use anti shake and throttling.
-// With just one line of code, Virid will be responsible for the native support of anti shake and throttling operations
+// This example demonstrates how to use debounce and throttle.
+// With just one line of code, Virid will be responsible for the native support of debounce and throttle operations
 
 import "reflect-metadata";
 import {
@@ -14,11 +14,9 @@ import {
   EventMessage,
   Message,
 } from "@virid/core";
-import { debounce, throttle, StdPlugin, activateDeTh } from "@virid/std";
+import { debounce, throttle, StdPlugin } from "@virid/std";
 
 const app = createVirid().use(StdPlugin, {});
-// 别忘了激活中间件逻辑
-activateDeTh(app);
 
 @Component()
 class Counter {
@@ -27,7 +25,7 @@ class Counter {
 }
 app.bindComponent(Counter);
 
-// 100ms 防抖：只有停止触发 100ms 后才会执行一次
+// 100ms debounce: It will only be executed once after stopping triggering for 100ms
 @debounce(100, (current, next) => {
   current.val += next.val;
 })
@@ -37,7 +35,7 @@ class SetTimerAMessage extends EventMessage {
   }
 }
 
-// 100ms 节流：100ms 内只允许触发一次
+// 100ms throttling: Only one trigger is allowed within 100ms
 @throttle(500)
 class IncreaseBMessage extends EventMessage {}
 
