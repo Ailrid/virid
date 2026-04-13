@@ -74,12 +74,9 @@ export class MessageInternal {
         );
         return;
       }
-      // 存入 Hub (根据 Single/Event 策略存入不同池子)
+      // 根据 Single/Event 策略存入不同池子
       this.eventHub.push(message);
-
-      // 标记 Dispatcher 为脏，并尝试触发 Tick
       this.dispatcher.markDirty(message);
-      // 启动调度循环
       this.dispatcher.tick(this.registry.systemTaskMap);
     });
   }

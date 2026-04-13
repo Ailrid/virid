@@ -222,7 +222,6 @@ export function bindResponsive(instance: any) {
 
     // 在 bindResponsive 内部
     if (existingBox) {
-      console.log("existingBox :>> ", existingBox);
       const rawValue = existingBox.value;
       const vRef = config.shallow ? shallowRef(rawValue) : ref(rawValue);
 

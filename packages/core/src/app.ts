@@ -15,7 +15,7 @@ import { type BaseMessage, MessageWriter, MessageInternal } from "./core";
 import { bindObservers } from "./decorators";
 import { initializeGlobalSystems } from "./utils";
 
-export interface ViridPlugin<T = void> {
+export interface ViridPlugin<T = any> {
   name: string;
   install: (app: ViridApp, options: T) => void;
 }
