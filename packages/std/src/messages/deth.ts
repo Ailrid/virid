@@ -21,7 +21,7 @@ const prevThTime = new Map<Newable<BaseMessage>, number>();
 /**
  * 防抖装饰器：连续触发的消息会合并，直到停止触发一段时间后才执行
  */
-export function debounce<T extends BaseMessage>(
+export function Debounce<T extends BaseMessage>(
   time: number = 100,
   merge: (currentMessage: T, nextMessage: T) => void = () => {},
 ) {
@@ -36,7 +36,7 @@ export function debounce<T extends BaseMessage>(
 /**
  * 节流装饰器：限制消息触发的频率
  */
-export function throttle(time: number = 100) {
+export function Throttle(time: number = 100) {
   return function (target: Newable<BaseMessage>) {
     throttleMap.set(target, time);
   };

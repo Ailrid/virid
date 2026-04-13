@@ -18,7 +18,7 @@ const asyncMessageQueue = new Map<string, QueueContext[]>();
 /**
  * * 注册异步队列消息
  */
-export function AsyncMessage(key: string = "default") {
+export function AsyncQueue(key: string = "default") {
   return function (target: Newable<EventMessage>) {
     asyncMessageMap.set(target, key);
   };

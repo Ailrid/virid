@@ -14,7 +14,7 @@ import {
   EventMessage,
   Message,
 } from "@virid/core";
-import { debounce, throttle, StdPlugin } from "@virid/std";
+import { Debounce, Throttle, StdPlugin } from "@virid/std";
 
 const app = createVirid().use(StdPlugin, {});
 
@@ -26,7 +26,7 @@ class Counter {
 app.bindComponent(Counter);
 
 // 100ms debounce: It will only be executed once after stopping triggering for 100ms
-@debounce(100, (current, next) => {
+@Debounce(100, (current, next) => {
   current.val += next.val;
 })
 class SetTimerAMessage extends EventMessage {
@@ -36,7 +36,7 @@ class SetTimerAMessage extends EventMessage {
 }
 
 // 100ms throttling: Only one trigger is allowed within 100ms
-@throttle(500)
+@Throttle(500)
 class IncreaseBMessage extends EventMessage {}
 
 class CounterSystem {

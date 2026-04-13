@@ -4,14 +4,9 @@
  * Project: Virid
  */
 import "reflect-metadata";
-import {
-  createVirid,
-  Component,
-  System,
-  EventMessage,
-} from "@virid/core";
-import { AsyncMessage, StdPlugin } from "@virid/std";
-// This example demonstrates how to use asynchronous queues, 
+import { createVirid, Component, System, EventMessage } from "@virid/core";
+import { AsyncQueue, StdPlugin } from "@virid/std";
+// This example demonstrates how to use asynchronous queues,
 // where messages marked with the same key will be sorted and executed in the order they were sent
 const app = createVirid().use(StdPlugin, {});
 
@@ -26,11 +21,11 @@ app.bindComponent(Counter);
 // With just one line of code,
 // virid ensures that a set of messages with the same key,
 // even if the system is asynchronous, will always follow the order of sending.
-@AsyncMessage("increase")
+@AsyncQueue("increase")
 class IncreaseAMessage extends EventMessage {}
-@AsyncMessage("increase")
+@AsyncQueue("increase")
 class IncreaseBMessage extends EventMessage {}
-@AsyncMessage("decrease")
+@AsyncQueue("decrease")
 class DecreaseMessage extends EventMessage {}
 
 class CounterSystem {
