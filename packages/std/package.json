@@ -1,8 +1,7 @@
 {
   "name": "@virid/std",
   "type": "module",
-  "private": true,
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "The virid standard library provides commonly used features in development",
   "author": "Ailrid",
   "license": "Apache 2.0",

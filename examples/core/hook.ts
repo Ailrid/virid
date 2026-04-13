@@ -13,7 +13,7 @@ import {
   SingleMessage,
   EventMessage,
 } from "@virid/core";
-
+// This example demonstrates how to add custom hooks
 const app = createVirid();
 
 // Mark and bind this component
@@ -34,6 +34,8 @@ app.useMiddleware((message, next) => {
   next();
 });
 
+// This hook will be executed when the component or controller is new.
+// For the component, as it is a global singleton, it will only be executed once
 app.addActivationHook((instance) => {
   console.log("----------Activation hook triggered----------");
   console.log(

@@ -19,6 +19,7 @@ export type ExecuteHook<T extends BaseMessage> = (
       ? T[]
       : T,
   context: ExecuteHookContext,
+  success: boolean,
 ) => void | Promise<void>;
 
 export interface ExecuteHookContext {

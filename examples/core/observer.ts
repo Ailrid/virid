@@ -14,7 +14,7 @@ import {
   Observer,
   EventMessage,
 } from "@virid/core";
-
+// This example demonstrates how to automatically trigger side effects when modifying variables on a component
 const app = createVirid();
 
 @Component()

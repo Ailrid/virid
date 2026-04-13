@@ -155,11 +155,11 @@ export class Dispatcher {
           // 此时 tick 立即进入下一轮
           this.tick(systemTaskMap);
         } else {
-          this.executeTickHooks(this.afterTickHooks);
-          //标记当前tick
-          this.globalTick++;
           // 重置内部状态
           this.internalDepth = 0;
+          this.executeTickHooks(this.afterTickHooks);
+          this.globalTick++;
+          //标记当前tick
         }
       }
     });
@@ -282,6 +282,7 @@ export class ExecutionTask {
 
   private triggerHooks(
     hooks: Array<{ type: MessageIdentifier<any>; handler: ExecuteHook<any> }>,
+    success: boolean,
   ) {
     const sample = Array.isArray(this.message) ? this.message[0] : this.message;
     if (!sample) return;
@@ -289,7 +290,7 @@ export class ExecutionTask {
     for (const hook of hooks) {
       if (sample instanceof hook.type) {
         try {
-          const result = hook.handler(this.message, this.hookContext);
+          const result = hook.handler(this.message, this.hookContext, success);
           if (result instanceof Promise) {
             result.catch((e) => {
               MessageWriter.error(
@@ -318,22 +319,24 @@ export class ExecutionTask {
       handler: ExecuteHook<any>;
     }>,
   ): any {
+    let success = true;
     //执行前置钩子
-    this.triggerHooks(beforeExecuteHooks);
-    const runAfter = () => this.triggerHooks(afterExecuteHooks);
+    this.triggerHooks(beforeExecuteHooks, success);
+    const runAfter = () => this.triggerHooks(afterExecuteHooks, success);
 
     try {
       const result = this.fn(this.message);
 
       if (result instanceof Promise) {
         // 异步模式利用 .finally 确保钩子执行
-        return result.finally(() => runAfter());
+        return result.catch(() => (success = false)).finally(runAfter);
       }
       // 如果是同步，直接后置钩子执行并返回
       runAfter();
       return result;
     } catch (e) {
       // 如果报错了，也执行后置钩子
+      success = false;
       runAfter();
       throw e; // 抛给 Dispatcher 的 try-catch 处理
     }

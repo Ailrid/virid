@@ -16,7 +16,7 @@ import {
   MessageWriter,
   SingleMessage,
 } from "@virid/core";
-
+// This example demonstrates how to replace the default logging system with a custom logging system
 // The embedded logging system can be turned off in the settings
 const app = createVirid({
   enableLog: false,

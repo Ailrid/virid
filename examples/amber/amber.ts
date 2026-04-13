@@ -12,7 +12,7 @@ import {
   Message,
 } from "@virid/core";
 import { Amber, AmberPlugin, defaultOptions, Backup } from "@virid/amber";
-
+// This example demonstrates how to use Amber for backup and recovery of Composer
 async function wait() {
   await new Promise<void>((resolve) => resolve());
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@examples/core",
+  "private": true,
+  "scripts": {
+    "async-queue": "node -r @swc-node/register ./async-queue.ts",
+    "nexttick": "node -r @swc-node/register ./nexttick.ts",
+    "execute-group": "node -r @swc-node/register ./execute-group.ts",
+    "deth": "node -r @swc-node/register ./deth.ts"
+  },
+  "dependencies": {
+    "@virid/core": "workspace:*",
+    "@virid/std": "workspace:*",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.11.1",
+    "@swc/core": "^1.15.11",
+    "@types/node": "^25.5.2"
+  }
+}

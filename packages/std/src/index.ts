@@ -15,3 +15,13 @@
  *
  * Description: The virid standard library provides commonly used features in development.
  */
+import { ViridPlugin, type ViridApp } from "@virid/core";
+export * from "./utils";
+export * from "./messages";
+import { activateApp } from "./app";
+export const StdPlugin: ViridPlugin = {
+  name: "@virid/std",
+  install(app: ViridApp, _options) {
+    activateApp(app);
+  },
+};

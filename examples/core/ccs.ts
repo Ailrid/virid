@@ -15,7 +15,7 @@ import {
   EventMessage,
   MessageWriter,
 } from "@virid/core";
-
+// This example demonstrates the basic usage of CCS architecture
 const app = createVirid();
 
 // Mark and bind this component
