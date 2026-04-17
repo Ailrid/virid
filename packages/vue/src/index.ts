@@ -16,13 +16,16 @@
  * Description: Vue adapter for virid, projecting logic sovereignty to reactive UI.
  */
 import { ViridPlugin, type ViridApp } from "@virid/core";
+import { type PluginOption } from "./interfaces";
 export * from "./adapters";
 export * from "./decorators";
 export * from "./interfaces";
 import { activateApp } from "./app";
-export const VuePlugin: ViridPlugin = {
+import { disableBorrowChecker } from "./adapters/borrow-checker";
+export const VuePlugin: ViridPlugin<PluginOption> = {
   name: "@virid/vue",
-  install(app: ViridApp, _options) {
+  install(app: ViridApp, options: PluginOption) {
+    if (options.disableBorrowChecker) disableBorrowChecker();
     activateApp(app);
   },
 };

@@ -6,6 +6,11 @@
 import { MessageWriter } from "@virid/core";
 import { VIRID_VUE_METADATA } from "../decorators/constant";
 
+let isBorrowCheckerEnabled = true;
+export function disableBorrowChecker() {
+  isBorrowCheckerEnabled = false;
+}
+
 // 在文件顶部定义缓存池
 const borrowCache = new WeakMap<any, any>();
 /**
@@ -16,8 +21,8 @@ export function createBorrowChecker(
   rootName: string,
   path: string = "",
 ): any {
-  // 基本类型处理
   if (
+    !isBorrowCheckerEnabled ||
     target === null ||
     (typeof target !== "object" && typeof target !== "function")
   ) {
