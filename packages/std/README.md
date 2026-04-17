@@ -1,8 +1,8 @@
 # @virid/std
 
-`@virid/std` 是 `@virid/core`的官方标准库，负责提供一组开箱即用的实用消息控制流操作。提供了原生的异步流、消息组、防抖节流等支持。
+**@virid/std** is the official standard library for **@virid/core**. It provides a set of out-of-the-box utility message control flow operations, featuring native support for asynchronous streams, message grouping, debouncing, throttling, and more.
 
-## 🔌启用插件
+### 🔌 Enabling the Plugin
 
 ```ts
 import { createVirid, Component, System, EventMessage } from "@virid/core";
@@ -11,12 +11,12 @@ import { nextTick, StdPlugin } from "@virid/std";
 const app = createVirid().use(StdPlugin, {});
 ```
 
-## 🛠️ @virid/std 核心 API 概览
+## 🛠️ @virid/std Core API Overview
 
-### nextTick
+### `nextTick`
 
-- **功能**：类似于`vue`中的`nextTick`，但该`Tick`指的是一个`virid`的宏观`Tick`，因此，当执行时该`Tick`内的所有同步`System`已经全部执行完毕，对于异步控制，则需要使用`@AsyncQueue`装饰器
-- **示例：**
+- **Function**: Similar to `nextTick` in Vue, but refers to a **Virid Macro Tick**. When executed, all synchronous Systems within the current Tick have finished running. For asynchronous control, use the `@AsyncQueue` decorator.
+- **Example**:
 
 ```ts
 nextTick(() => {
@@ -26,63 +26,74 @@ nextTick(() => {
 });
 ```
 
-### `@AsyncQueue()`
+------
 
-- **功能**：`@AsyncQueue()`提供了一个开箱即用的异步消息控制，该装饰器接受一个参数key，对于key相同的message，将严格按照先后顺序执行，而不会出现异步竟态问题。
-- **示例：**
+### `@AsyncQueue(key: string)`
+
+- **Function**: Provides out-of-the-box asynchronous message control. It accepts a `key` parameter; messages sharing the same `key` are executed in strict sequential order, preventing asynchronous race conditions.
+- **Example**:
+
+TypeScript
 
 ```ts
 @AsyncQueue("increase")
 class IncreaseAMessage extends EventMessage {}
+
 @AsyncQueue("increase")
 class IncreaseBMessage extends EventMessage {}
+
 @AsyncQueue("decrease")
 class DecreaseMessage extends EventMessage {}
 
-// 按以下顺序发送消息
-// 由于IncreaseMessage和IncreaseBMessage的key是相同的，
-// 即使存在异步操作，以下三条消息也必须按顺序执行
+// Messages sent in the following order:
+// Because IncreaseAMessage and IncreaseBMessage share the same key,
+// they will execute sequentially even if they contain async operations.
 IncreaseAMessage.send();
 IncreaseBMessage.send();
 IncreaseAMessage.send();
-// 由于DecaseMessage和其他消息之间的key不同
-// DecaseMessage不会等待上述消息
-// 但是，以下三条消息将按顺序执行
+
+// Since DecreaseMessage has a different key, it does not wait for the above.
+// However, the three DecreaseMessages below will execute in their own sequence.
 DecreaseMessage.send();
 DecreaseMessage.send();
 DecreaseMessage.send();
 ```
 
-### `executeGroup`
+------
 
-- **功能**：`executeGroup`是一组消息的集合，将一组消息严格按照先后顺序一次性执行，并且当途中出错时取消后续逻辑。
-- **示例：**
+### **`executeGroup`**
+
+- **Function**: A collection of messages that executes a group in strict sequential order. If an error occurs during execution, subsequent logic is cancelled.
+- **Example**:
 
 ```ts
-const a = await executeGroup(
-[
-  new IncreaseAMessage(),
-  new IncreaseBMessage(),
-  new IncreaseAMessage(),
-  new DecreaseMessage(),
-],
-"first",
+const success = await executeGroup(
+  [
+    new IncreaseAMessage(),
+    new IncreaseBMessage(),
+    new IncreaseAMessage(),
+    new DecreaseMessage(),
+  ],
+  "first"
 );
-if (a) {
-console.log("[ExecuteGroup] Success");
+
+if (success) {
+  console.log("[ExecuteGroup] Success");
 } else {
-console.log("[ExecuteGroup] Failed");
+  console.log("[ExecuteGroup] Failed");
 }
 ```
 
-### `@Debounce（）/@Throttle`
+------
 
-- **功能**：开箱即用的防抖与节流支持。只需要一行代码即可实现。
-- **示例：**
+### `@Debounce()` / `@Throttle()`
+
+- **Function**: Out-of-the-box support for debouncing and throttling. Can be implemented with a single line of code.
+- **Example**:
 
 ```ts
-// 100ms防抖：停止触发100ms后只执行一次
-// 后一个参数用于聚合消息
+// 100ms Debounce: Executes only once after 100ms of inactivity.
+// The second parameter is used to aggregate messages.
 @Debounce(100, (current, next) => {
   current.val += next.val;
 })
@@ -92,7 +103,7 @@ class SetTimerAMessage extends EventMessage {
   }
 }
 
-// 100ms节流：100ms内只允许一次触发
+// 500ms Throttle: Limits execution to once every 500ms.
 @Throttle(500)
 class IncreaseBMessage extends EventMessage {}
 ```

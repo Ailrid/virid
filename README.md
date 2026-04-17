@@ -2,23 +2,25 @@
 
 ## [中文说明](README.zh.md)
 
-**A deterministic, message-driven engine written in TypeScript, built for heavy-duty logic.**
+Virid is a deterministic, message-driven engine written in TypeScript, specifically architected for complex Electron applications. It completely strips business logic away from the fragments of UI frameworks, establishing a micro-distributed core with location transparency.
 
-`virid` completely decouples business logic from the fragments of UI frameworks, constructing a micro-distributed core with **location transparency**, **temporal reversibility**, and **inter-process sovereignty**.
+##  Key Features
 
----
+Virid resolves the issues of "state drift" and "spaghetti logic" in large-scale frontend and Electron projects by decoupling business logic from views. Its core operational mechanisms include:
 
-### 🛠️ Core Concepts
+**Environment-Agnostic Logic Core:** Business logic resides entirely within `@virid/core` without any dependency on DOM/BOM APIs. This allows the same core logic to run seamlessly across Electron’s main process, renderer process, or Node.js environments, ensuring high code reusability even if you switch frontend frameworks.
 
-By thoroughly decoupling logic from views, `virid` solves the problems of "state drift" and "spaghetti logic" in large-scale frontend and Electron projects. Its core operational mechanisms are as follows:
+**Unidirectional Data Projection:** The UI layer integrates via `@virid/vue` and acts strictly as a read-only view of the logic layer. The system prevents direct state modifications from the view layer at the architectural level, ensuring a single source of truth for all data changes.
 
-**Environment-Agnostic Logic Kernel：**Business logic runs entirely within `@virid/core`, independent of DOM/BOM APIs. This allows the same core logic to run seamlessly across the **Electron Main process**, **Renderer processes**, or **Node.js** environments.
+**Command-Driven Asynchronous Scheduling:** All state changes must be triggered via Messages. The Dispatcher utilizes a tick mechanism—similar to a game engine—to process messages, while "Systems" handle specific business computations to guarantee predictable execution order.
 
-**Unidirectional Data Projection**：The UI layer (e.g., Vue) connects via `@virid/vue` and acts strictly as a **read-only view** of the logic layer's data. The system physically blocks the view layer from directly modifying state, ensuring a single, authoritative source of truth for all data changes.
+**Abstracted IPC Communication:** Virid provides a comprehensive messaging mechanism between the renderer and main processes that fully abstracts underlying IPC. Communicating across Electron processes with Virid feels identical to local communication.
 
-**Command-Driven Asynchronous Scheduling**：Every state change must be triggered by a `Message`. The `Dispatcher` processes messages using a **Tick mechanism** (inspired by game engines), where `Systems` perform business computations. This ensures the execution order of logic is deterministic and predictable.
+**Robust Asynchronous Control:** The engine offers native-level support for debouncing, throttling, transactions, and asynchronous timing control. There is no need to introduce external libraries or dependencies for these tasks.
 
-## 📦 Module composition
+**Zero-Dependency Minimalist Design:** Virid maintains a footprint with zero third-party dependencies, with the sole exception of `reflect-metadata`.
+
+##  Module composition
 
 | **Module**            | **Role**                               | **Key Features**                                             |
 | --------------------- | -------------------------------------- | ------------------------------------------------------------ |
@@ -29,18 +31,9 @@ By thoroughly decoupling logic from views, `virid` solves the problems of "state
 | **`@virid/main`**     | **Main Bridge**                        | **Intelligent message routing, Multi-window message forwarding & arbitration.** |
 | **`@virid/amber`**    | **Causal State Management**            | **Message replay, Temporal state recovery, Multi-track Undo/Redo.** |
 | **`@virid/express`**  | **HTTP request to message conversion** | **Convert express requests into messages and process them in the system, providing dependency injection functionality similar to NestJS** |
+| **@virid/std**        | **Core function enhancement**          | **Provide asynchronous message timing control, throttling and debounce, etc** |
 
-### 🎯 Key Advantages
-
-- **Deterministic Logic Execution**: By implementing a game-engine-inspired **Tick scheduling mechanism** and **double-buffered message pools**, `virid` completely eliminates "Race Conditions" and logic jitter commonly found in complex UI interactions.
-
-- **Native Support for Automated Testing**: Since the logic kernel is entirely decoupled from the DOM, developers can achieve **100% business logic test coverage** in pure Node.js or Vitest environments. By simulating message sequences, you can verify complex behaviors without the need for any UI-level mocking.
-
-- **Rigorous State Mutation Auditing**: Built on a unidirectional data flow and command-driven pattern, the system automatically records every state change triggered by a message. This provides the foundational infrastructure for **Time Machine (Undo/Redo)**, operation log auditing, and precise fault reproduction.
-
-- **Seamless Cross-Process Communication**: Specifically optimized for the Electron ecosystem. The built-in **Transparent Message Routing** simplifies complex IPC communication into standard message dispatches, significantly reducing the development overhead for multi-window and multi-process collaborative applications.
-
-### 🔗 Deep Dive
+##  Deep Dive
 
 For detailed implementation details and quick-start examples, please refer to the documentation in each sub-package:
 
@@ -51,4 +44,8 @@ For detailed implementation details and quick-start examples, please refer to th
 - 👉 **[@virid/main](packages/main/README.md)** – Learn how the **Main process** handles and routes messages from Renderer processes.
 - 👉 **[@virid/amber](packages/amber/README.md)** – Learn how to implement **message replay** and **Undo/Redo** functionality.
 - 👉 **[@virid/express](packages/express/README.md)** –Learn how to **control express** in virid.
--  👉 **[Comprehensive Example](https://github.com/Ailrid/starry)** – Learn how to use virid to build the entire application
+- 👉 **[@virid/std](packages/std/README.md)** –Learn how to control asynchronous messages.
+
+##  Other
+
+  👉 **[Comprehensive Example](https://github.com/Ailrid/vireo)** – A complete electron application written using Virid.
