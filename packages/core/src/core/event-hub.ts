@@ -58,21 +58,6 @@ export class EventHub {
   }
 
   /**
-   * [EVENT专用] 获取当前所有待处理的事件流
-   */
-  getEventStream(): any[] {
-    return this.eventActive;
-  }
-
-  /**
-   * [新增] 根据索引精准读取 EVENT 里的某个数据
-   * 配合 Dispatcher 逐条分发时使用
-   */
-  peekEventAt(index: number): any {
-    return this.eventActive[index];
-  }
-
-  /**
    * 清理已处理的内容
    */
   clearSignals(types: Set<any>) {

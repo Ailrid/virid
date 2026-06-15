@@ -17,7 +17,7 @@ import {
   type TickHookContext,
 } from "../interfaces";
 import { SingleMessage, EventMessage, type BaseMessage } from "./message";
-import { type EventHub } from "./event-hub";
+import { EventHub } from "./event-hub";
 
 export class Dispatcher {
   private dirtySignalTypes = new Set<any>();
@@ -25,7 +25,8 @@ export class Dispatcher {
   private isRunning = false;
   private globalTick = 0; // 整个 App 生命周期内唯一、单调递增
   private internalDepth = 0; // 用于死循环防御，单次任务链执行完归零
-  private eventHub: EventHub;
+  private eventHub = new EventHub();
+
   private tickPayload: { [key: string]: any } = {};
   // 两个execute钩子
   private beforeExecuteHooks: Array<{
@@ -39,10 +40,7 @@ export class Dispatcher {
   // 两个tick钩子
   private beforeTickHooks: Array<TickHook> = [];
   private afterTickHooks: Array<TickHook> = [];
-  // 两个tick钩子
-  constructor(eventHub: EventHub) {
-    this.eventHub = eventHub;
-  }
+
   // 添加执行钩子
   public addBeforeExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
@@ -86,6 +84,7 @@ export class Dispatcher {
    * 标记脏数据：根据基类判断进入哪个池子
    */
   public markDirty(message: any) {
+    this.eventHub.push(message);
     if (message instanceof EventMessage) {
       // EventMessage：顺序追加，不合并
       this.eventQueue.push(message);
@@ -185,26 +184,16 @@ export class Dispatcher {
       });
     }
     // 收集 SIGNAL 任务 (每个 System 针对该类型只跑一次)
-    // 对 System 函数引用进行去重，防止同一个类型触发多次重复的 SIGNAL 处理
-    const signalFnSet = new Set<any>();
     for (const type of signalSnapshot) {
       const systems = systemTaskMap.get(type) || [];
       systems.forEach((s) => {
-        if (!signalFnSet.has(s.fn)) {
-          tasks.push(
-            new ExecutionTask(
-              s.fn,
-              s.priority,
-              this.eventHub.peekSignal(type),
-              {
-                context: (s.fn as any).systemContext as SystemContext,
-                tick: this.globalTick,
-                payload: {},
-              },
-            ),
-          );
-          signalFnSet.add(s.fn);
-        }
+        tasks.push(
+          new ExecutionTask(s.fn, s.priority, this.eventHub.peekSignal(type), {
+            context: (s.fn as any).systemContext as SystemContext,
+            tick: this.globalTick,
+            payload: {},
+          }),
+        );
       });
     }
     return tasks;

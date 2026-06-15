@@ -44,3 +44,5 @@
 ## 其他
 
 👉 **[Comprehensive Example](https://github.com/Ailrid/vireo)** – 一个使用virid编写的，完整的electron应用。
+
+👉 **[python  virid](https://github.com/Ailrid/py_virid)** – Python版本的virid

@@ -4,7 +4,6 @@
  * Project: Virid Core
  */
 import { Dispatcher } from "./dispatcher";
-import { EventHub } from "./event-hub";
 import {
   type ExecuteHook,
   type TickHook,
@@ -16,8 +15,7 @@ import { MessageRegistry } from "./registry";
 import { MessageWriter, activateInstance } from "./io";
 
 export class MessageInternal {
-  private eventHub = new EventHub();
-  private dispatcher = new Dispatcher(this.eventHub);
+  private dispatcher = new Dispatcher();
   private registry = new MessageRegistry();
   private middlewares: Middleware[] = [];
 
@@ -74,8 +72,6 @@ export class MessageInternal {
         );
         return;
       }
-      // 根据 Single/Event 策略存入不同池子
-      this.eventHub.push(message);
       this.dispatcher.markDirty(message);
       this.dispatcher.tick(this.registry.systemTaskMap);
     });

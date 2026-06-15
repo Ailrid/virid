@@ -49,3 +49,5 @@ For detailed implementation details and quick-start examples, please refer to th
 ##  Other
 
   👉 **[Comprehensive Example](https://github.com/Ailrid/vireo)** – A complete electron application written using Virid.
+
+  👉 **[python  virid](https://github.com/Ailrid/py_virid)** – Python virid

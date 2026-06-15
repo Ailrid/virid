@@ -36,10 +36,10 @@ function afterExecuteHook(
       if (executeGroup.length > 0) {
         const { resolve } = executeGroup.shift()!;
         resolve();
-        if (executeGroup.length == 0) {
-          callBackMap.get(key)!(true);
-          clearGroup(key);
-        }
+      }
+      if (executeGroup.length == 0) {
+        callBackMap.get(key)!(true);
+        clearGroup(key);
       }
     } else {
       callBackMap.get(key)!(false);
