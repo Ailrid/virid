@@ -12,7 +12,6 @@ import {
   WarnMessage,
   InfoMessage,
   System,
-  Message,
   MessageWriter,
   SingleMessage,
 } from "@virid/core";
@@ -26,28 +25,30 @@ class TestMessage extends SingleMessage {}
 
 class LogSystem {
   @System()
-  static info(@Message(InfoMessage) message: InfoMessage) {
-    console.log(`[INFO] ${message.context}]`);
+  static info(message: InfoMessage) {
+    console.log(`[INFO] ${message.context}`);
   }
 
   @System()
-  static warn(@Message(WarnMessage) message: WarnMessage) {
-    console.log(`[WARN] ${message.context}]`);
+  static warn(message: WarnMessage) {
+    console.log(`[WARN] ${message.context}`);
   }
   @System()
-  static error(@Message(ErrorMessage) message: ErrorMessage) {
-    console.log(
-      `[ERROR] ${message.error.message}\nDetail: ${message.context}]`,
-    );
+  static error(message: ErrorMessage) {
+    console.log(`[ERROR] ${message.error.message}\nDetail: ${message.context}`);
   }
 
   @System()
-  static test(@Message(TestMessage) message: TestMessage) {
+  static test(message: TestMessage) {
     // If any error occurs in a system
     // it will be captured by the scheduler and automatically converted into a new Error Message
     throw new Error("Error Test");
   }
 }
+app.register(LogSystem.info);
+app.register(LogSystem.warn);
+app.register(LogSystem.error);
+app.register(LogSystem.test);
 
 MessageWriter.info("This is a info message");
 MessageWriter.warn("This is a warn message");
@@ -59,3 +60,13 @@ async function wait() {
 }
 
 wait();
+// final output:
+// [INFO] This is a info message
+// [WARN] This is a warn message
+// [ERROR] Error Text
+// Detail: This is a info message
+// [ERROR] Error Test
+// Detail: [Virid Dispatcher]: Sync System Error.
+// SystemLocation: LogSystem.test
+// MessageName:    TestMessage
+// MessageData:    [{}]

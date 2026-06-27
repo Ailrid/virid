@@ -17,7 +17,7 @@ class Counter {
   public timeC = 100;
 }
 
-app.bindComponent(Counter);
+app.bind(Counter);
 // With just one line of code,
 // virid ensures that a set of messages with the same key,
 // even if the system is asynchronous, will always follow the order of sending.
@@ -63,6 +63,13 @@ class CounterSystem {
     console.log("C, which took longer to execute, has been completed");
   }
 }
+app.register(CounterSystem.increaseA);
+app.register(CounterSystem.increaseB);
+app.register(CounterSystem.decrease);
+app.register(CounterSystem.decreaseLonger);
+
+
+
 
 // Send messages in the following order
 // Due to the fact that the keys for IncreaseAMessage and IncreaseBMessage are the same,
@@ -82,7 +89,7 @@ DecreaseMessage.send();
 // C, which took longer to execute, has been completed
 
 // ->DecreaseMessage
-// C :>>  97
+// C :>>  98
 // ->IncreaseAMessage
 //  This system was asynchronously paused before and resumed execution after 2 seconds,
 //  so it will jump the queue and appear

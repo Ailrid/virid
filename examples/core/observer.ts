@@ -29,7 +29,7 @@ class Counter {
   })
   public count = 0;
 }
-app.bindComponent(Counter);
+app.bind(Counter);
 
 class IncreaseMessage extends EventMessage {}
 
@@ -41,6 +41,7 @@ class CounterSystem {
     counter.count++;
   }
 }
+app.register(CounterSystem.increase);
 
 IncreaseMessage.send();
 IncreaseMessage.send();
@@ -51,3 +52,12 @@ async function wait() {
 }
 
 wait();
+// final output:
+// ✔ [Virid Info] Global Info Caught:
+// Details: Counter has changed from 0 to 1! I should go do some extra things now
+//  ✔ [Virid Info] Global Info Caught:
+// Details: Counter has changed from 1 to 2! I should go do some extra things now
+//  ✔ [Virid Info] Global Info Caught:
+// Details: Counter has changed from 2 to 3! I should go do some extra things now
+//  ✔ [Virid Info] Global Info Caught:
+// Details: Counter has changed from 3 to 4! I should go do some extra things now

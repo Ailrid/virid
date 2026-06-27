@@ -5,7 +5,12 @@
  */
 import { VIRID_VUE_METADATA } from "./constant";
 import type { WatchOptions } from "vue";
-import { MessageWriter, type Newable, BaseMessage } from "@virid/core";
+import {
+  MessageWriter,
+  type Newable,
+  BaseMessage,
+  SingleMessage,
+} from "@virid/core";
 import {
   type WatchMetadata,
   type ProjectMetadata,
@@ -15,32 +20,39 @@ import {
   type OnHookMetadata,
   type ListenerMetadata,
   type ListenerConfig,
+  EnvMetadata,
 } from "../interfaces";
-/**
- * @description:实现Watch
- */
 
-// 重载 1: 监听 Controller 自身变量
+/**
+ * Overload 1: Monitor Controller's own variables
+ * @param source Watching closure functions
+ * @param options Watch options
+ */
 export function Watch<T>(
   source: (instance: T) => any | Promise<any>,
   options?: WatchOptions,
 ): any;
 
-// 重载 2: 监听全局 Component 变量
+/**
+ * Overload 2: Monitor Component's variables
+ * @param componentClass Component class
+ * @param source Watching closure functions
+ * @param options Watch options
+ */
+
 export function Watch<C>(
   component: Newable<C>,
   source: (comp: C) => any | Promise<any>,
   options?: WatchOptions,
 ): any;
 
-// 实现逻辑
 export function Watch(arg1: any, arg2?: any, arg3?: any) {
   return (target: any, methodName: string) => {
     const existing: WatchMetadata =
       Reflect.getMetadata(VIRID_VUE_METADATA.WATCH, target) || [];
 
     if (typeof arg2 === "function") {
-      // 重载 2: Watch(Component, (c) => c.prop, options)
+      // Watch(Component, (c) => c.prop, options)
       existing.push({
         type: "component",
         componentClass: arg1,
@@ -49,7 +61,7 @@ export function Watch(arg1: any, arg2?: any, arg3?: any) {
         methodName,
       });
     } else {
-      // 重载 1: Watch((i) => i.prop, options)
+      //  Watch((i) => i.prop, options)
       existing.push({
         type: "local",
         componentClass: null,
@@ -62,21 +74,25 @@ export function Watch(arg1: any, arg2?: any, arg3?: any) {
     Reflect.defineMetadata(VIRID_VUE_METADATA.WATCH, existing, target);
   };
 }
+
 /**
- * @description: 实现数据投影
- * 用法：@Project() 或 @Project('a.b.c')
+ * Overload 1: Internal Projection
+ * @param source Projection closure functions
  */
-// 重载 1: 内部投影 @Project(i => i.someService.data)
+
 export function Project<T>(source: (instance: T) => any): any;
 
-// 重载 2: 跨组件投影 @Project(UserComponent, c => c.name)
+/**
+ * Overload 1: Component Projection
+ * @param source Projection closure functions
+ */
 export function Project<C>(
   component: new (...args: any[]) => C,
   source: (comp: C) => any,
 ): any;
-// 重载 3: 内部get set 投影 @Project() public get name() {}
+// Overload 3: Internal get set projection @Project() Public get name() {}
 export function Project<T>(): any;
-// 实现逻辑
+
 export function Project(arg1?: any, arg2?: any) {
   return (target: any, key: string, descriptor?: PropertyDescriptor) => {
     const existing: ProjectMetadata =
@@ -104,8 +120,7 @@ export function Project(arg1?: any, arg2?: any) {
   };
 }
 /**
- * @description: 给数据增加响应式
- * 用法：@Responsive()
+ * Add responsiveness to data
  */
 export function Responsive(shallow = false) {
   return (target: any, key: string) => {
@@ -118,8 +133,7 @@ export function Responsive(shallow = false) {
 }
 
 /**
- * @description: 声明式生命周期钩子
- * 用法：@OnHook("onMounted")
+ * Declarative lifecycle hook @OnHook("onMounted")
  */
 export function OnHook(
   hookName:
@@ -138,8 +152,8 @@ export function OnHook(
   };
 }
 /**
- * @description: 万能 Hook 注入装饰器
- * 用法：@Use(() => useRoute()) public route!: RouteLocationNormalized
+ * Universal Hook Injection Decorator
+ * Usage: @ Use()=>useRoute() Public route! : RouteLocationNormalized
  */
 export function Use(hookFactory: () => any) {
   return (target: any, key: string) => {
@@ -150,8 +164,8 @@ export function Use(hookFactory: () => any) {
   };
 }
 /**
- * @description: Inherit注入装饰器
- * 用法：@Inherit(Controller,(instance) => instance.xxxx) public data!: SomeType
+ * Inherit injection decorator
+ * Usage: @Inherit(Controller, (instance)=>instance. xxxx) public data! : SomeType
  */
 export function Inherit<T>(
   token: Newable<T>,
@@ -167,37 +181,116 @@ export function Inherit<T>(
 }
 
 /**
- * @description: 标记一个属性是从外部环境(context)注入的
- * 纯元数据标记，什么也不干，方便后期做自动化文档或 TS 类型提示
+ * Marking an attribute as injected from the external environment (context)
  */
 export function Env() {
-  return (_target: any, _propertyKey: string) => {
-    // 即使现在不存元数据，有了这个装饰器，Controller 看起来也会更清晰
+  return (target: any, key: string) => {
+    const metadata: EnvMetadata =
+      Reflect.getMetadata(VIRID_VUE_METADATA.ENV, target) || [];
+    metadata.push({ key });
+    Reflect.defineMetadata(VIRID_VUE_METADATA.ENV, metadata, target);
   };
 }
 
 /**
- * @description: Listener 装饰器 - 标记 Controller 的成员方法为消息监听器
+ * Listener Decorator - Tag Controller's member methods as message listeners
  */
-export function Listener<T extends BaseMessage>({
-  messageClass,
-  priority = 0,
-  single = true,
-}: ListenerConfig<T>) {
-  return (target: any, key: string) => {
-    // 获取该 Controller 原型上已有的监听器元数据
+export function Listener(
+  config: ListenerConfig = {
+    messageClass: null,
+    priority: 0,
+    batchMode: false,
+  },
+) {
+  return (target: any, key: string, descriptor?: PropertyDescriptor) => {
+    if (typeof target === "function") {
+      throw new Error(
+        `[Virid Listener] Method Type Error: The Method "${key}" is a static method. @Listener can only be used on instance member methods.`,
+      );
+    }
+
+    // Get parameter type metadata
+    const types: Array<any> =
+      Reflect.getMetadata("design:paramtypes", target, key) || [];
+
+    // Verify if there are undefined parameters (to prevent circular references or incomplete imports)
+    const undefinedIndices = types
+      .map((t, i) => (t === undefined ? i : -1))
+      .filter((i) => i !== -1);
+    if (undefinedIndices.length > 0) {
+      throw new Error(
+        `[Virid Listener] Parameter Metadata Loss in "${key}": One or more parameters have 'undefined' types. Check indices: [${undefinedIndices.join(", ")}]`,
+      );
+    }
+
+    // The parameter must have only one
+    if (types.length > 1) {
+      throw new Error(
+        `[Virid Listener] Multiple Parameters Not Allowed: Listener method "${key}" can have at most ONE parameter (BaseMessage subclass or Array).`,
+      );
+    }
+
+    // Prepare variables for final storage in metadata
+    let finalMessageClass = config.messageClass;
+    let finalBatchMode = config.batchMode ?? false;
+
+    // Split processing: 0 parameters vs 1 parameter
+    if (types.length === 0) {
+      // No parameters are allowed, but it must be written in messageClass
+      if (!config.messageClass) {
+        throw new Error(
+          `[Virid Listener] Rule Violation in "${key}": When the method has no parameters, you MUST specify "messageClass" in the decorator options.`,
+        );
+      }
+    } else {
+      // There is only one parameter available
+      const paramType = types[0];
+
+      if (paramType === Array) {
+        // If it is a list (Array), messageClass must be written
+        if (!config.messageClass) {
+          throw new Error(
+            `[Virid Listener] Rule Violation in "${key}": When using batch processing mode with Array, the "messageClass" parameter must be specified in decorator options.`,
+          );
+        }
+        // Batch, verify if it inherits from SingleMessage
+        if (!(config.messageClass.prototype instanceof SingleMessage)) {
+          throw new Error(
+            `[Virid Listener] Type Mismatch in "${key}": Batch processing mode (Array) is only supported for subclasses of SingleMessage.`,
+          );
+        }
+        finalBatchMode = true;
+      } else if (
+        paramType === BaseMessage ||
+        (paramType && paramType.prototype instanceof BaseMessage)
+      ) {
+        // If it is a single BaseMessage, messageClass cannot be written
+        if (config.messageClass) {
+          throw new Error(
+            `[Virid Listener] Rule Violation in "${key}": Cannot specify "messageClass" in decorator options when it is already declared as a method parameter.`,
+          );
+        }
+        finalMessageClass = paramType;
+        // If batchMode is not explicitly specified, batch mode will not be enabled by default for single messages
+        finalBatchMode = config.batchMode ?? false;
+      } else {
+        // I have written parameters, but they are neither BaseMessage nor Array
+        throw new Error(
+          `[Virid Listener] Invalid Parameter in "${key}": The single parameter must be either a subclass of BaseMessage or an Array.`,
+        );
+      }
+    }
+
     const listeners: ListenerMetadata =
       Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, target) || [];
 
-    // 存入当前方法的配置：哪个方法(key) 听 哪个消息(messageClass)
     listeners.push({
       key,
-      messageClass,
-      priority,
-      single,
+      messageClass: finalMessageClass as any,
+      priority: config.priority || 0,
+      batchMode: finalBatchMode,
     });
 
-    // 将元数据重新定义回类原型，供 useController 在实例化时扫描
     Reflect.defineMetadata(VIRID_VUE_METADATA.LISTENER, listeners, target);
   };
 }

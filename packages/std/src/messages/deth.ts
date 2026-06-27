@@ -11,15 +11,15 @@ interface DebounceTask {
 }
 
 const debounceMap = new Map<Newable<BaseMessage>, DebounceContext<any>>();
-// 存储每个消息类对应的当前防抖任务（包含合并后的消息内容和计时器）
+// Store the current anti shake task corresponding to each message class (including merged message content and timer)
 const prevDebounceTask = new Map<Newable<BaseMessage>, DebounceTask>();
 
 const throttleMap = new Map<Newable<BaseMessage>, number>();
-// 存储每个消息类上一次真正执行的时间戳
+// Store the timestamp of the last actual execution of each message class
 const prevThTime = new Map<Newable<BaseMessage>, number>();
 
 /**
- * 防抖装饰器：连续触发的消息会合并，直到停止触发一段时间后才执行
+ * Anti shake decorator: Messages triggered continuously will be merged until they stop triggering for a period of time before execution
  */
 export function Debounce<T extends BaseMessage>(
   time: number = 100,
@@ -34,7 +34,7 @@ export function Debounce<T extends BaseMessage>(
 }
 
 /**
- * 节流装饰器：限制消息触发的频率
+ * Throttle decorator: Limit the frequency of message triggering
  */
 export function Throttle(time: number = 100) {
   return function (target: Newable<BaseMessage>) {
@@ -63,14 +63,14 @@ function middleWare(message: BaseMessage, next: () => void): void {
         timer: newTimer,
       });
     } else {
-      // 第一次触发
+      // First trigger
       const timer = setTimeout(() => {
         prevDebounceTask.delete(messageClass);
         next();
       }, de.time);
       prevDebounceTask.set(messageClass, { message, timer });
     }
-    return; // 拦截当前消息，不立即向下执行
+    return; // Intercept the current message without immediately executing downwards
   }
   // 处理节流
   const th = throttleMap.get(messageClass);
@@ -81,7 +81,7 @@ function middleWare(message: BaseMessage, next: () => void): void {
       prevThTime.set(messageClass, now);
       next();
     } else {
-      // 时间不够，直接丢弃该消息
+      // Time is not enough, discard the message directly
       return;
     }
     return;

@@ -9,10 +9,12 @@ export type Newable<
 > = new (...args: TArgs) => TInstance;
 
 export interface AppConfig {
-  enableLog: boolean;
+  maxDepth?: number;
+  enableLog?: boolean;
 }
 
-const defaultConfig = {
+const defaultConfig: AppConfig = {
+  maxDepth: 100,
   enableLog: true,
 };
 export { defaultConfig };

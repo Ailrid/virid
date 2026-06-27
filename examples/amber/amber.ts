@@ -4,13 +4,7 @@
  * Project: Virid
  */
 import "reflect-metadata";
-import {
-  createVirid,
-  Component,
-  System,
-  EventMessage,
-  Message,
-} from "@virid/core";
+import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { Amber, AmberPlugin, defaultOptions, Backup } from "@virid/amber";
 // This example demonstrates how to use Amber for backup and recovery of Composer
 async function wait() {
@@ -73,8 +67,8 @@ class CounterB {
   public count = 0;
 }
 
-app.bindComponent(CounterA);
-app.bindComponent(CounterB);
+app.bind(CounterA);
+app.bind(CounterB);
 
 class IncreaseMessage extends EventMessage {}
 class PrintMessage extends EventMessage {
@@ -103,16 +97,15 @@ class CounterSystem {
   // Although these two components are used here,
   // Amber can know that no backup is needed because the values have not been changed
   @System()
-  static print(
-    @Message(PrintMessage) message: PrintMessage,
-    counterA: CounterA,
-    counterB: CounterB,
-  ) {
+  static print(message: PrintMessage, counterA: CounterA, counterB: CounterB) {
     if (message.order === "A") console.log(`[CounterA]: ${counterA.count}`);
     else console.log(`[CounterB]: ${counterB.count}`);
   }
 }
 
+app.register(CounterSystem.increaseA);
+app.register(CounterSystem.increaseB);
+app.register(CounterSystem.print);
 async function main() {
   //------------Tick 0 start-------------
   console.log("\n>>> Phase 1: Data Change");
@@ -175,3 +168,28 @@ async function main() {
   await wait();
 }
 main();
+// final output
+// >>> Phase 1: Data Change
+// [CounterA]: 0
+// [CounterB]: 0
+// [Version A]: 0
+// [Version B]: 0
+// [Before backup]: {"count":0}
+// [After backup]: {"count":2}
+// [Version A]: 1
+// [Version B]: 1
+// [Before backup]: {"count":2}
+// [After backup]: {"count":3}
+// [Version A]: 2
+// [Version B]: 2
+
+// >>> Phase 2: Simulated Revocation
+// [Version A]: 0
+// [CounterA]: 0
+// [Before backup]: {"count":3}
+// [After backup]: {"count":4}
+// [CanRedo A]: false
+// [Restore] Direction: UNDO, Old: {"count":4} -> New: {"count":3}
+// [Restore] Direction: REDO, Old: {"count":3} -> New: {"count":4}
+// [Version B]: 3
+// [CounterB]: 4

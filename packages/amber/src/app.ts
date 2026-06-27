@@ -34,7 +34,7 @@ export function activateApp(app: ViridApp, options: PluginOptions) {
     }
     return instance;
   };
-  app.addActivationHook(amberInitHook);
+  app.onActivate(amberInitHook);
   activeApp = app;
 }
 

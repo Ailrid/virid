@@ -10,113 +10,186 @@ import {
   type Middleware,
   type TickHook,
   type Newable,
+  type SystemContext,
+  type SystemConfig,
 } from "./interfaces";
-import { type BaseMessage, MessageWriter, MessageInternal } from "./core";
-import { bindObservers } from "./decorators";
-import { initializeGlobalSystems } from "./utils";
+import {
+  BaseMessage,
+  MessageWriter,
+  MessageEngine,
+  EventMessage,
+  SingleMessage,
+} from "./core";
+import { handleResult, Component } from "./decorators";
 
 export interface ViridPlugin<T = any> {
   name: string;
   install: (app: ViridApp, options: T) => void;
 }
 
-// 维护一个已安装插件的列表，防止重复安装
-const installedPlugins = new Set<string>();
-/**
- * 创建 virid 核心实例
- */
+@Component()
 export class ViridApp {
   public container: ViridContainer = new ViridContainer();
-  private messageInternal: MessageInternal = new MessageInternal();
-  // Core 内部提供一个中间件数组
-  private activationHooks: Array<(instance: any) => any> = [];
-  public addActivationHook(hook: (instance: any) => any) {
-    this.activationHooks.push(hook);
-  }
+  private MessageEngine: MessageEngine;
+  private installedPlugins = new Set<string>();
 
-  public get<T>(identifier: Newable<T>): T {
-    if (identifier.length > 0) {
-      MessageWriter.error(
-        new Error(
-          `[Virid Container] Violation: Component "${identifier.name}" should not have constructor arguments. Dependency Injection is only allowed in Systems.`,
-        ),
-      );
-    }
-    return this.container.get(identifier, (ins) => this.handleActivation(ins));
-  }
-
-  private handleActivation<T>(instance: T): T {
-    if (!instance) return instance;
-
-    // 前一个 Hook 的输出是后一个 Hook 的输入
-    return this.activationHooks.reduce((currentInstance, hook) => {
-      try {
-        const nextInstance = hook(currentInstance);
-        // 如果 Hook 忘记写 return，则保留上一步的结果
-        // 同时，弹一个警告
-        if (nextInstance === undefined) {
-          MessageWriter.warn(
-            `[Virid Container] Hook Does Bot Return A Value: Hook "${hook.name}" should return a instance to continue.`,
-          );
-        }
-        return nextInstance !== undefined ? nextInstance : currentInstance;
-      } catch (e) {
-        MessageWriter.error(
-          e as Error,
-          `[Virid Container] Activation Hook Failed`,
-        );
-        return currentInstance;
-      }
-    }, instance);
+  constructor(maxDepth: number) {
+    this.MessageEngine = new MessageEngine(maxDepth);
+    this.container.spawn(this);
   }
   /**
-   * 绑定多例 (Controller 通常是多例)
+   * Register an activation hook
+   * @param hook An activation hook
+   * @param front Is the hook order inserted from the front or added
    */
-  bindController<T>(identifier: Newable<T>) {
-    this.container.bind(identifier).toSelf();
-    // 保持链式调用风格，即便现在后面没接东西
-    return { inSingletonScope: () => ({ onActivation: () => {} }) };
+  onActivate(hook: (instance: any) => any, front: boolean = false) {
+    this.container.addActivationHook(hook, front);
+  }
+  /**
+   * Obtain a Component or Controller instance
+   * @param identifier Constructor of components or controllers
+   */
+  get<T>(identifier: Newable<T>): T {
+    return this.container.get(identifier);
   }
 
   /**
-   * 绑定单例 (Component 是单例)
+   * Static binding component or controller
+   * @param identifier Constructor of components or controllers
    */
-  bindComponent<T>(identifier: Newable<T>) {
-    this.container.bind(identifier).toSelf().inSingletonScope();
-    return { onActivation: () => {} };
+  bind<T>(identifier: Newable<T>) {
+    this.container.bind(identifier);
+  }
+  /**
+   * Dynamically register a component
+   * @param instance Component instance
+   */
+  spawn(instance: object) {
+    this.container.spawn(instance);
   }
   useMiddleware(mw: Middleware, front = false) {
-    this.messageInternal.useMiddleware(mw, front);
+    this.MessageEngine.useMiddleware(mw, front);
   }
   onBeforeExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
     hook: ExecuteHook<T>,
     front = false,
   ) {
-    this.messageInternal.onBeforeExecute(type, hook, front);
+    this.MessageEngine.onBeforeExecute(type, hook, front);
   }
   onAfterExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
     hook: ExecuteHook<T>,
     front = false,
   ) {
-    this.messageInternal.onAfterExecute(type, hook, front);
+    this.MessageEngine.onAfterExecute(type, hook, front);
   }
   onBeforeTick(hook: TickHook, front = false) {
-    this.messageInternal.onBeforeTick(hook, front);
+    this.MessageEngine.onBeforeTick(hook, front);
   }
   onAfterTick(hook: TickHook, front = false) {
-    this.messageInternal.onAfterTick(hook, front);
+    this.MessageEngine.onAfterTick(hook, front);
   }
-  register(
-    messageClass: any,
-    systemFn: (...args: any[]) => any,
-    priority: number = 0,
-  ): () => void {
-    return this.messageInternal.register(messageClass, systemFn, priority);
+  /**
+   * Register message to registrar
+   * @param systemFn System functions
+   */
+  register(systemFn: (...args: any[]) => any): () => void {
+    const systemContext: SystemContext = (systemFn as any).systemContext;
+    const systemConfig: SystemConfig = (systemFn as any).systemConfig;
+
+    if (!systemContext || !systemConfig) {
+      throw new Error(
+        `[Virid System] System Parameter Loss: Please declare ${systemFn.name} using the System decorator first.`,
+      );
+    }
+
+    const { params: types, targetClass, originalMethod } = systemContext;
+    const { messageClass, messageIdx, priority, batchMode } = systemConfig;
+
+    // The closure variable belongs to the currently registered instance of wrappedSystem
+    let cachedDeps: any[] | null = null;
+    const buildArgs = (currentMessage: EventMessage | SingleMessage[]) => {
+      let processedMessage: any = null;
+
+      const sample = Array.isArray(currentMessage)
+        ? currentMessage[0]
+        : currentMessage;
+
+      if (sample && !(sample instanceof messageClass)) {
+        const receivedName = (sample as any).constructor?.name || typeof sample;
+        throw new Error(
+          `[Virid System] Type Mismatch: Expected ${messageClass.name}, but received ${receivedName}`,
+        );
+      }
+
+      // Processing SingleMessage (Merge and Batch Processing Type)
+      if (sample instanceof SingleMessage) {
+        if (!batchMode) {
+          processedMessage = Array.isArray(currentMessage)
+            ? currentMessage[currentMessage.length - 1]
+            : currentMessage;
+        } else {
+          processedMessage = Array.isArray(currentMessage)
+            ? currentMessage
+            : [currentMessage];
+        }
+      }
+      // Process EventMessage (Sequential Single Order Type)
+      else if (sample instanceof EventMessage) {
+        processedMessage = currentMessage;
+      } else if (sample) {
+        throw new Error(
+          `[Virid System] unknown Message Types: Message ${messageClass.name} is not a subclass of SingleMessage or EventMessage!`,
+        );
+      }
+
+      if (!cachedDeps) {
+        // First execution: Retrieve regular dependencies from the DI container on site and fill the cache
+        cachedDeps = types.map((type: any, index: number) => {
+          // If the current index is the position of the Message parameter, first store a null placeholder, and then dynamically fill it in later
+          if (index === messageIdx) {
+            return null;
+          }
+          const param = this.get(type);
+          if (!param) {
+            throw new Error(
+              `[Virid System] unknown Inject Data Types: ${type.name || type} is not registered in the container!`,
+            );
+          }
+          return param;
+        });
+      }
+
+      const finalArgs = cachedDeps.map((dep, index) => {
+        if (index === messageIdx) {
+          return processedMessage;
+        }
+        return dep;
+      });
+      return finalArgs;
+    };
+
+    const wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
+      const finalArgs = buildArgs(currentMessage);
+      const result = originalMethod.apply(targetClass, finalArgs);
+
+      const handleResultFn =
+        typeof handleResult === "function" ? handleResult : (res: any) => res;
+
+      return result instanceof Promise
+        ? result.then(handleResultFn)
+        : handleResultFn(result);
+    };
+    (wrappedSystem as any).systemContext = systemContext;
+
+    return this.MessageEngine.register(messageClass, wrappedSystem, priority);
   }
+
+  
+
   use<T>(plugin: ViridPlugin<T>, options: T): this {
-    if (installedPlugins.has(plugin.name)) {
+    if (this.installedPlugins.has(plugin.name)) {
       MessageWriter.warn(
         `[Virid Plugin] Duplicate Installation: Plugin ${plugin.name} has already been installed.`,
       );
@@ -124,7 +197,7 @@ export class ViridApp {
     }
     try {
       plugin.install(this, options);
-      installedPlugins.add(plugin.name);
+      this.installedPlugins.add(plugin.name);
     } catch (e) {
       MessageWriter.error(
         e as Error,
@@ -134,7 +207,3 @@ export class ViridApp {
     return this;
   }
 }
-
-export const viridApp = new ViridApp();
-viridApp.addActivationHook(bindObservers);
-initializeGlobalSystems(viridApp);

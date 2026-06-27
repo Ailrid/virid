@@ -8,7 +8,7 @@ interface ExecuteContext {
   message: EventMessage;
   resolve: () => void;
 }
-// 每个key中缓存的执行组队列
+// Execution team columns cached in each key
 const executeGroupMap = new Map<string, ExecuteContext[]>();
 const messageKeyMap = new Map<EventMessage, string>();
 const keyMessageMap = new Map<string, EventMessage[]>();
@@ -32,7 +32,7 @@ function afterExecuteHook(
   if (key) {
     const executeGroup = executeGroupMap.get(key)!;
     if (success) {
-      // 只有当前任务执行成功，才继续下一个
+      // Only when the current task is successfully executed, will we proceed to the next one
       if (executeGroup.length > 0) {
         const { resolve } = executeGroup.shift()!;
         resolve();
@@ -44,7 +44,7 @@ function afterExecuteHook(
     } else {
       callBackMap.get(key)!(false);
       clearGroup(key);
-      // 如果出错了，直接取消执行队列
+      // If there is an error, cancel the execution queue directly
       MessageWriter.error(
         new Error(
           `[ExecuteGroup] Queue Execution Failed: Due to an error in the System execution triggered by ${message.constructor.name}, the message group '${key}' has been cancelled`,
@@ -57,7 +57,7 @@ export async function executeGroup(
   messages: EventMessage[],
   id: string = "default",
 ): Promise<boolean> {
-  // 构造一串promise并且把resolve存起来,每个resolve会启动下一个promise
+  // Construct a string of promises and store the resolutions, with each resolution initiating the next promise
   if (executeGroupMap.has(id)) {
     MessageWriter.error(
       new Error(
@@ -66,7 +66,7 @@ export async function executeGroup(
     );
     return Promise.resolve(false);
   }
-  // 注册这一个执行组
+  // Register this execution group
   const executeChain: ExecuteContext[] = [];
   keyMessageMap.set(id, messages);
   messages.forEach((message, index) => {
@@ -90,7 +90,7 @@ export async function executeGroup(
 
   executeGroupMap.set(id, executeChain);
 
-  // 立刻触发第一个
+  // Immediately trigger the first one
   MessageWriter.write(messages[0]);
   return promise;
 }

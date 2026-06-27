@@ -18,7 +18,7 @@ class Counter {
   public timeC = 100;
 }
 
-app.bindComponent(Counter);
+app.bind(Counter);
 
 class IncreaseAMessage extends EventMessage {}
 class IncreaseBMessage extends EventMessage {}
@@ -58,6 +58,10 @@ class CounterSystem {
     throw new Error("Error");
   }
 }
+app.register(CounterSystem.decrease);
+app.register(CounterSystem.increaseA);
+app.register(CounterSystem.increaseB);
+app.register(CounterSystem.willError);
 // An execution group is a collective operation.
 // Regardless of whether the system triggered by these messages is synchronous or asynchronous,
 // they will execute sequentially and must not throw any errors

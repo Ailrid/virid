@@ -10,13 +10,13 @@ interface QueueContext {
   next: () => void;
 }
 
-// 消息和key的对应关系
+// The correspondence between messages and keys
 const asyncMessageMap = new Map<Newable<EventMessage>, string>();
-// 每个key中缓存的消息序列
+// The message sequence cached in each key
 const asyncMessageQueue = new Map<string, QueueContext[]>();
 
 /**
- * * 注册异步队列消息
+ * Register asynchronous queue messages
  */
 export function AsyncQueue(key: string = "default") {
   return function (target: Newable<EventMessage>) {
@@ -25,7 +25,7 @@ export function AsyncQueue(key: string = "default") {
 }
 
 /**
- * * 拦截所有异步消息
+ * Intercept all asynchronous messages
  */
 function middleWare(message: BaseMessage, next: () => void): void {
   const key = asyncMessageMap.get(message.constructor as Newable<EventMessage>);
@@ -44,11 +44,11 @@ function afterExecuteHook(
   message: EventMessage,
   _hookContext: ExecuteHookContext,
 ) {
-  // 当前消息是否是需要排序的
+  // Is the current message to be sorted
   const key = asyncMessageMap.get(message.constructor as Newable<EventMessage>);
   if (key) {
-    // 如果此消息正是队列头部记录的message
-    // 那么立刻这一个，然后投递另一个后继消息
+    // If this message is exactly the message recorded at the head of the queue
+    // So immediately send this one, and then deliver another follow-up message
     const currentQueue = asyncMessageQueue.get(key)!;
     if (currentQueue.at(0)?.message === message) {
       currentQueue.shift();

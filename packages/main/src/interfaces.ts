@@ -5,8 +5,5 @@
  */
 import { type App } from "electron";
 export interface PluginOption {
-  /**
-   * 窗口的 ID
-   */
   electronApp: App;
 }

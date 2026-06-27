@@ -21,7 +21,8 @@ const app = createVirid();
 class Counter {
   public count = 0;
 }
-app.bindComponent(Counter);
+app.bind(Counter);
+
 class IncreaseMessage extends SingleMessage {}
 class DecreaseMessage extends EventMessage {}
 class TransferMessage extends EventMessage {}
@@ -36,7 +37,7 @@ app.useMiddleware((message, next) => {
 
 // This hook will be executed when the component or controller is new.
 // For the component, as it is a global singleton, it will only be executed once
-app.addActivationHook((instance) => {
+app.onActivate((instance) => {
   console.log("----------Activation hook triggered----------");
   console.log(
     `Counter component activated, instance type: ${instance.constructor.name}`,
@@ -99,21 +100,34 @@ class CounterSystem {
     counter.count--;
   }
 }
-
+app.register(CounterSystem.increase);
+app.register(CounterSystem.decrease);
 // Due to inheriting from SingleMessage, these two messages will be merged within a micro task queue
 IncreaseMessage.send();
 IncreaseMessage.send();
 DecreaseMessage.send();
-// Although TransferMessage appears to be executed last, 
-// since the message is processed in a micro queue, 
+// Although TransferMessage appears to be executed last,
+// since the message is processed in a micro queue,
 // MiddleWare will intercept it first, so the output order is TransferMessage ->DeceaseMessage ->IncreaseMessage[]
-// Wait, why DeceaseMessage ->Increase Message []? 
+// Wait, why DeceaseMessage ->Increase Message []?
 // Okay, this is because by default, EventMessage will always be processed before SingleMessage
 TransferMessage.send();
-
 
 async function wait() {
   await new Promise<void>((resolve) => resolve());
 }
 
 wait();
+// final output:
+// Detect TransferMessage! I will transfer it to other thread.
+// ----------Before Tick hook triggered----------
+// HookContext:  { tick: 0, timestamp: 1782539226263, payload: {} }
+// ----------Activation hook triggered----------
+// Counter component activated, instance type: Counter
+// ----------After Tick hook triggered----------
+// Message:  {}
+// ----------Before Tick hook triggered----------
+// Message:  [{},{}]
+// HookContext:  {"context":{"params":[null],"methodName":"increase"},"tick":0,"payload":{}}
+// ----------After Tick hook triggered----------
+// Receive data from before tick hook:  Hello from before tick hook

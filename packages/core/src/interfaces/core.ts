@@ -36,6 +36,13 @@ export interface SystemContext {
   originalMethod: (...args: any[]) => any;
 }
 
+export interface SystemConfig {
+  priority: number;
+  messageClass: Newable<BaseMessage>;
+  messageIdx: number;
+  batchMode: boolean;
+}
+
 export interface SystemTask {
   fn: (...args: any[]) => any;
   priority: number;

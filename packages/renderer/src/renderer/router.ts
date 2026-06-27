@@ -20,7 +20,6 @@ export function FromMain(type: string) {
   };
 }
 export function convertFromMainMessage(ipcMessage: any): void {
-  // 解构
   const { __virid_source, __virid_target, __virid_messageType, payload } =
     ipcMessage;
   if (!__virid_messageType || !__virid_source || !__virid_target) {
@@ -37,21 +36,21 @@ export function convertFromMainMessage(ipcMessage: any): void {
     );
     return;
   }
-  // 找到对应的构造函数
+  // Find the corresponding constructor
   const MessageClass = MESSAGE_MAP.get(__virid_messageType)!;
-  // 实例化并注入参数
+  // Instantiate and inject parameters
   const instance = new MessageClass();
 
-  // 显式赋值基类标识，确保实例的身份信息完整
+  // Explicitly assigning base class identifiers to ensure complete identity information of instances
   instance.__virid_source = __virid_source;
   instance.__virid_target = __virid_target;
   instance.__virid_messageType = __virid_messageType;
 
-  // 还原数据
+  // Restore data
   if (payload) {
     Object.assign(instance, payload);
   }
 
-  // 重新分发
+  // Redistribution
   MessageWriter.write(instance);
 }

@@ -5,16 +5,14 @@
  */
 import { type ViridApp } from "./app";
 import { ErrorMessage, InfoMessage, WarnMessage } from "./core";
-import { type SystemContext } from "./interfaces";
+import { System } from "./decorators";
+
 let globalSwitch = true;
 
 export function toggleSwitch(enable: boolean) {
   globalSwitch = enable;
 }
 
-/**
- * 简单的色彩辅助函数
- */
 const clr = {
   reset: "\x1b[0m",
   red: "\x1b[31m",
@@ -27,116 +25,58 @@ const clr = {
   green: "\x1b[32m",
 };
 
-/**
- * 为全局处理器包装上下文
- */
-function withContext(
-  params: any,
-  fn: (...args: any[]) => any,
-  methodName: string,
-) {
-  const context: SystemContext = {
-    params: params, // 参数类型
-    targetClass: Object, // 指向全局 Object 或特定标记类
-    methodName: methodName,
-    originalMethod: fn,
-  };
-  (fn as any).ccsContext = context;
-  return fn;
-}
-/**
- * 注册全局默认信息处理系统
- */
-const globalInfoHandler = (err: InfoMessage) => {
-  if (!globalSwitch) return;
-  const header = `${clr.green}${clr.bold} ✔ [Virid Info] ${clr.reset}`;
-  const context = `${clr.magenta}${err.context}${clr.reset}`;
+class ViridLogHandler {
+  /**
+   * Register the global default information processing system
+   */
+  @System()
+  static globalInfoHandler(info: InfoMessage) {
+    if (!globalSwitch) return;
+    const header = `${clr.green}${clr.bold} ✔ [Virid Info] ${clr.reset}`;
+    const context = `${clr.magenta}${info.context}${clr.reset}`;
 
-  console.log(
-    `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
-      `  ${clr.green}Details:${clr.reset}`,
-    err.context || "unknown Info",
-  );
-};
+    console.log(
+      `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
+      `${clr.green}Details:${clr.reset}`,
+      context || "unknown Info",
+    );
+  }
 
-/**
- * 注册全局默认错误处理系统
- */
-const globalErrorHandler = (err: ErrorMessage) => {
-  if (!globalSwitch) return;
-  const header = `${clr.red}${clr.bold} ✖ [Virid Error] ${clr.reset}`;
-  const context = `${clr.magenta}${err.context}${clr.reset}`;
+  /**
+   * Register the global default error handling system
+   */
+  @System()
+  static globalErrorHandler(err: ErrorMessage) {
+    if (!globalSwitch) return;
+    const header = `${clr.red}${clr.bold} ✖ [Virid Error] ${clr.reset}`;
+    const context = `${clr.magenta}${err.context}${clr.reset}`;
 
-  console.error(
-    `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
-      `  ${clr.red}Context:${clr.reset} ${context}\n` +
-      `  ${clr.red}Details:${clr.reset}`,
-    err.error || err || "unknown Error",
-  );
-};
+    console.error(
+      `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
+      `${clr.red}Context:${clr.reset} ${context}\n` +
+      `${clr.red}Details:${clr.reset}`,
+      err.error || err || "unknown Error",
+    );
+  }
 
-/**
- * 注册全局默认警告处理系统
- */
-const globalWarnHandler = (warn: WarnMessage) => {
-  if (!globalSwitch) return;
-  const header = `${clr.yellow}${clr.bold} ⚠ [Virid Warn] ${clr.reset}`;
-  const context = `${clr.cyan}${warn.context}${clr.reset}`;
+  /**
+   * Register the global default warning handling system
+   */
+  @System()
+  static globalWarnHandler(warn: WarnMessage) {
+    if (!globalSwitch) return;
+    const header = `${clr.yellow}${clr.bold} ⚠ [Virid Warn] ${clr.reset}`;
+    const context = `${clr.cyan}${warn.context}${clr.reset}`;
 
-  console.warn(
-    `${header}${clr.gray}Global Warn Caught:${clr.reset}\n` +
-      `  ${clr.yellow}Context:${clr.reset} ${context}`,
-  );
-};
-
-/**
- * 激活真正的 App 实例
- */
-export function initializeGlobalSystems(app: ViridApp) {
-  app.register(
-    WarnMessage,
-    withContext(WarnMessage, globalWarnHandler, "GlobalWarnHandler"),
-    -999,
-  );
-  app.register(
-    ErrorMessage,
-    withContext(ErrorMessage, globalErrorHandler, "GlobalErrorHandler"),
-    -999,
-  );
-  app.register(
-    InfoMessage,
-    withContext(InfoMessage, globalInfoHandler, "GlobalInfoHandler"),
-    -999,
-  );
-  activeApp = app;
-}
-export interface IViridApp {
-  get(identifier: any): any;
+    console.warn(
+      `${header}${clr.gray}Global Warn Caught:${clr.reset}\n` +
+      `${clr.yellow}Context:${clr.reset} ${context}`,
+    );
+  }
 }
 
-let activeApp: IViridApp | null = null;
-
-/**
- * viridApp 代理
- */
-export const viridApp: IViridApp = new Proxy({} as IViridApp, {
-  get(_, prop: keyof IViridApp) {
-    return (...args: any[]) => {
-      // 检查实例是否存在
-      if (!activeApp) {
-        console.warn(
-          `[Virid Vue] App method "${String(prop)}" called before initialization.`,
-        );
-
-        return;
-      }
-
-      // 正常转发调用
-      // 使用 Reflect 确保 this 指向正确，或者直接从 activeApp 调用
-      const targetMethod = activeApp[prop];
-      if (typeof targetMethod === "function") {
-        return Reflect.apply(targetMethod, activeApp, args);
-      }
-    };
-  },
-});
+export function registerBasicSystems(app: ViridApp) {
+  app.register(ViridLogHandler.globalInfoHandler);
+  app.register(ViridLogHandler.globalErrorHandler);
+  app.register(ViridLogHandler.globalWarnHandler);
+}

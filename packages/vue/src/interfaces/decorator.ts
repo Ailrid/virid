@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Vue
  */
-import { Newable } from "@virid/core";
+import { BaseMessage, Newable } from "@virid/core";
 import { WatchOptions } from "vue";
 
 export interface WatchItem {
@@ -61,12 +61,17 @@ export interface ListenerItem {
   key: string;
   messageClass: Newable<any>;
   priority: number;
-  single: boolean;
+  batchMode: boolean;
 }
 export type ListenerMetadata = ListenerItem[];
 
-export interface ListenerConfig<T> {
-  messageClass: Newable<T>;
+export interface EnvItem {
+  key: string;
+}
+export type EnvMetadata = EnvItem[];
+
+export interface ListenerConfig {
+  messageClass?: Newable<BaseMessage> | null;
   priority?: number;
-  single?: boolean;
+  batchMode?: boolean;
 }

@@ -5,41 +5,41 @@
  */
 import { EventMessage } from "@virid/core";
 /**
- * RenderMessage: 由主进程发来的消息
+ * RenderMessage: Message sent by the main process
  */
 export abstract class FromMainMessage extends EventMessage {
-  /** 我来自哪？
+  /** Where am I from?
    */
   public __virid_source: string = "unknown";
-  /** 我的目的地是哪儿？
-   * 'main': 发给主进程处理
-   * 'all': 广播给所有窗口（经过主进程中转）
-   * string: 指定某个窗口的 ID (windowId)
+  /**Where is my destination?
+   *'main ': Sent to the main process for processing
+   *'all': Broadcast to all windows (relayed through the main process)
+   *String: Specify the ID of a window (windowId)
    */
   public __virid_target: string = "";
   /**
-   * 我应该在目的地转变成什么消息？
+   *What message should I turn into at the destination?
    */
   public __virid_messageType: string = "";
 }
 
 /**
- * RenderMessage: 由渲染进程发起，目标是主进程或其他窗口
+ *RenderMessage: Initiated by the rendering process, targeting the main process or other windows
  */
 export abstract class ToMainMessage extends EventMessage {
-  /** 我来自哪？
+  /**Where am I from?
    */
   public static __virid_source: string;
 
-  /** 我的目的地是哪儿？
-   * 'main': 发给主进程处理
-   * 'all': 广播给所有窗口（经过主进程中转）
-   * string: 指定某个窗口的 ID (windowId)
+  /**Where is my destination?
+   *'main ': Sent to the main process for processing
+   *'all': Broadcast to all windows (relayed through the main process)
+   *String: Specify the ID of a window (windowId)
    */
   public abstract __virid_target: string;
 
   /**
-   * 我应该在目的地转变成什么消息？
+   *What message should I turn into at the destination?
    */
   public abstract __virid_messageType: string;
 }

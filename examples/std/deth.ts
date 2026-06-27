@@ -7,13 +7,7 @@
 // With just one line of code, Virid will be responsible for the native support of debounce and throttle operations
 
 import "reflect-metadata";
-import {
-  createVirid,
-  Component,
-  System,
-  EventMessage,
-  Message,
-} from "@virid/core";
+import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { Debounce, Throttle, StdPlugin } from "@virid/std";
 
 const app = createVirid().use(StdPlugin, {});
@@ -23,7 +17,7 @@ class Counter {
   public timerA = 0;
   public timerB = 0;
 }
-app.bindComponent(Counter);
+app.bind(Counter);
 
 // 100ms debounce: It will only be executed once after stopping triggering for 100ms
 @Debounce(100, (current, next) => {
@@ -41,10 +35,7 @@ class IncreaseBMessage extends EventMessage {}
 
 class CounterSystem {
   @System()
-  static async increaseA(
-    @Message(SetTimerAMessage) message: SetTimerAMessage,
-    counter: Counter,
-  ) {
+  static async increaseA(message: SetTimerAMessage, counter: Counter) {
     counter.timerA = message.val;
     console.log(`[CounterSystem] TImer A executed. Current: ${counter.timerA}`);
   }
@@ -55,6 +46,8 @@ class CounterSystem {
     console.log(`[CounterSystem] Timer B executed. Current: ${counter.timerB}`);
   }
 }
+app.register(CounterSystem.increaseA);
+app.register(CounterSystem.increaseB);
 
 async function test() {
   console.log(
@@ -79,3 +72,9 @@ async function test() {
 }
 
 test();
+// final output:
+// --------Testing Debounce (100ms delay): Sending 10 messages immediately--------
+// [CounterSystem] TImer A executed. Current: 1000
+// --------Testing Throttle (100ms limit): Rapid fire--------
+// [CounterSystem] Timer B executed. Current: 1
+// [CounterSystem] Timer B executed. Current: 2

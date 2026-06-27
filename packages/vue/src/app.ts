@@ -6,20 +6,13 @@
 import { type ViridApp, Newable } from "@virid/core";
 import { bindResponsive } from "./adapters/bind";
 export interface IViridApp {
-  register(
-    messageClass: any,
-    systemFn: (...args: any[]) => any,
-    priority: number,
-  ): () => void;
+  register(systemFn: (...args: any[]) => any): () => void;
   get(identifier: any): any;
-  bindComponent<T>(identifier: Newable<T>): void;
+  bind<T>(identifier: Newable<T>): void;
 }
 
 let activeApp: IViridApp | null = null;
 
-/**
- * 激活真正的 App 实例
- */
 export function activateApp(app: ViridApp) {
   const bindResponsiveHook = (instance: any) => {
     if (instance) {
@@ -27,23 +20,18 @@ export function activateApp(app: ViridApp) {
     }
     return instance;
   };
-  app.addActivationHook(bindResponsiveHook);
+  app.onActivate(bindResponsiveHook);
   activeApp = app;
 }
 
-/**
- * viridApp 代理
- */
 export const viridApp: IViridApp = new Proxy({} as IViridApp, {
   get(_, prop: keyof IViridApp) {
     return (...args: any[]) => {
-      // 检查实例是否存在
       if (!activeApp) {
         console.warn(
           `[Virid Vue] App method "${String(prop)}" called before initialization.`,
         );
 
-        // 针对 register 这种有返回值的函数做特殊处理
         if (prop === "register") {
           return () => {
             console.warn(
@@ -53,9 +41,6 @@ export const viridApp: IViridApp = new Proxy({} as IViridApp, {
         }
         return undefined;
       }
-
-      // 正常转发调用
-      // 使用 Reflect 确保 this 指向正确，或者直接从 activeApp 调用
       const targetMethod = activeApp[prop];
       if (typeof targetMethod === "function") {
         return Reflect.apply(targetMethod, activeApp, args);

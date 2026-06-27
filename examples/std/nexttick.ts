@@ -17,7 +17,7 @@ class Counter {
   public timeC = 100;
 }
 
-app.bindComponent(Counter);
+app.bind(Counter);
 
 class IncreaseAMessage extends EventMessage {}
 class IncreaseBMessage extends EventMessage {}
@@ -38,6 +38,9 @@ class CounterSystem {
     console.log("B :>> ", counter.timeB);
   }
 }
+app.register(CounterSystem.increaseA);
+app.register(CounterSystem.increaseB);
+
 app.onAfterTick(() => {
   console.log("----------After Tick----------");
 });
@@ -47,6 +50,7 @@ app.onBeforeTick(() => {
 });
 
 IncreaseAMessage.send();
+
 nextTick(() => {
   // These three messages must have been run after the last Tick ended
   // Therefore, if the message corresponding to Increase AMessage is synchronized,

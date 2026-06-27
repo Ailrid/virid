@@ -3,9 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Core
  */
-/**
- * @description: 事件调度器
- */
+
 import { MessageWriter } from "./io";
 import {
   type ExecuteHook,
@@ -16,19 +14,18 @@ import {
   type TickHook,
   type TickHookContext,
 } from "../interfaces";
-import { SingleMessage, EventMessage, type BaseMessage } from "./message";
-import { EventHub } from "./event-hub";
+import { type BaseMessage } from "./message";
+import { Staging } from "./staging";
 
 export class Dispatcher {
-  private dirtySignalTypes = new Set<any>();
-  private eventQueue: EventMessage[] = [];
+  constructor(private maxDepth: number) {}
   private isRunning = false;
-  private globalTick = 0; // 整个 App 生命周期内唯一、单调递增
-  private internalDepth = 0; // 用于死循环防御，单次任务链执行完归零
-  private eventHub = new EventHub();
+  private globalTick = 0;
+  private internalDepth = 0;
+  private staging = new Staging();
 
   private tickPayload: { [key: string]: any } = {};
-  // 两个execute钩子
+
   private beforeExecuteHooks: Array<{
     type: MessageIdentifier<any>;
     handler: ExecuteHook<any>;
@@ -37,17 +34,15 @@ export class Dispatcher {
     type: MessageIdentifier<any>;
     handler: ExecuteHook<any>;
   }> = [];
-  // 两个tick钩子
+
   private beforeTickHooks: Array<TickHook> = [];
   private afterTickHooks: Array<TickHook> = [];
 
-  // 添加执行钩子
   public addBeforeExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
     hook: ExecuteHook<T>,
     front: boolean,
   ) {
-    //从前面插入
     if (front)
       this.beforeExecuteHooks.unshift({
         type,
@@ -61,7 +56,6 @@ export class Dispatcher {
     hook: ExecuteHook<T>,
     front: boolean,
   ) {
-    //从前面插入
     if (front)
       this.afterExecuteHooks.unshift({
         type,
@@ -70,7 +64,6 @@ export class Dispatcher {
     else
       this.afterExecuteHooks.push({ type, handler: hook as ExecuteHook<any> });
   }
-  // 添加执行钩子
   public addBeforeTick(hook: TickHook, front: boolean) {
     if (front) this.beforeTickHooks.unshift(hook);
     else this.beforeTickHooks.push(hook);
@@ -81,37 +74,22 @@ export class Dispatcher {
   }
 
   /**
-   * 标记脏数据：根据基类判断进入哪个池子
+   * Marking dirty data, Determine which pool to enter based on the base class
    */
-  public markDirty(message: any) {
-    this.eventHub.push(message);
-    if (message instanceof EventMessage) {
-      // EventMessage：顺序追加，不合并
-      this.eventQueue.push(message);
-    } else if (message instanceof SingleMessage) {
-      // SingleMessage：按类型合并
-      this.dirtySignalTypes.add(message.constructor);
-    }
+  public stage(message: BaseMessage) {
+    this.staging.stage(message);
   }
 
   public tick(systemTaskMap: Map<any, SystemTask[]>) {
-    if (
-      this.isRunning ||
-      (this.dirtySignalTypes.size === 0 && this.eventQueue.length === 0)
-    )
-      return;
+    if (this.isRunning || this.staging.isEmpty()) return;
 
-    // 死循环防御
-    if (this.internalDepth > 100) {
+    if (this.internalDepth > this.maxDepth) {
       this.internalDepth = 0;
-      // 立即清空队列
-      this.dirtySignalTypes.clear();
-      this.eventQueue = [];
-      // 立即清空hub
-      this.eventHub.reset();
-      // 递归爆炸💥
-      MessageWriter.error(
-        new Error("[Virid Dispatcher] Deadlock: Recursive loop detected 💥."),
+      this.staging.reset();
+      console.error(
+        new Error(
+          `[Virid Dispatcher] Deadlock: Max depth reached ${this.maxDepth}, Possible infinite loop detected. The dispatcher will stop processing this tick.`,
+        ),
       );
       return;
     }
@@ -120,102 +98,95 @@ export class Dispatcher {
     this.internalDepth++;
 
     queueMicrotask(() => {
-      let signalSnapshot: Set<any> | undefined;
-      let eventSnapshot: EventMessage[] | undefined;
       try {
-        //执行tick钩子,只在第一次才触发
+        // Execute tick hook, only triggered on the first time
         if (this.internalDepth == 1) {
           this.tickPayload = {};
           this.executeTickHooks(this.beforeTickHooks);
         }
-
-        //准备开始执行
-        const snapshot = this.prepareSnapshot();
-        signalSnapshot = snapshot.signalSnapshot;
-        eventSnapshot = snapshot.eventSnapshot;
-        //收集这一tick应该执行的任务
-        const tasks = this.collectTasks(
-          eventSnapshot,
-          signalSnapshot,
-          systemTaskMap,
-        );
-        //执行这一帧的任务
+        // Preparing to start execution
+        this.staging.flip();
+        // The tasks that should be performed to collect this tick
+        const tasks = this.collectTasks(systemTaskMap);
+        // Execute the task for this frame
         this.executeTasks(tasks);
       } catch (e) {
         MessageWriter.error(e as Error, "[Virid Dispatcher] Unhandled Error");
       } finally {
-        // 清理
-        if (signalSnapshot && eventSnapshot) {
-          this.clear(eventSnapshot, signalSnapshot);
-        }
-        // 释放锁并尝试下一轮执行
+        // Release the lock and attempt the next round of execution
         this.isRunning = false;
-        if (this.dirtySignalTypes.size > 0 || this.eventQueue.length > 0) {
-          // 此时 tick 立即进入下一轮
+        // Enter the next round of micro tick
+        if (!this.staging.isEmpty()) {
           this.tick(systemTaskMap);
         } else {
-          // 重置内部状态
+          // Reset internal status
+          this.staging.reset();
           this.internalDepth = 0;
           this.executeTickHooks(this.afterTickHooks);
           this.globalTick++;
-          //标记当前tick
         }
       }
     });
   }
-  private collectTasks(
-    eventSnapshot: EventMessage[],
-    signalSnapshot: Set<any>,
-    systemTaskMap: Map<any, SystemTask[]>,
-  ): ExecutionTask[] {
+  private collectTasks(systemTaskMap: Map<any, SystemTask[]>): ExecutionTask[] {
     const tasks: ExecutionTask[] = [];
-    // 收集 EVENT 任务 ,从前往后每一条消息执行所有关联 System
-    for (const msg of eventSnapshot) {
+    // Collect EVENT tasks and execute all associated systems for each message from front to back
+    for (const msg of this.staging.eventActive) {
       const systems = systemTaskMap.get(msg.constructor) || [];
       systems.forEach((s) => {
-        //拿到Context
         tasks.push(
-          new ExecutionTask(s.fn, s.priority, msg, {
-            context: (s.fn as any).systemContext as SystemContext,
-            tick: this.globalTick,
-            payload: {},
-          }),
+          new ExecutionTask(
+            s.fn,
+            s.priority,
+            msg,
+            {
+              context: (s.fn as any).systemContext as SystemContext,
+              tick: this.globalTick,
+              payload: {},
+            },
+            this.beforeExecuteHooks,
+            this.afterExecuteHooks,
+          ),
         );
       });
     }
-    // 收集 SIGNAL 任务 (每个 System 针对该类型只跑一次)
-    for (const type of signalSnapshot) {
-      const systems = systemTaskMap.get(type) || [];
+    // Collect SIGNAL tasks (each system only runs once for that type)
+    for (const [msg, msg_list] of this.staging.signalActive.entries()) {
+      const systems = systemTaskMap.get(msg) || [];
       systems.forEach((s) => {
         tasks.push(
-          new ExecutionTask(s.fn, s.priority, this.eventHub.peekSignal(type), {
-            context: (s.fn as any).systemContext as SystemContext,
-            tick: this.globalTick,
-            payload: {},
-          }),
+          new ExecutionTask(
+            s.fn,
+            s.priority,
+            msg_list,
+            {
+              context: (s.fn as any).systemContext as SystemContext,
+              tick: this.globalTick,
+              payload: {},
+            },
+            this.beforeExecuteHooks,
+            this.afterExecuteHooks,
+          ),
         );
       });
     }
     return tasks;
   }
   private executeTasks(tasks: ExecutionTask[]) {
-    // 无论消息类型，按照 System 定义的优先级排序
+    // Regardless of the message type, sort according to the priority defined by the System
     tasks.sort((a, b) => b.priority - a.priority);
-    // 执行任务流
     for (const task of tasks) {
+      const msg = Array.isArray(task.message) ? task.message[0] : task.message;
       try {
-        const result = task.execute(
-          this.beforeExecuteHooks,
-          this.afterExecuteHooks,
-        );
-        // 如果是 Promise，只管注册一个 catch 防止崩溃，不 await 它
+        const result = task.execute();
+        // If it's a Promise, just register a catch to prevent crashes, don't await it
         if (result instanceof Promise) {
           result.catch((e) =>
             MessageWriter.error(
               e,
               `[Virid Dispatcher]: Async System Error.\n` +
                 `SystemLocation: ${task.hookContext.context.targetClass.name}.${task.hookContext.context.methodName}\n` +
-                `MessageName:    ${task.message.constructor.name}\n` +
+                `MessageName:    ${msg.constructor.name}\n` +
                 `MessageData:    ${JSON.stringify(task.message)}`,
             ),
           );
@@ -225,32 +196,13 @@ export class Dispatcher {
           e as Error,
           `[Virid Dispatcher]: Sync System Error.\n` +
             `SystemLocation: ${task.hookContext.context.targetClass.name}.${task.hookContext.context.methodName}\n` +
-            `MessageName:    ${task.message.constructor.name}\n` +
+            `MessageName:    ${msg.constructor.name}\n` +
             `MessageData:    ${JSON.stringify(task.message)}`,
         );
       }
     }
   }
-  private prepareSnapshot() {
-    // 交换双缓冲区，锁定当前 Tick 数据
-    this.eventHub.flip();
-    // 拍下当前待处理任务的快照
-    const signalSnapshot = new Set(this.dirtySignalTypes);
-    const eventSnapshot = [...this.eventQueue];
-    // 立即清空队列，允许 System 在执行时产生新消息进入 staging
-    this.dirtySignalTypes.clear();
-    this.eventQueue = [];
-    return { signalSnapshot, eventSnapshot };
-  }
-  private clear(eventSnapshot: EventMessage[], signalSnapshot: Set<any>) {
-    // 进行清理
-    const processedTypes = new Set(signalSnapshot);
-    eventSnapshot.forEach((m) => processedTypes.add(m.constructor));
-    // 清理 SIGNAL
-    this.eventHub.clearSignals(processedTypes);
-    // 清理已执行完的 EVENT 队列
-    this.eventHub.clearEvents();
-  }
+
   private executeTickHooks(hooks: TickHook[]) {
     const hooksContext: TickHookContext = {
       tick: this.globalTick,
@@ -262,16 +214,27 @@ export class Dispatcher {
 }
 
 export class ExecutionTask {
+  public success = true;
   constructor(
     public fn: (...args: any[]) => any,
     public priority: number,
-    public message: any, // 运行时可能是 T 或 T[]
+    public message: any, //  T or T[]
     public hookContext: ExecuteHookContext,
+    public beforeExecuteHooks: Array<{
+      type: MessageIdentifier<any>;
+      handler: ExecuteHook<any>;
+    }>,
+    public afterExecuteHooks: Array<{
+      type: MessageIdentifier<any>;
+      handler: ExecuteHook<any>;
+    }>,
   ) {}
 
   private triggerHooks(
-    hooks: Array<{ type: MessageIdentifier<any>; handler: ExecuteHook<any> }>,
-    success: boolean,
+    hooks: Array<{
+      type: MessageIdentifier<any>;
+      handler: ExecuteHook<any>;
+    }>,
   ) {
     const sample = Array.isArray(this.message) ? this.message[0] : this.message;
     if (!sample) return;
@@ -279,55 +242,48 @@ export class ExecutionTask {
     for (const hook of hooks) {
       if (sample instanceof hook.type) {
         try {
-          const result = hook.handler(this.message, this.hookContext, success);
+          const result = hook.handler(
+            this.message,
+            this.hookContext,
+            this.success,
+          );
           if (result instanceof Promise) {
             result.catch((e) => {
               MessageWriter.error(
                 e,
-                `[Virid Hook] Async Hook Error:\nIt is prohibited to use asynchronous hooks within Hook:\n${hook.type.name}`,
+                `[Virid Hook] Async Hook Error: It is prohibited to use asynchronous hooks within Hook: ${hook.type.name}`,
               );
             });
           }
         } catch (e) {
           MessageWriter.error(
             e as Error,
-            `[Virid Hook] Hook Execute Failed:\nTriggered by: ${sample.constructor.name}\n Registered type: ${hook.type.name}`,
+            `[Virid Hook] Hook Execute Failed: Triggered by: ${sample.constructor.name}, Registered type: ${hook.type.name}`,
           );
         }
       }
     }
   }
 
-  public execute(
-    beforeExecuteHooks: Array<{
-      type: MessageIdentifier<any>;
-      handler: ExecuteHook<any>;
-    }>,
-    afterExecuteHooks: Array<{
-      type: MessageIdentifier<any>;
-      handler: ExecuteHook<any>;
-    }>,
-  ): any {
-    let success = true;
-    //执行前置钩子
-    this.triggerHooks(beforeExecuteHooks, success);
-    const runAfter = () => this.triggerHooks(afterExecuteHooks, success);
+  public execute(): any {
+    this.triggerHooks(this.beforeExecuteHooks);
+    const runAfter = () => this.triggerHooks(this.afterExecuteHooks);
 
     try {
       const result = this.fn(this.message);
 
       if (result instanceof Promise) {
-        // 异步模式利用 .finally 确保钩子执行
-        return result.catch(() => (success = false)).finally(runAfter);
+        // Asynchronous mode utilizes. finally to ensure hook execution
+        return result.catch(() => (this.success = false)).finally(runAfter);
       }
-      // 如果是同步，直接后置钩子执行并返回
+      // If it is synchronization, execute it directly with a post hook and return it
       runAfter();
       return result;
     } catch (e) {
-      // 如果报错了，也执行后置钩子
-      success = false;
+      // If an error occurs, execute the post hook as well
+      this.success = false;
       runAfter();
-      throw e; // 抛给 Dispatcher 的 try-catch 处理
+      throw e; // Try catch processing thrown to Dispatcher
     }
   }
 }

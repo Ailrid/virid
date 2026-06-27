@@ -9,7 +9,7 @@ import { BrowserWindow, ipcMain } from "electron";
 import { middleWare, processMessage, ROUTER_MAP } from "./main";
 import { type PluginOption } from "./interfaces";
 export function activateApp(app: ViridApp, options: PluginOption) {
-  //检查参数
+  //Check parameters
   if (!options?.electronApp) {
     MessageWriter.error(
       new Error(
@@ -17,7 +17,7 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       ),
     );
   }
-  //绑定electron主进程回调
+  //Bind Electron main process callback
   ipcMain.on(VIRID_CHANNEL, (event, message) => {
     const { __virid_target, __virid_source, __virid_messageType } = message;
     if (!__virid_target || !__virid_source || !__virid_messageType) {
@@ -28,11 +28,11 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       );
       return;
     }
-    // 如果是注册消息，那么注册这个渲染进程
+    // If it is a registration message, then register this rendering process
     if (__virid_messageType === "VIRID_INTERNAL_REGISTER") {
-      // 通过 event.sender 拿到物理实例，并与逻辑 ID 绑定
+      // Obtain the physical instance through event.sender and bind it with the logical ID
       const win = BrowserWindow.fromWebContents(event.sender);
-      //找不见窗口，报错
+      //Unable to find window, error reported
       if (!win) {
         MessageWriter.error(
           new Error(
@@ -41,7 +41,7 @@ export function activateApp(app: ViridApp, options: PluginOption) {
         );
         return;
       }
-      //如果已经存在了，报错
+      //If it already exists, report an error
       if (ROUTER_MAP.has(__virid_source)) {
         MessageWriter.error(
           new Error(
@@ -50,9 +50,9 @@ export function activateApp(app: ViridApp, options: PluginOption) {
         );
         return;
       }
-      // 存入路由表
+      // Store in routing table
       ROUTER_MAP.set(__virid_source, win);
-      // 关闭时自动删除自己
+      // Automatically delete oneself when closed
       win.once("closed", () => {
         ROUTER_MAP.delete(__virid_source);
         MessageWriter.info(
@@ -62,9 +62,9 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       MessageWriter.info(`[Virid Main] Window registered: ${__virid_source}`);
       return;
     }
-    //分发消息
+    //Distribute messages
     processMessage(message);
   });
-  //注册自己的中间件函数，把ToRenderMessage拦截发往指定的渲染进程
+  //Register your own middleware function to intercept ToRenderMessage and send it to the specified rendering process
   app.useMiddleware(middleWare);
 }

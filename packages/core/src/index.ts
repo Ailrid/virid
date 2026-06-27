@@ -15,15 +15,21 @@
  *
  * Description: Virid Core Dispatcher - The heart of CCS Architecture.
  */
+export * from "./interfaces";
 export * from "./core";
 export * from "./decorators";
-export * from "./interfaces";
-import { viridApp, type ViridApp } from "./app";
+export * from "./app";
+
+import { ViridApp } from "./app";
 import { AppConfig, defaultConfig } from "./interfaces";
-import { toggleSwitch } from "./utils";
-export { type ViridApp, type ViridPlugin } from "./app";
+import { toggleSwitch, registerBasicSystems } from "./utils";
+import { bindObservers } from "./decorators/bind";
 
 export function createVirid(config: AppConfig = defaultConfig): ViridApp {
-  toggleSwitch(config.enableLog);
-  return viridApp;
+  config = { ...defaultConfig, ...config };
+  const app = new ViridApp(config.maxDepth!);
+  registerBasicSystems(app);
+  toggleSwitch(config.enableLog!);
+  app.onActivate(bindObservers);
+  return app;
 }

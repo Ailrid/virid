@@ -14,4 +14,5 @@ export const VIRID_VUE_METADATA = {
   ATTR: "virid:vue:attr",
   PROJECT: "virid:vue:project",
   WATCH: "virid:vue:watch",
+  ENV: "virid:vue:env",
 } as const;

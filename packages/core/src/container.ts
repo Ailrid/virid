@@ -5,6 +5,7 @@
  */
 
 import { Newable } from "./interfaces";
+import { VIRID_METADATA } from "./decorators/constant";
 
 interface Binding {
   type: "singleton" | "transient";
@@ -14,47 +15,89 @@ interface Binding {
 export class ViridContainer {
   private bindings = new Map<any, Binding>();
   private singletonInstances = new Map<any, any>();
-
-  public bind<T>(identifier: Newable<T>) {
-    const binding: Binding = { type: "transient", ctor: identifier };
-    this.bindings.set(identifier, binding);
-
-    return {
-      toSelf: () => ({
-        inSingletonScope: () => {
-          binding.type = "singleton";
-          return {
-            onActivation: (fn: any) => {},
-          };
-        },
-      }),
-    };
+  private activationHooks: Array<(instance: any) => any> = [];
+  /**
+   * Register an activation hook
+   * @param hook An activation hook
+   * @param front Is the hook order inserted from the front or added
+   */
+  public addActivationHook(hook: (instance: any) => any, front: boolean) {
+    if (front) this.activationHooks.unshift(hook);
+    else this.activationHooks.push(hook);
   }
-
-  public get<T>(identifier: Newable<T>, onActivate: (instance: T) => T): T {
+  /**
+   * Static binding component or controller
+   * @param identifier Constructor of components or controllers
+   */
+  public bind<T>(identifier: Newable<T>) {
+    //Check if the constructor has mandatory parameters
+    if (identifier.length > 0) {
+      throw new Error(
+        `[Virid Container] Cannot Bind Component Or Controller: The Class ${identifier.name} should not have mandatory parameters.`,
+      );
+    }
+    if (Reflect.getMetadata(VIRID_METADATA.COMPONENT, identifier)) {
+      const binding: Binding = {
+        type: "singleton",
+        ctor: identifier,
+      };
+      this.bindings.set(identifier, binding);
+    } else if (Reflect.getMetadata(VIRID_METADATA.CONTROLLER, identifier)) {
+      const binding: Binding = { type: "transient", ctor: identifier };
+      this.bindings.set(identifier, binding);
+    } else {
+      throw new Error(
+        `[Virid Container] Cannot Bind Component Or Controller: The Class ${identifier.name} is not decorated with @Component or @Controller`,
+      );
+    }
+  }
+  /**
+   * Dynamically register a component
+   * @param instance Component instance
+   */
+  public spawn(instance: object) {
+    const identifier = instance.constructor as Newable<any>;
+    if (Reflect.hasMetadata(VIRID_METADATA.COMPONENT, identifier)) {
+      const binding: Binding = { type: "singleton", ctor: identifier };
+      this.bindings.set(identifier, binding);
+      this.singletonInstances.set(identifier, instance);
+    } else {
+      throw new Error(
+        `[Virid Container] Cannot spawn Component: The Class ${identifier.name} is not decorated with @Component`,
+      );
+    }
+  }
+  /**
+   * Obtain a Component or Controller instance
+   * @param identifier Constructor of components or controllers
+   */
+  public get<T>(identifier: Newable<T>): T {
     const binding = this.bindings.get(identifier);
     if (!binding) {
       throw new Error(
-        `[Virid Container] Unbound Constructor: No binding found for ${identifier.name}`,
+        `[Virid Container] Cannot Get Component Or Controller: No binding found for ${identifier}`,
       );
     }
     const TargetCtor = binding.ctor;
 
-    // 处理单例逻辑
     if (binding.type === "singleton") {
       if (!this.singletonInstances.has(identifier)) {
-        // 第一次创建：实例化 -> 走流水线加工 -> 存入成品
+        // first creation
         const rawInstance = new TargetCtor();
-        const processedInstance = onActivate(rawInstance);
+        const processedInstance = this.handleActivation(rawInstance);
         this.singletonInstances.set(identifier, processedInstance);
       }
-      // 后续直接返回加工后的成品
       return this.singletonInstances.get(identifier);
     }
 
-    // 处理多例（Transient）逻辑
-    // 每次都创建新实例并走一遍流水线加工
+    // Transient
     const instance = new TargetCtor();
-    return onActivate(instance);
+    return this.handleActivation(instance);
+  }
+  private handleActivation<T>(instance: T): T {
+    for (const hook of this.activationHooks) {
+      instance = hook(instance);
+    }
+    return instance;
   }
 }

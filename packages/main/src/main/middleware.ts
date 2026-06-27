@@ -7,10 +7,10 @@ import { type Middleware, MessageWriter } from "@virid/core";
 import { ToRendererMessage } from "./message";
 import { ROUTER_MAP, VIRID_CHANNEL } from "./router";
 export const middleWare: Middleware = (message, next) => {
-  //如果消息是继承自MainRequestMessage，拦截并发往对应的渲染进程
+  //If the message is inherited from MainRequestMessage, intercept and send it to the corresponding rendering process
   if (message instanceof ToRendererMessage) {
     const { __virid_target, __virid_messageType, ...payload } = message;
-    //不准自己发给自己
+    //Don't send it to yourself
     if (__virid_target == "main") {
       MessageWriter.warn(
         `[Virid Main] Prohibit Sending To Oneself: ${__virid_target} is not allowed in ToRendererMessage.`,
@@ -27,7 +27,7 @@ export const middleWare: Middleware = (message, next) => {
     const targetWindows =
       __virid_target === "*" || __virid_target === "all"
         ? Array.from(ROUTER_MAP.values())
-        : [ROUTER_MAP.get(__virid_target)].filter(Boolean); // 过滤掉 undefined
+        : [ROUTER_MAP.get(__virid_target)].filter(Boolean);
 
     if (targetWindows.length > 0) {
       targetWindows.forEach((win) =>

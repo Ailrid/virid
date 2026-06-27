@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Core
  */
-import { Dispatcher } from "./dispatcher";
+
 import {
   type ExecuteHook,
   type TickHook,
@@ -13,13 +13,15 @@ import {
 import { BaseMessage } from "./message";
 import { MessageRegistry } from "./registry";
 import { MessageWriter, activateInstance } from "./io";
+import { Dispatcher } from "./dispatcher";
 
-export class MessageInternal {
-  private dispatcher = new Dispatcher();
+export class MessageEngine {
+  private dispatcher: Dispatcher;
   private registry = new MessageRegistry();
   private middlewares: Middleware[] = [];
 
-  constructor() {
+  constructor(maxDepth: number) {
+    this.dispatcher = new Dispatcher(maxDepth);
     // 修改
     activateInstance(this);
   }
@@ -72,7 +74,7 @@ export class MessageInternal {
         );
         return;
       }
-      this.dispatcher.markDirty(message);
+      this.dispatcher.stage(message);
       this.dispatcher.tick(this.registry.systemTaskMap);
     });
   }

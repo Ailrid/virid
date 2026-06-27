@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 //  统一导出
-export { MessageInternal } from "./internal";
+export { MessageEngine } from "./engine";
 export { MessageRegistry } from "./registry";
 export * from "./message";
 export * from "./io";

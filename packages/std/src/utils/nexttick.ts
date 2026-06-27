@@ -1,6 +1,5 @@
 import { type ViridApp } from "@virid/core";
 
-// 一个简单的nextTick函数
 let tickTaskQueue: Array<() => void> = [];
 
 function afterTickHook() {

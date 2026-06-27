@@ -18,14 +18,9 @@ import {
   shallowRef,
   type WritableComputedRef,
 } from "vue";
-import {
-  MessageWriter,
-  type SystemContext,
-  EventMessage,
-  SingleMessage,
-} from "@virid/core";
+import { MessageWriter, type SystemContext, SystemConfig } from "@virid/core";
 import { viridApp } from "../app";
-import { createBorrowChecker } from "./borrow-checker";
+import { createBorrowChecker } from "./borrow_checker";
 import {
   type WatchMetadata,
   type ProjectMetadata,
@@ -34,6 +29,7 @@ import {
   type ResponsiveMetadata,
   type OnHookMetadata,
   type ListenerMetadata,
+  EnvMetadata,
 } from "../interfaces";
 
 // controller注册表
@@ -326,65 +322,27 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
     Reflect.getMetadata(VIRID_VUE_METADATA.LISTENER, proto) || [];
   const unbindFunctions: (() => void)[] = [];
 
-  listenerConfigs.forEach(({ key, messageClass, priority, single }) => {
+  listenerConfigs.forEach(({ key, messageClass, priority, batchMode }) => {
     const originalMethod = instance[key];
 
-    // 强制只能接受一个参数且是 SingleMessage
-    const wrappedHandler = function (
-      currentMessage: SingleMessage[] | EventMessage,
-    ) {
-      const sample = Array.isArray(currentMessage)
-        ? currentMessage[0]
-        : currentMessage;
-      let params;
-      if (!(sample instanceof messageClass)) {
-        // 如果类型不匹配，说明 Dispatcher 路由逻辑或元数据配置有问题
-        MessageWriter.error(
-          new Error(
-            `[Virid Listener] Type Mismatch: Expected ${messageClass.name}, but received ${sample?.constructor.name}`,
-          ),
-        );
-        return null;
-      }
-      // 处理 SingleMessage (合并且批处理类型)
-      if (sample instanceof SingleMessage) {
-        // 如果用户标记了 single: true，则只取最后一条（最新的一条）
-        if (single) {
-          params = Array.isArray(currentMessage)
-            ? [currentMessage[currentMessage.length - 1]]
-            : currentMessage;
-        } else {
-          // 否则默认返回整个数组（批处理模式）
-          params = Array.isArray(currentMessage)
-            ? currentMessage
-            : [currentMessage];
-        }
-      }
-      // 处理 EventMessage (顺序单发类型)
-      else if (sample instanceof EventMessage) {
-        params = [currentMessage];
-      } else {
-        throw new Error(
-          `[Virid System] unknown Message Types: Message ${messageClass.name} is not a subclass of SingleMessage or EventMessage!`,
-        );
-      }
-      originalMethod.apply(instance, params);
-    };
-
-    // 给包装后的函数挂载上下文信息（供 Dispatcher 读取）
-    const taskContext: SystemContext = {
+    // 给包装后的函数挂载上下文信息
+    const listenerContext: SystemContext = {
       params: [messageClass],
       targetClass: instance.constructor,
       methodName: key,
       originalMethod: originalMethod,
     };
-    (wrappedHandler as any).systemContext = taskContext;
 
-    const unregister = viridApp.register(
-      messageClass,
-      wrappedHandler,
-      priority,
-    );
+    const listenerConfig: SystemConfig = {
+      messageClass: messageClass,
+      messageIdx: 0,
+      batchMode: batchMode,
+      priority: priority,
+    };
+    (instance[key] as any).systemContext = listenerContext;
+    (instance[key] as any).systemContext = listenerConfig;
+
+    const unregister = viridApp.register(instance[key]);
     unbindFunctions.push(unregister);
   });
 
@@ -408,7 +366,7 @@ export function bindInherit(proto: any, instance: any) {
       const target = GlobalRegistry.get(id); // 自动依赖 Registry 的增删
       if (!target) {
         MessageWriter.warn(
-          `[Virid Inherit] Warning:\n Inherit target not found: ${id}`,
+          `[Virid Inherit] Warning: Inherit target not found: ${id}`,
         );
         return null;
       }
@@ -426,9 +384,43 @@ export function bindInherit(proto: any, instance: any) {
       set: () => {
         MessageWriter.error(
           new Error(
-            `[Virid Inherit] No Modification:\nAttempted to set read-only Inherit property: ${key}`,
+            `[Virid Inherit] No Modification: Attempted to set read-only Inherit property: ${key}`,
           ),
         );
+      },
+      enumerable: true,
+      configurable: true,
+    });
+  });
+}
+
+/**
+u* @description: 把槽或者其他乱七八糟的东西传递过来的上下文注入到controller里
+ * @param {*} context 上下文对象
+ * @param {*} instance controller实例
+ */
+export function bindEnv(proto: any, instance: any, context: any) {
+  const envs: EnvMetadata = Reflect.getMetadata(VIRID_VUE_METADATA.ENV, proto);
+
+  envs.forEach(({ key }) => {
+    if (!context[key]) {
+      MessageWriter.warn(
+        `[Virid Context] Env Not Found: The "${key}" is not defined in the context.`,
+      );
+      return;
+    }
+    Object.defineProperty(instance, key, {
+      get: () => context[key],
+      set: (val) => {
+        if (context[key] === val) return;
+        try {
+          context[key] = val;
+        } catch (e) {
+          MessageWriter.error(
+            e as Error,
+            `[Virid Context] Set Failed:\n "${key}" is only readable.`,
+          );
+        }
       },
       enumerable: true,
       configurable: true,

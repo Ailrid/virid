@@ -25,7 +25,7 @@ function ReceiveMessages(message: any): void {
   const { __virid_source, __virid_messageType, __virid_target, payload } =
     message;
   if (!MESSAGE_MAP.has(__virid_messageType)) {
-    // 主进程没注册这个消息,直接报错
+    // The main process did not register this message and reported an error directly
     MessageWriter.error(
       new Error(
         `[Virid Main] unknown Message Type: Cannot find ${__virid_messageType} in the main process registry.`,
@@ -33,35 +33,33 @@ function ReceiveMessages(message: any): void {
     );
     return;
   }
-  // 查找主进程注册的消息类
+  // Search for message classes registered by the main process
   const MessageClass = MESSAGE_MAP.get(__virid_messageType);
-  // 实例化
   const instance = new (MessageClass as any)();
-  // 数据还原
   if (payload) {
     Object.assign(instance, payload);
   }
-  // 注入身份元数据
+  // Inject identity metadata
   instance.__virid_source = __virid_source;
   instance.__virid_target = __virid_target;
   instance.__virid_messageType = __virid_messageType;
-  // 注入物理上下文
+  // Inject context
   const context = ROUTER_MAP.get(__virid_source);
   if (context) {
     instance.senderWindow = context;
   }
 
-  // 派发给主进程的 System 群
+  // System group assigned to the main process
   MessageWriter.write(instance);
 }
 
 function TransmitMessages(message: any): void {
   const { __virid_source, __virid_messageType, __virid_target, payload } =
     message;
-  // 查找主进程注册的消息类
+  // Search for message classes registered by the main process
   const targetWindow = ROUTER_MAP.get(__virid_target);
   if (!targetWindow) {
-    // 主进程没注册这个消息,直接报错
+    // The main process did not register this message and reported an error directly
     MessageWriter.error(
       new Error(
         `[Virid Main] unknown Window: Cannot find ${__virid_target} in the windows registry.`,

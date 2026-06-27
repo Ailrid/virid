@@ -4,7 +4,7 @@
  * Project: Virid Core
  */
 import { type ObserverItem } from "../interfaces";
-import { handleResult } from "./ccs";
+import { handleResult } from "./decorator";
 import { VIRID_METADATA } from "./constant";
 const ARRAY_MUTABLE_METHODS = [
   "push",

@@ -11,10 +11,10 @@ export function disableBorrowChecker() {
   isBorrowCheckerEnabled = false;
 }
 
-// 在文件顶部定义缓存池
 const borrowCache = new WeakMap<any, any>();
+
 /**
- * 递归借用检查代理：将对象及其所有后代变为硬只读
+ * Recursive borrowing check proxy: Make the object and all its descendants hard read-only
  */
 export function createBorrowChecker(
   target: any,
@@ -36,7 +36,6 @@ export function createBorrowChecker(
     get(obj, prop, receiver) {
       const value = Reflect.get(obj, prop, receiver);
       const currentPath = path ? `${path}.${String(prop)}` : String(prop);
-      // 函数拦截
       if (typeof value === "function") {
         return (...args: any[]) => {
           if (!isShieldException(obj, prop)) {
@@ -49,20 +48,17 @@ export function createBorrowChecker(
             return null;
           }
 
-          // 安全执行：如果是 Safe 的，执行它
           const result = value.apply(obj, args);
-          // 对返回值递归借用检查
           return createBorrowChecker(result, rootName, `${currentPath}()`);
         };
       }
-      // 自动给子对象也加上借用检查
       return createBorrowChecker(value, rootName, currentPath);
     },
 
     set(_obj, prop) {
       const currentPath = path ? `${path}.${String(prop)}` : String(prop);
 
-      // 优雅地失败，并给出修复建议
+      // Elegantly fail and provide repair suggestions
       const errorMsg = [
         `[Virid Borrow Checker]`,
         `------------------------------------------------`,
@@ -97,10 +93,9 @@ export function createBorrowChecker(
   return proxy;
 }
 /**
- * 判断一个方法是否应该跳过护盾拦截
+ * Determine whether a method should skip shield interception
  */
 function isShieldException(obj: any, prop: string | symbol): boolean {
-  // 1. 内置协议 (Symbol 和基础 Object 方法)
   const PROTOCOL_WHITELIST = new Set<string | symbol>([
     Symbol.iterator,
     Symbol.asyncIterator,
@@ -112,10 +107,8 @@ function isShieldException(obj: any, prop: string | symbol): boolean {
   ]);
   if (PROTOCOL_WHITELIST.has(prop)) return true;
 
-  // 2. 集合类(Map/Set/Array) 的只读方法白名单
   const constructorName = obj.constructor?.name;
 
-  // 核心修复：补充 Array 的只读操作方法
   const READONLY_COLLECTIONS: Record<string, Set<string | symbol>> = {
     Map: new Set([
       "get",
@@ -166,7 +159,6 @@ function isShieldException(obj: any, prop: string | symbol): boolean {
 
   if (READONLY_COLLECTIONS[constructorName]?.has(prop)) return true;
 
-  // 3. 手动标记的 @Safe 装饰器方法
   const safeMethods = Reflect.getMetadata(VIRID_VUE_METADATA.SAFE, obj);
   if (safeMethods instanceof Set && safeMethods.has(prop)) return true;
 
