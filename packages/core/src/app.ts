@@ -33,10 +33,11 @@ export class ViridApp {
   private MessageEngine: MessageEngine;
   private installedPlugins = new Set<string>();
 
-  constructor(maxDepth: number) {
-    this.MessageEngine = new MessageEngine(maxDepth);
+  constructor(maxDepth: number, manual: boolean) {
+    this.MessageEngine = new MessageEngine(maxDepth, manual);
     this.container.spawn(this);
   }
+
   /**
    * Register an activation hook
    * @param hook An activation hook
@@ -45,6 +46,14 @@ export class ViridApp {
   onActivate(hook: (instance: any) => any, front: boolean = false) {
     this.container.addActivationHook(hook, front);
   }
+
+  /**
+   * Opening a new tick
+   */
+  tick() {
+    this.MessageEngine.tick();
+  }
+
   /**
    * Obtain a Component or Controller instance
    * @param identifier Constructor of components or controllers
@@ -90,103 +99,6 @@ export class ViridApp {
   onAfterTick(hook: TickHook, front = false) {
     this.MessageEngine.onAfterTick(hook, front);
   }
-  /**
-   * Register message to registrar
-   * @param systemFn System functions
-   */
-  register(systemFn: (...args: any[]) => any): () => void {
-    const systemContext: SystemContext = (systemFn as any).systemContext;
-    const systemConfig: SystemConfig = (systemFn as any).systemConfig;
-
-    if (!systemContext || !systemConfig) {
-      throw new Error(
-        `[Virid System] System Parameter Loss: Please declare ${systemFn.name} using the System decorator first.`,
-      );
-    }
-
-    const { params: types, targetClass, originalMethod } = systemContext;
-    const { messageClass, messageIdx, priority, batchMode } = systemConfig;
-
-    // The closure variable belongs to the currently registered instance of wrappedSystem
-    let cachedDeps: any[] | null = null;
-    const buildArgs = (currentMessage: EventMessage | SingleMessage[]) => {
-      let processedMessage: any = null;
-
-      const sample = Array.isArray(currentMessage)
-        ? currentMessage[0]
-        : currentMessage;
-
-      if (sample && !(sample instanceof messageClass)) {
-        const receivedName = (sample as any).constructor?.name || typeof sample;
-        throw new Error(
-          `[Virid System] Type Mismatch: Expected ${messageClass.name}, but received ${receivedName}`,
-        );
-      }
-
-      // Processing SingleMessage (Merge and Batch Processing Type)
-      if (sample instanceof SingleMessage) {
-        if (!batchMode) {
-          processedMessage = Array.isArray(currentMessage)
-            ? currentMessage[currentMessage.length - 1]
-            : currentMessage;
-        } else {
-          processedMessage = Array.isArray(currentMessage)
-            ? currentMessage
-            : [currentMessage];
-        }
-      }
-      // Process EventMessage (Sequential Single Order Type)
-      else if (sample instanceof EventMessage) {
-        processedMessage = currentMessage;
-      } else if (sample) {
-        throw new Error(
-          `[Virid System] unknown Message Types: Message ${messageClass.name} is not a subclass of SingleMessage or EventMessage!`,
-        );
-      }
-
-      if (!cachedDeps) {
-        // First execution: Retrieve regular dependencies from the DI container on site and fill the cache
-        cachedDeps = types.map((type: any, index: number) => {
-          // If the current index is the position of the Message parameter, first store a null placeholder, and then dynamically fill it in later
-          if (index === messageIdx) {
-            return null;
-          }
-          const param = this.get(type);
-          if (!param) {
-            throw new Error(
-              `[Virid System] unknown Inject Data Types: ${type.name || type} is not registered in the container!`,
-            );
-          }
-          return param;
-        });
-      }
-
-      const finalArgs = cachedDeps.map((dep, index) => {
-        if (index === messageIdx) {
-          return processedMessage;
-        }
-        return dep;
-      });
-      return finalArgs;
-    };
-
-    const wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
-      const finalArgs = buildArgs(currentMessage);
-      const result = originalMethod.apply(targetClass, finalArgs);
-
-      const handleResultFn =
-        typeof handleResult === "function" ? handleResult : (res: any) => res;
-
-      return result instanceof Promise
-        ? result.then(handleResultFn)
-        : handleResultFn(result);
-    };
-    (wrappedSystem as any).systemContext = systemContext;
-
-    return this.MessageEngine.register(messageClass, wrappedSystem, priority);
-  }
-
-  
 
   use<T>(plugin: ViridPlugin<T>, options: T): this {
     if (this.installedPlugins.has(plugin.name)) {
@@ -205,5 +117,129 @@ export class ViridApp {
       );
     }
     return this;
+  }
+  /**
+   * Register message to registrar
+   * @param systemFn System functions
+   */
+  register(systemFn: (...args: any[]) => any): () => void {
+    const systemContext: SystemContext = (systemFn as any).systemContext;
+    const systemConfig: SystemConfig = (systemFn as any).systemConfig;
+
+    if (!systemContext || !systemConfig) {
+      throw new Error(
+        `[Virid System] System Parameter Loss: Please declare ${systemFn.name} using the @System decorator first.`,
+      );
+    }
+
+    const { params: types, targetClass, originalMethod } = systemContext;
+    const { messageClass, messageIdx, priority, batchMode } = systemConfig;
+
+    const handleResultFn =
+      typeof handleResult === "function" ? handleResult : (res: any) => res;
+    const processResult = (result: any) => {
+      return result instanceof Promise
+        ? result.then(handleResultFn)
+        : handleResultFn(result);
+    };
+
+    const cachedComponents = new Array(types.length);
+    let isInitialized = false;
+
+    const initDeps = () => {
+      for (let i = 0; i < types.length; i++) {
+        if (i !== messageIdx) {
+          const dep = this.get(types[i]);
+          if (!dep) {
+            throw new Error(
+              `[Virid System] Unknown Inject Data Types: ${types[i].name || types[i]} is not registered in the container for system '${systemFn.name}'!`,
+            );
+          }
+          cachedComponents[i] = dep;
+        }
+      }
+      isInitialized = true;
+    };
+
+    let wrappedSystem: (currentMessage: EventMessage | SingleMessage[]) => any;
+
+    if (messageIdx === -1) {
+      wrappedSystem = () => {
+        if (!isInitialized) initDeps();
+        return processResult(
+          originalMethod.apply(targetClass, cachedComponents),
+        );
+      };
+    } else if (types.length === 1) {
+      if (batchMode) {
+        wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
+          const payload = Array.isArray(currentMessage)
+            ? currentMessage
+            : [currentMessage];
+
+          if (payload.length > 0 && !(payload[0] instanceof messageClass)) {
+            throw new Error(
+              `[Virid System] Type Mismatch: Expected list of ${messageClass.name}, but got ${payload[0]?.constructor?.name}`,
+            );
+          }
+
+          return processResult(originalMethod.call(targetClass, payload));
+        };
+      } else {
+        wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
+          const payload = Array.isArray(currentMessage)
+            ? currentMessage[currentMessage.length - 1]
+            : currentMessage;
+
+          if (!(payload instanceof messageClass)) {
+            throw new Error(
+              `[Virid System] Type Mismatch: Expected ${messageClass.name}, but got ${(payload as any)?.constructor?.name}`,
+            );
+          }
+
+          return processResult(originalMethod.call(targetClass, payload));
+        };
+      }
+    } else {
+      if (batchMode) {
+        wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
+          if (!isInitialized) initDeps();
+          const payload = Array.isArray(currentMessage)
+            ? currentMessage
+            : [currentMessage];
+
+          if (payload.length > 0 && !(payload[0] instanceof messageClass)) {
+            throw new Error(
+              `[Virid System] Type Mismatch: Expected list of ${messageClass.name}, but got ${payload[0]?.constructor?.name}`,
+            );
+          }
+
+          const callArgs = [...cachedComponents];
+          callArgs[messageIdx] = payload;
+          return processResult(originalMethod.apply(targetClass, callArgs));
+        };
+      } else {
+        wrappedSystem = (currentMessage: EventMessage | SingleMessage[]) => {
+          if (!isInitialized) initDeps();
+          const payload = Array.isArray(currentMessage)
+            ? currentMessage[currentMessage.length - 1]
+            : currentMessage;
+
+          if (!(payload instanceof messageClass)) {
+            throw new Error(
+              `[Virid System] Type Mismatch: Expected ${messageClass.name}, but got ${(payload as any)?.constructor?.name}`,
+            );
+          }
+
+          const callArgs = [...cachedComponents];
+          callArgs[messageIdx] = payload;
+          return processResult(originalMethod.apply(targetClass, callArgs));
+        };
+      }
+    }
+
+    (wrappedSystem as any).systemContext = systemContext;
+
+    return this.MessageEngine.register(messageClass, wrappedSystem, priority);
   }
 }

@@ -27,7 +27,8 @@ import { bindObservers } from "./decorators/bind";
 
 export function createVirid(config: AppConfig = defaultConfig): ViridApp {
   config = { ...defaultConfig, ...config };
-  const app = new ViridApp(config.maxDepth!);
+  const app = new ViridApp(config.maxDepth!, config.manual!);
+
   registerBasicSystems(app);
   toggleSwitch(config.enableLog!);
   app.onActivate(bindObservers);

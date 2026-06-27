@@ -69,8 +69,8 @@ function checkMessageParam(types: Array<any>) {
  */
 export function System(
   params: SystemParams = {
-    priority: 0,
     messageClass: null,
+    priority: 0,
   },
 ) {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {

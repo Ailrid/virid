@@ -128,6 +128,45 @@ export class Dispatcher {
       }
     });
   }
+  public tickSync(systemTaskMap: Map<any, SystemTask[]>) {
+    if (this.staging.isEmpty()) return;
+
+    this.internalDepth = 0;
+    this.tickPayload = {};
+
+    this.executeTickHooks(this.beforeTickHooks);
+
+    while (!this.staging.isEmpty()) {
+      if (this.internalDepth > this.maxDepth) {
+        this.staging.reset();
+        this.internalDepth = 0;
+        console.error(
+          new Error(
+            `[Virid Dispatcher] Deadlock: Max depth reached ${this.maxDepth}, Possible infinite loop detected. Ticking aborted.`,
+          ),
+        );
+        return;
+      }
+      this.internalDepth++;
+      try {
+        this.staging.flip();
+        const tasks = this.collectTasks(systemTaskMap);
+        this.executeTasks(tasks);
+      } catch (e) {
+        MessageWriter.error(
+          e as Error,
+          "[Virid Dispatcher] Sub-Tick Unhandled Error",
+        );
+        break;
+      }
+    }
+
+    this.staging.reset();
+    this.internalDepth = 0;
+    this.executeTickHooks(this.afterTickHooks);
+    this.globalTick++;
+  }
+
   private collectTasks(systemTaskMap: Map<any, SystemTask[]>): ExecutionTask[] {
     const tasks: ExecutionTask[] = [];
     // Collect EVENT tasks and execute all associated systems for each message from front to back

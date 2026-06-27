@@ -19,9 +19,11 @@ export class MessageEngine {
   private dispatcher: Dispatcher;
   private registry = new MessageRegistry();
   private middlewares: Middleware[] = [];
+  private manual: boolean;
 
-  constructor(maxDepth: number) {
+  constructor(maxDepth: number, manual: boolean) {
     this.dispatcher = new Dispatcher(maxDepth);
+    this.manual = manual;
     // 修改
     activateInstance(this);
   }
@@ -50,11 +52,11 @@ export class MessageEngine {
     this.dispatcher.addAfterTick(hook, front);
   }
 
-  /**
-   * 消息进入系统的唯一入口
-   */
+  tick() {
+    this.dispatcher.tickSync(this.registry.systemTaskMap);
+  }
+
   dispatch(message: BaseMessage) {
-    // 不是继承自BaseMessage就报错
     if (!(message instanceof BaseMessage)) {
       MessageWriter.error(
         new Error(
@@ -75,7 +77,9 @@ export class MessageEngine {
         return;
       }
       this.dispatcher.stage(message);
-      this.dispatcher.tick(this.registry.systemTaskMap);
+      if (!this.manual) {
+        this.dispatcher.tick(this.registry.systemTaskMap);
+      }
     });
   }
 

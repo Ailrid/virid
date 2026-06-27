@@ -11,10 +11,12 @@ export type Newable<
 export interface AppConfig {
   maxDepth?: number;
   enableLog?: boolean;
+  manual?: boolean;
 }
 
 const defaultConfig: AppConfig = {
   maxDepth: 100,
   enableLog: true,
+  manual: false,
 };
 export { defaultConfig };

@@ -5,7 +5,8 @@
     "ccs": "node -r @swc-node/register ./ccs.ts",
     "log": "node -r @swc-node/register ./log.ts",
     "hook": "node -r @swc-node/register ./hook.ts",
-    "observer": "node -r @swc-node/register ./observer.ts"
+    "observer": "node -r @swc-node/register ./observer.ts",
+    "throughput": "node -r @swc-node/register ./throughput.ts"
   },
   "dependencies": {
     "@virid/core": "workspace:*",
