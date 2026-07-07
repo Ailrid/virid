@@ -94,3 +94,17 @@ function reportMetrics(start: number, end: number, iterations: number) {
 
 // Start benchmark
 runBenchmark();
+// final result on i7-12700H
+// [Virid Core] Warming up V8 engine...
+
+// Scenario 1: Pure High-Frequency Throughput
+// Duration: 315.21 ms
+// Throughput: 951,758 ops/sec
+// Latency: 1.0507 us
+
+// Scenario 2: Cascading Message Ripple
+// Duration: 597.56 ms
+// Throughput: 502,044 ops/sec
+// Latency: 1.9919 us
+
+// Verification: Counter final value: 900000

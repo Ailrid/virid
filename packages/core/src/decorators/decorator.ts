@@ -46,7 +46,7 @@ function checkMessageParam(types: Array<any>) {
   });
 
   if (foundMatches.length === 0) {
-    return null; // 或者根据你的业务返回 undefined / 报错
+    return null;
   }
 
   if (foundMatches.length > 1) {

@@ -9,18 +9,22 @@ interface QueueContext {
   message: EventMessage;
   next: () => void;
 }
+interface AsyncMessageKey {
+  key: string;
+  maxSize: number;
+}
 
 // The correspondence between messages and keys
-const asyncMessageMap = new Map<Newable<EventMessage>, string>();
+const asyncMessageMap = new Map<Newable<EventMessage>, AsyncMessageKey>();
 // The message sequence cached in each key
 const asyncMessageQueue = new Map<string, QueueContext[]>();
 
 /**
  * Register asynchronous queue messages
  */
-export function AsyncQueue(key: string = "default") {
+export function AsyncQueue(key: string = "default", maxSize: number = 1) {
   return function (target: Newable<EventMessage>) {
-    asyncMessageMap.set(target, key);
+    asyncMessageMap.set(target, { key, maxSize });
   };
 }
 
@@ -28,12 +32,16 @@ export function AsyncQueue(key: string = "default") {
  * Intercept all asynchronous messages
  */
 function middleWare(message: BaseMessage, next: () => void): void {
-  const key = asyncMessageMap.get(message.constructor as Newable<EventMessage>);
-  if (key && message instanceof EventMessage) {
-    const currentQueue = asyncMessageQueue.get(key) || [];
+  const item = asyncMessageMap.get(
+    message.constructor as Newable<EventMessage>,
+  );
+  if (item && message instanceof EventMessage) {
+    const currentQueue = asyncMessageQueue.get(item.key) || [];
+    // check the maximum length
+    if (currentQueue.length >= item.maxSize) return;
     currentQueue.push({ message, next });
-    asyncMessageQueue.set(key, currentQueue);
-    // 如果没有暂存队列，立刻放行
+    asyncMessageQueue.set(item.key, currentQueue);
+
     if (currentQueue.length == 1) next();
   } else {
     next();
@@ -45,11 +53,13 @@ function afterExecuteHook(
   _hookContext: ExecuteHookContext,
 ) {
   // Is the current message to be sorted
-  const key = asyncMessageMap.get(message.constructor as Newable<EventMessage>);
-  if (key) {
+  const item = asyncMessageMap.get(
+    message.constructor as Newable<EventMessage>,
+  );
+  if (item) {
     // If this message is exactly the message recorded at the head of the queue
     // So immediately send this one, and then deliver another follow-up message
-    const currentQueue = asyncMessageQueue.get(key)!;
+    const currentQueue = asyncMessageQueue.get(item.key)!;
     if (currentQueue.at(0)?.message === message) {
       currentQueue.shift();
       currentQueue.at(0)?.next();

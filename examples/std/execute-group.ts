@@ -8,8 +8,8 @@ import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { executeGroup, StdPlugin } from "@virid/std";
 // This example demonstrates how to use message groups,
 // where messages within a message group will be executed sequentially and must all succeed
-
-const app = createVirid().use(StdPlugin, {});
+const stdPlugin = new StdPlugin();
+const app = createVirid().use(stdPlugin, null);
 
 @Component()
 class Counter {

@@ -11,7 +11,7 @@ import {
   WarnMessage,
   InfoMessage,
 } from "@virid/core";
-import { amberComponentStore, amberTickStore } from "./store";
+import { type AmberTickStore, type AmberComponentStore } from "./store";
 import { VIRID_AMBER_METADATA } from "../decorators/constant";
 
 const dirtyBuffer = new Set<any>();
@@ -36,17 +36,19 @@ export const afterExecuteHooks: ExecuteHook<BaseMessage> = (
   });
 };
 
-export const afterTickHooks: TickHook = (_context) => {
-  if (dirtyBuffer.size === 0) return;
+export function getAfterTickHooks(
+  amberComponentStore: AmberComponentStore,
+  amberTickStore: AmberTickStore,
+): TickHook {
+  return (_context) => {
+    if (dirtyBuffer.size === 0) return;
 
-  // 微观更新
-  dirtyBuffer.forEach((compClass) => {
-    amberComponentStore.seal(compClass);
-  });
+    dirtyBuffer.forEach((compClass) => {
+      amberComponentStore.seal(compClass);
+    });
 
-  // 宏观更新
-  amberTickStore.updateTickHistory();
+    amberTickStore.updateTickHistory(amberComponentStore);
 
-  // 清理缓存，准备下一轮
-  dirtyBuffer.clear();
-};
+    dirtyBuffer.clear();
+  };
+}

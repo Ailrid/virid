@@ -21,17 +21,10 @@ export class HttpContext {
     public readonly route: string,
   ) {}
 
-  /**
-   * Increment Reference Count (进入 System)
-   */
   inc() {
     this.rc++;
   }
 
-  /**
-   * Decrement Reference Count (离开 System)
-   * 如果归零且未响应，则判定为孤立响应，强制收割
-   */
   dec() {
     this.rc--;
     if (this.rc === 0) {
@@ -40,13 +33,10 @@ export class HttpContext {
   }
 
   private tryFinalize() {
-    // 如果已经由 System 正常返回
-    // 或者已经强制关闭过，则直接跳过
     if (this.res.writableEnded || this.isClosed) return;
 
     this.isClosed = true;
 
-    // 强制报错并关闭连接
     const errorMsg = `[Virid Express] Request Orphaned: The connection was closed because all systems finished execution without sending a response. 
     Route: ${this.route}
     Uptime: ${Date.now() - this.timestamp}ms`;
@@ -60,7 +50,6 @@ export class HttpContext {
           "Request processed but no response was returned by any system.",
       });
     } else {
-      // 如果 header 已经发了但没写完，强行结束流
       this.res.end();
     }
   }
@@ -167,7 +156,6 @@ export interface StreamFileOptions {
   lastModified?: boolean;
   /** 是否支持断点续传 (Range 请求) */
   acceptRanges?: boolean;
-  /** 还有一些不常用的（如 cacheControl, extensions）也可以按需添加 */
 }
 export class StreamFileResponse extends HttpResponse {
   constructor(
@@ -189,7 +177,6 @@ export class StreamResponse extends HttpResponse {
     super(options.status || 206, {}, options.headers);
   }
 }
-// --- 辅助工厂函数 ---
 
 /** 200 OK */
 export const Ok = (data: any, headers: HttpHeaders = {}) =>
@@ -216,8 +203,13 @@ export const Forbidden = (msg = "Forbidden") => new ForbiddenResponse(msg);
 export const NotFound = (msg = "Not Found") => new NotFoundResponse(msg);
 
 /** 500 Internal Error */
-export const InternalServerError = (msg = "Internal Server Error") =>
-  new InternalServerErrorResponse(msg);
+export const InternalServerError = (
+  msg: string | Error = "Internal Server Error",
+) => {
+  return msg instanceof Error
+    ? new InternalServerErrorResponse(msg.message)
+    : new InternalServerErrorResponse(msg);
+};
 
 export const CustomResponse = (
   status: number,

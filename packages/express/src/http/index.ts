@@ -3,6 +3,6 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Express
  */
-export * from "./http-response";
+export * from "./response";
 export * from "./utils";
 export * from "./message";

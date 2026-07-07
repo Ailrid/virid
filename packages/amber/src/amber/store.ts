@@ -3,22 +3,13 @@
  * Licensed under the Apache License, Version 2.0.
  * Project: Virid Amber
  */
-import { MessageWriter } from "@virid/core";
-import { viridApp } from "../app";
+import { MessageWriter, type ViridApp } from "@virid/core";
 import { VIRID_AMBER_METADATA } from "../decorators/constant";
 import { RestoreDirection, type PluginOptions } from "../interfaces";
 import { type VersionMetadata, type CustomMethodMetadata } from "../interfaces";
-
 import { _serialization, _deserialization, _diff } from "./utils";
-let config: PluginOptions;
 
-export function activateConfig(customConfig: PluginOptions) {
-  config = customConfig;
-  amberComponentStore.maxComponentLength = config.maxComponentLength;
-  amberTickStore.maxTickLength = config.maxTickLength;
-}
-
-class AmberTickStore {
+export class AmberTickStore {
   // 快照镜像
   private tickHistory: Array<Map<any, any>> = [];
 
@@ -28,9 +19,11 @@ class AmberTickStore {
   public maxTickLength: number;
   // 当前处于哪个逻辑 Tick
   public currentTick = 0;
+  public app: ViridApp;
 
-  constructor(maxTickLength: number = 20) {
-    this.maxTickLength = maxTickLength;
+  constructor(app: ViridApp, customConfig: PluginOptions) {
+    this.maxTickLength = customConfig.maxTickLength;
+    this.app = app;
   }
   /**
    * 获取最小可用Tick
@@ -49,7 +42,7 @@ class AmberTickStore {
   /**
    * 记录当前的宏观快照
    */
-  public updateTickHistory() {
+  public updateTickHistory(amberComponentStore: AmberComponentStore) {
     // 剪枝
     if (this.currentTick < this.baseTick + this.tickHistory.length) {
       // 剪掉后面的平行宇宙
@@ -73,7 +66,7 @@ class AmberTickStore {
   /**
    * 全局时空旅行
    */
-  public travel(targetTick: number) {
+  public travel(targetTick: number, amberComponentStore: AmberComponentStore) {
     // 计算物理索引
     const index = targetTick - this.baseTick;
     const historyMap = this.tickHistory[index];
@@ -123,7 +116,7 @@ class AmberTickStore {
           });
         }
       }
-      const instance = viridApp.get(compClass);
+      const instance = this.app.get(compClass);
     }
 
     // 更新宏观时空指针
@@ -137,33 +130,38 @@ class AmberTickStore {
   /**
    * 重置宏观时间轴
    */
-  public resetTickStore() {
+  public resetTickStore(amberComponentStore: AmberComponentStore) {
     // 彻底清空旧的磁带
     this.tickHistory = [];
     this.baseTick = 0;
     this.currentTick = 0;
 
     // 立刻保存一份当前的“现状”作为新起点
-    this.updateTickHistory();
+    this.updateTickHistory(amberComponentStore);
   }
 }
 
-class AmberComponentStore {
+export class AmberComponentStore {
   public componentHistory = new Map<any, any[]>();
   // 记录每个组件消失的历史总数
   public biasVersions = new Map<any, number>();
   public maxComponentLength: number;
   // 记录当前每个组件都是什么版本
   public currentHistory = new Map<any, any>();
+  public config: PluginOptions;
+  public app: ViridApp;
+
   // 记录每个组件消失的历史总数
-  constructor(maxComponentLength: number = 20) {
-    this.maxComponentLength = maxComponentLength;
+  constructor(app: ViridApp, customConfig: PluginOptions) {
+    this.maxComponentLength = customConfig.maxComponentLength;
+    this.config = customConfig;
+    this.app = app;
   }
   /**
    * 将component 的数据进行序列化
    */
   public serializeComponent(compClass: any) {
-    const instance = viridApp.get(compClass);
+    const instance = this.app.get(compClass);
     if (!instance) {
       MessageWriter.error(
         new Error(
@@ -177,7 +175,7 @@ class AmberComponentStore {
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const serializeFn = customMethod?.serialize || config.serialization;
+    const serializeFn = customMethod?.serialize || this.config.serialization;
     try {
       return serializeFn(instance);
     } catch (e) {
@@ -192,7 +190,7 @@ class AmberComponentStore {
    * 将component 的数据反序列化
    */
   public deserializeComponent(compClass: any, data: any) {
-    const instance = viridApp.get(compClass);
+    const instance = this.app.get(compClass);
     if (!instance) {
       MessageWriter.error(
         new Error(
@@ -213,7 +211,8 @@ class AmberComponentStore {
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const deserializeFn = customMethod?.deserialize || config.deserialization;
+    const deserializeFn =
+      customMethod?.deserialize || this.config.deserialization;
     try {
       deserializeFn(instance, data);
     } catch (e) {
@@ -228,7 +227,7 @@ class AmberComponentStore {
    * 对比diff
    */
   public diffComponent(compClass: any, old_data: any): boolean {
-    const instance = viridApp.get(compClass);
+    const instance = this.app.get(compClass);
     if (!instance) {
       MessageWriter.error(
         new Error(
@@ -249,7 +248,7 @@ class AmberComponentStore {
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const diffFn = customMethod?.diff || config.diff;
+    const diffFn = customMethod?.diff || this.config.diff;
     try {
       return diffFn(instance, old_data);
     } catch (e) {
@@ -270,7 +269,7 @@ class AmberComponentStore {
       VIRID_AMBER_METADATA.CUSTOM_METHOD,
       compClass,
     );
-    const serializeFn = customMethod?.serialize || config.serialization;
+    const serializeFn = customMethod?.serialize || this.config.serialization;
     let data;
     try {
       data = serializeFn(instance);
@@ -389,7 +388,11 @@ class AmberComponentStore {
    * @param targetVersion 目标版本
    * @returns
    */
-  public seek(compClass: any, targetVersion: number): boolean {
+  public seek(
+    compClass: any,
+    targetVersion: number,
+    amberTickStore: AmberTickStore,
+  ): boolean {
     // 边界检查
     const stack = this.componentHistory.get(compClass);
     if (!stack) {
@@ -437,7 +440,7 @@ class AmberComponentStore {
     }
 
     // 告诉时间轴，有个零件变了
-    amberTickStore.updateTickHistory();
+    amberTickStore.updateTickHistory(this);
     return true;
   }
   /**
@@ -456,12 +459,9 @@ class AmberComponentStore {
     Reflect.defineMetadata(VIRID_AMBER_METADATA.VERSION, 0, compClass);
   }
 
-  public resetComponent(compClass: any) {
+  public resetComponent(compClass: any, amberTickStore: AmberTickStore) {
     this.resetComponentInternal(compClass);
     // 只有局部重置时，才主动触发宏观记录
-    amberTickStore.updateTickHistory();
+    amberTickStore.updateTickHistory(this);
   }
 }
-
-export const amberTickStore = new AmberTickStore();
-export const amberComponentStore = new AmberComponentStore();

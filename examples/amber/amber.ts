@@ -21,8 +21,8 @@ async function wait() {
 //   maxComponentLength: number;
 //   maxTickLength: number;
 // }
-
-const app = createVirid().use(AmberPlugin, defaultOptions);
+const amberPlugin = new AmberPlugin();
+const app = createVirid().use(amberPlugin, defaultOptions);
 
 // In the plugin level configuration, all components marked with Backup will default to this configuration
 @Backup()
@@ -83,14 +83,17 @@ class CounterSystem {
   @System({
     messageClass: IncreaseMessage,
   })
-  static increaseA(counter: CounterA) {
+  // You can directly obtain Amber in the system like obtaining a regular component
+  static increaseA(counter: CounterA, amber: Amber) {
+    console.log(`[CounterA Version]: ${amber.getVersion(CounterA)}`);
     counter.count++;
   }
 
   @System({
     messageClass: IncreaseMessage,
   })
-  static increaseB(counter: CounterB) {
+  static increaseB(counter: CounterB, amber: Amber) {
+    console.log(`[CounterB Version]: ${amber.getVersion(CounterB)}`);
     counter.count++;
   }
 
@@ -107,6 +110,9 @@ app.register(CounterSystem.increaseA);
 app.register(CounterSystem.increaseB);
 app.register(CounterSystem.print);
 async function main() {
+  // Get the Amber instance
+  const amber = app.get(Amber);
+
   //------------Tick 0 start-------------
   console.log("\n>>> Phase 1: Data Change");
   // Firstly, we print the values of the components twice
@@ -114,8 +120,8 @@ async function main() {
   PrintMessage.send("B");
   await wait();
   // Then we check the version number
-  console.log(`[Version A]: ${Amber.getVersion(CounterA)}`);
-  console.log(`[Version B]: ${Amber.getVersion(CounterB)}`);
+  console.log(`[Version A]: ${amber.getVersion(CounterA)}`);
+  console.log(`[Version B]: ${amber.getVersion(CounterB)}`);
   //------------Tick 0 end-------------
 
   //------------Tick 1 start-------------
@@ -124,8 +130,8 @@ async function main() {
   IncreaseMessage.send();
   await wait();
   // Then we checked the version numbers, and now their version numbers should all be 1
-  console.log(`[Version A]: ${Amber.getVersion(CounterA)}`);
-  console.log(`[Version B]: ${Amber.getVersion(CounterB)}`);
+  console.log(`[Version A]: ${amber.getVersion(CounterA)}`);
+  console.log(`[Version B]: ${amber.getVersion(CounterB)}`);
   //------------Tick 1 end-------------
 
   //------------Tick 2 start-------------
@@ -134,8 +140,8 @@ async function main() {
   await wait();
   // Then we checked the version numbers, and now their version numbers should all be 2
   // The values of these two Counters should both be 3
-  console.log(`[Version A]: ${Amber.getVersion(CounterA)}`);
-  console.log(`[Version B]: ${Amber.getVersion(CounterB)}`);
+  console.log(`[Version A]: ${amber.getVersion(CounterA)}`);
+  console.log(`[Version B]: ${amber.getVersion(CounterB)}`);
   //------------Tick 2 end-------------
 
   // From now on, the values in both A and B are 3
@@ -145,10 +151,10 @@ async function main() {
   // We undo Counter A twice, value 3->0
   // Why did we only roll back twice, but the value became 0?
   // This is because our second consecutive two changes occurred within one tick, so they were merged
-  Amber.undo(CounterA);
-  Amber.undo(CounterA);
+  amber.undo(CounterA);
+  amber.undo(CounterA);
   // The version number will also be rolled back，2->0
-  console.log(`[Version A]: ${Amber.getVersion(CounterA)}`);
+  console.log(`[Version A]: ${amber.getVersion(CounterA)}`);
   // Then let's print it out and see the results
   PrintMessage.send("A");
   await wait();
@@ -157,12 +163,12 @@ async function main() {
   IncreaseMessage.send();
   await wait();
   // This should be false because our future has already been deleted
-  console.log(`[CanRedo A]: ${Amber.canRedo(CounterA)}`);
+  console.log(`[CanRedo A]: ${amber.canRedo(CounterA)}`);
   // Finally, let's try making changes to CounterB to see if our features can work properly
-  Amber.undo(CounterB);
-  Amber.redo(CounterB);
+  amber.undo(CounterB);
+  amber.redo(CounterB);
   // The version here should still be 3, why? Because of our IncreaseMessage.send() above
-  console.log(`[Version B]: ${Amber.getVersion(CounterB)}`);
+  console.log(`[Version B]: ${amber.getVersion(CounterB)}`);
   // Should the value not change, 4
   PrintMessage.send("B");
   await wait();
@@ -174,10 +180,16 @@ main();
 // [CounterB]: 0
 // [Version A]: 0
 // [Version B]: 0
+// [CounterA Version]: 0
+// [CounterB Version]: 0
+// [CounterA Version]: 0
+// [CounterB Version]: 0
 // [Before backup]: {"count":0}
 // [After backup]: {"count":2}
 // [Version A]: 1
 // [Version B]: 1
+// [CounterA Version]: 1
+// [CounterB Version]: 1
 // [Before backup]: {"count":2}
 // [After backup]: {"count":3}
 // [Version A]: 2
@@ -186,6 +198,8 @@ main();
 // >>> Phase 2: Simulated Revocation
 // [Version A]: 0
 // [CounterA]: 0
+// [CounterA Version]: 0
+// [CounterB Version]: 2
 // [Before backup]: {"count":3}
 // [After backup]: {"count":4}
 // [CanRedo A]: false

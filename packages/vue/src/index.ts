@@ -22,10 +22,11 @@ export * from "./decorators";
 export * from "./interfaces";
 import { activateApp } from "./app";
 import { disableBorrowChecker } from "./adapters/borrow_checker";
-export const VuePlugin: ViridPlugin<PluginOption> = {
-  name: "@virid/vue",
+
+export class VuePlugin implements ViridPlugin<PluginOption> {
+  name = "@virid/vue";
   install(app: ViridApp, options: PluginOption) {
     if (options.disableBorrowChecker) disableBorrowChecker();
     activateApp(app);
-  },
-};
+  }
+}

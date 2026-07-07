@@ -20,7 +20,7 @@ export function FromRenderer(type: string) {
     MESSAGE_MAP.set(type, target);
   };
 }
-//主进程接收消息并发给自己的system
+// The main process receives the message and sends it to its own system
 function ReceiveMessages(message: any): void {
   const { __virid_source, __virid_messageType, __virid_target, payload } =
     message;

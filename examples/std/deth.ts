@@ -9,8 +9,8 @@
 import "reflect-metadata";
 import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { Debounce, Throttle, StdPlugin } from "@virid/std";
-
-const app = createVirid().use(StdPlugin, {});
+const stdPlugin = new StdPlugin();
+const app = createVirid().use(stdPlugin, null);
 
 @Component()
 class Counter {

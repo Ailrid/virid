@@ -16,7 +16,6 @@ export const middleWare: Middleware = (message, next) => {
         `[Virid Main] Prohibit Sending To Oneself: ${__virid_target} is not allowed in ToRendererMessage.`,
       );
     }
-    // 准备要发送的数据包
     const packet = {
       __virid_source: ToRendererMessage.__virid_source,
       __virid_target,

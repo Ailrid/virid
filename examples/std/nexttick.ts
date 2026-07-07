@@ -8,7 +8,8 @@ import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { nextTick, StdPlugin } from "@virid/std";
 // This example demonstrates how to automatically execute some characters at the beginning of the next tick
 // Enable support for Std plugin
-const app = createVirid().use(StdPlugin, {});
+const stdPlugin = new StdPlugin();
+const app = createVirid().use(stdPlugin, null);
 
 @Component()
 class Counter {

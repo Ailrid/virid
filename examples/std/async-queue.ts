@@ -8,7 +8,8 @@ import { createVirid, Component, System, EventMessage } from "@virid/core";
 import { AsyncQueue, StdPlugin } from "@virid/std";
 // This example demonstrates how to use asynchronous queues,
 // where messages marked with the same key will be sorted and executed in the order they were sent
-const app = createVirid().use(StdPlugin, {});
+const stdPlugin = new StdPlugin();
+const app = createVirid().use(stdPlugin, null);
 
 @Component()
 class Counter {
@@ -21,11 +22,11 @@ app.bind(Counter);
 // With just one line of code,
 // virid ensures that a set of messages with the same key,
 // even if the system is asynchronous, will always follow the order of sending.
-@AsyncQueue("increase")
+@AsyncQueue("increase", 10)
 class IncreaseAMessage extends EventMessage {}
-@AsyncQueue("increase")
+@AsyncQueue("increase", 10)
 class IncreaseBMessage extends EventMessage {}
-@AsyncQueue("decrease")
+@AsyncQueue("decrease", 10)
 class DecreaseMessage extends EventMessage {}
 
 class CounterSystem {
@@ -67,9 +68,6 @@ app.register(CounterSystem.increaseA);
 app.register(CounterSystem.increaseB);
 app.register(CounterSystem.decrease);
 app.register(CounterSystem.decreaseLonger);
-
-
-
 
 // Send messages in the following order
 // Due to the fact that the keys for IncreaseAMessage and IncreaseBMessage are the same,

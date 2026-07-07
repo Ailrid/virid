@@ -13,6 +13,11 @@ export interface HttpRouteConfig {
   method: HttpMethod;
 }
 
+export interface HttpSystemParams {
+  priority?: number;
+  messageClass?: Newable<HttpRequestMessage> | null;
+}
+
 export interface HttpRouteInfo extends HttpRouteConfig {
   httpMessage: Newable<HttpRequestMessage>;
   params: string[];
@@ -54,3 +59,22 @@ export interface ParamItem {
   pipe?: TransformPipe<any>;
 }
 export type ParamMetadata = ParamItem[];
+
+export interface HttpMetadata {
+  bodyMeta: BodyMetadata;
+  headerMeta: HeaderMetadata;
+  queryMeta: QueryMetadata;
+  paramMeta: ParamMetadata;
+  cookiesMeta: CookieMetadata;
+  reqMeta: RequestMetadata;
+  resMeta: ResponseMetadata;
+  ctxMeta: ContextMetadata;
+}
+
+export interface HttpSystemConfig {
+  httpMetadata: HttpMetadata;
+  priority: number;
+  messageClass: Newable<HttpRequestMessage>;
+  messageIdx: number;
+  batchMode: boolean;
+}

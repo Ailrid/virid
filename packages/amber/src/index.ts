@@ -15,15 +15,42 @@
  *
  * Description: Add replay, redo, undo and other functions to virid.
  */
-import { ViridPlugin, type ViridApp } from "@virid/core";
-import { activateApp } from "./app";
+import { BaseMessage, ViridPlugin, type ViridApp } from "@virid/core";
 import { PluginOptions } from "./interfaces";
+import {
+  getAfterTickHooks,
+  afterExecuteHooks,
+  Amber,
+  AmberTickStore,
+  AmberComponentStore,
+} from "./amber";
+import { VIRID_AMBER_METADATA } from "./decorators/constant";
 export * from "./amber";
 export * from "./decorators";
 export * from "./interfaces";
-export const AmberPlugin: ViridPlugin<PluginOptions> = {
-  name: "@virid/amber",
-  install(app: ViridApp, options) {
-    activateApp(app, options);
-  },
-};
+
+export class AmberPlugin implements ViridPlugin<PluginOptions> {
+  name = "@virid/amber";
+  install(app: ViridApp, options: PluginOptions) {
+    const tickStore = new AmberTickStore(app, options);
+    const amberComponentStore = new AmberComponentStore(app, options);
+    const amber = new Amber(amberComponentStore, tickStore);
+    const afterTickHooks = getAfterTickHooks(amberComponentStore, tickStore);
+    //Register Hook
+    app.onAfterTick(afterTickHooks, true);
+    app.onAfterExecute(BaseMessage, afterExecuteHooks, true);
+
+    const amberInitHook = (instance: any) => {
+      if (
+        instance &&
+        Reflect.hasMetadata(VIRID_AMBER_METADATA.VERSION, instance.constructor)
+      ) {
+        //实例化的时候，init第一个版本
+        amberComponentStore.initComponent(instance);
+      }
+      return instance;
+    };
+    app.onActivate(amberInitHook);
+    app.spawn(amber);
+  }
+}

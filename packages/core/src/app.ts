@@ -30,11 +30,11 @@ export interface ViridPlugin<T = any> {
 @Component()
 export class ViridApp {
   public container: ViridContainer = new ViridContainer();
-  private MessageEngine: MessageEngine;
+  public engine: MessageEngine;
   private installedPlugins = new Set<string>();
 
   constructor(maxDepth: number, manual: boolean) {
-    this.MessageEngine = new MessageEngine(maxDepth, manual);
+    this.engine = new MessageEngine(maxDepth, manual);
     this.container.spawn(this);
   }
 
@@ -51,7 +51,7 @@ export class ViridApp {
    * Opening a new tick
    */
   tick() {
-    this.MessageEngine.tick();
+    this.engine.tick();
   }
 
   /**
@@ -77,27 +77,27 @@ export class ViridApp {
     this.container.spawn(instance);
   }
   useMiddleware(mw: Middleware, front = false) {
-    this.MessageEngine.useMiddleware(mw, front);
+    this.engine.useMiddleware(mw, front);
   }
   onBeforeExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
     hook: ExecuteHook<T>,
     front = false,
   ) {
-    this.MessageEngine.onBeforeExecute(type, hook, front);
+    this.engine.onBeforeExecute(type, hook, front);
   }
   onAfterExecute<T extends BaseMessage>(
     type: MessageIdentifier<T>,
     hook: ExecuteHook<T>,
     front = false,
   ) {
-    this.MessageEngine.onAfterExecute(type, hook, front);
+    this.engine.onAfterExecute(type, hook, front);
   }
   onBeforeTick(hook: TickHook, front = false) {
-    this.MessageEngine.onBeforeTick(hook, front);
+    this.engine.onBeforeTick(hook, front);
   }
   onAfterTick(hook: TickHook, front = false) {
-    this.MessageEngine.onAfterTick(hook, front);
+    this.engine.onAfterTick(hook, front);
   }
 
   use<T>(plugin: ViridPlugin<T>, options: T): this {
@@ -240,6 +240,6 @@ export class ViridApp {
 
     (wrappedSystem as any).systemContext = systemContext;
 
-    return this.MessageEngine.register(messageClass, wrappedSystem, priority);
+    return this.engine.register(messageClass, wrappedSystem, priority);
   }
 }

@@ -2,9 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
+    "types": [
+      "reflect-metadata",
+      "node"
+    ]
   },
   "include": [
-    "src/**/*",
+    "./**/*.ts"
   ]
 }

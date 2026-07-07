@@ -6,9 +6,7 @@
 
 import { PluginOptions } from "../interfaces";
 
-/**
- * 默认 serialization
- */
+
 export function _serialization(instance: any, depth = 5): any {
   if (instance === null || typeof instance !== "object") return instance;
   if (depth <= 0) return Array.isArray(instance) ? [] : {};
@@ -33,9 +31,7 @@ export function _serialization(instance: any, depth = 5): any {
   }
   return snapshot;
 }
-/**
- * 默认 deserialization
- */
+
 export function _deserialization(instance: any, snapshot: any) {
   if (!instance || !snapshot) return;
 
@@ -57,9 +53,7 @@ export function _deserialization(instance: any, snapshot: any) {
     }
   });
 }
-/**
- * 默认 Diff
- */
+
 export function _diff(oldData: any, instance: any, depth = 3): boolean {
   // 基础类型或引用相同，直接认为没变
   if (oldData === instance) return false;

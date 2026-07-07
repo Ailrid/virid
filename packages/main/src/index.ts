@@ -20,9 +20,9 @@ export * from "./interfaces";
 import { ViridPlugin, type ViridApp } from "@virid/core";
 import { type PluginOption } from "./interfaces";
 import { activateApp } from "./app";
-export const MainPlugin: ViridPlugin<PluginOption> = {
-  name: "@virid/main",
-  install(app: ViridApp, options) {
-    activateApp(app, options as PluginOption);
-  },
-};
+export class MainPluginClass implements ViridPlugin<PluginOption> {
+  name = "@virid/main";
+  install(app: ViridApp, options: PluginOption) {
+    activateApp(app, options);
+  }
+}

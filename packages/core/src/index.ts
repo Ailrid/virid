@@ -32,5 +32,7 @@ export function createVirid(config: AppConfig = defaultConfig): ViridApp {
   registerBasicSystems(app);
   toggleSwitch(config.enableLog!);
   app.onActivate(bindObservers);
+  const self = app;
+  app.spawn(self);
   return app;
 }

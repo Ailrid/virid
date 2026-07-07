@@ -8,7 +8,7 @@ import { MessageWriter, type ViridApp } from "@virid/core";
 import { middleWare, convertFromMainMessage, ToMainMessage } from "./renderer";
 import { type PluginOption } from "./interfaces";
 export function activateApp(app: ViridApp, options: PluginOption) {
-  // 先检查预加载脚本是否已经加载
+  // first, check if the preload script has been loaded
   if (!window.__VIRID_BRIDGE__) {
     MessageWriter.error(
       new Error(
@@ -16,7 +16,7 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       ),
     );
   }
-  // 检查参数是否传递
+  // check whether parameters are passed
   if (!options?.windowId) {
     MessageWriter.error(
       new Error(
@@ -24,9 +24,9 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       ),
     );
   }
-  //注册自己的id，以后所有发往主进程的消息都会携带自己的id
+  // register your own id, so that all messages sent to the main process will carry your own id in the future
   ToMainMessage.__virid_source = options.windowId;
-  //主动向主进程发一个注册消息来注册自己
+  // actively send a registration message to the main process to register itself
   window.__VIRID_BRIDGE__.post({
     __virid_source: options.windowId,
     __virid_target: "main",
@@ -35,8 +35,8 @@ export function activateApp(app: ViridApp, options: PluginOption) {
       windowId: options.windowId,
     },
   });
-  // 订阅ipc通道，所有返回的消息，全部转换按照注册表转换成自己的消息类型
+  // Subscribe to the ipc channel, and convert all returned messages into our own message types according to the registry
   window.__VIRID_BRIDGE__.subscribe(convertFromMainMessage);
-  //注册自己的中间件函数，把ToMainMessage类型的消息拦截发往electron主进程
+  // register your own middleware function to intercept messages of type ToMainMessage and forward them to the main process of electron
   app.useMiddleware(middleWare);
 }

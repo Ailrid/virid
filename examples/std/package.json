@@ -16,5 +16,6 @@
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.11",
     "@types/node": "^25.5.2"
-  }
+  },
+  "version": "0.3.0"
 }
