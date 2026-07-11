@@ -4,8 +4,5 @@
  * Project: Virid Renderer
  */
 export interface PluginOption {
-  /**
-   * 窗口的 ID
-   */
   windowId: string;
 }

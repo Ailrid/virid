@@ -8,7 +8,7 @@ import { ToMainMessage } from "./message";
 export const middleWare: Middleware = (message, next) => {
   // If the message inherits from ToMainMessage, intercept concurrency to the main process
   if (message instanceof ToMainMessage) {
-    const { __virid_target, __virid_messageType, ...payload } = message;
+    const { __virid_target, __virid_message_type, ...payload } = message;
     if (__virid_target == ToMainMessage.__virid_source) {
       MessageWriter.warn(
         `[Virid Render] Prohibit Sending To Oneself: ${__virid_target} is not allowed in ToRenderMessage.`,
@@ -18,7 +18,7 @@ export const middleWare: Middleware = (message, next) => {
     window.__VIRID_BRIDGE__.post({
       __virid_source: ToMainMessage.__virid_source,
       __virid_target: __virid_target,
-      __virid_messageType: __virid_messageType,
+      __virid_message_type: __virid_message_type,
       payload: payload, // Expand all attributes on the instance
     });
   } else {

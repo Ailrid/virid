@@ -5,4 +5,4 @@
  */
 export * from "./message";
 export * from "./middleware";
-export * from "./router";
+export * from "./decorator";

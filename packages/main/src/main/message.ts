@@ -21,7 +21,7 @@ export abstract class FromRendererMessage extends EventMessage {
   public __virid_target: string = "unknown";
 
   //What message should I turn into at the destination?
-  public __virid_messageType: string = "unknown";
+  public __virid_message_type: string = "unknown";
   public senderWindow: Electron.BrowserWindow = null as any;
 }
 
@@ -41,5 +41,5 @@ export abstract class ToRendererMessage extends EventMessage {
   /**
    *What message should I turn into at the destination?
    */
-  public abstract __virid_messageType: string;
+  public abstract __virid_message_type: string;
 }

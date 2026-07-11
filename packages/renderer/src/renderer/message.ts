@@ -20,7 +20,7 @@ export abstract class FromMainMessage extends EventMessage {
   /**
    *What message should I turn into at the destination?
    */
-  public __virid_messageType: string = "";
+  public __virid_message_type: string = "";
 }
 
 /**
@@ -41,5 +41,5 @@ export abstract class ToMainMessage extends EventMessage {
   /**
    *What message should I turn into at the destination?
    */
-  public abstract __virid_messageType: string;
+  public abstract __virid_message_type: string;
 }
