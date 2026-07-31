@@ -20,23 +20,17 @@ const VIRID_CHANNEL = "VIRID_INTERNAL_BUS";
 
 export function injectViridBridge() {
   contextBridge.exposeInMainWorld("__VIRID_BRIDGE__", {
-    /**
-     * 发送原始 Packet 到主进程
-     */
     post: (packet: any) => {
       ipcRenderer.send(VIRID_CHANNEL, packet);
     },
 
-    /**
-     * 订阅主进程发来的原始数据
-     */
     subscribe: (callback: (packet: any) => void) => {
-      const internalHandler = (_event: IpcRendererEvent, packet: any) => {
+      const subscription = (_event: IpcRendererEvent, packet: any) => {
         callback(packet);
       };
-      ipcRenderer.on(VIRID_CHANNEL, internalHandler);
+      ipcRenderer.on(VIRID_CHANNEL, subscription);
       return () => {
-        ipcRenderer.removeListener(VIRID_CHANNEL, internalHandler);
+        ipcRenderer.removeListener(VIRID_CHANNEL, subscription);
       };
     },
   });

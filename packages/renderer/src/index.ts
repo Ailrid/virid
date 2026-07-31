@@ -29,8 +29,8 @@ import { VIRID_RENDERER_METADATA } from "./renderer/constant";
 export * from "./interfaces";
 export * from "./renderer";
 
-export class RenderPlugin implements ViridPlugin<PluginOption> {
-  name = "@virid/render";
+export class RendererPlugin implements ViridPlugin<PluginOption> {
+  name = "@virid/renderer";
   public message_map = new Map<string, Newable<FromMainMessage>>();
 
   install(app: ViridApp, options: PluginOption) {
@@ -41,17 +41,21 @@ export class RenderPlugin implements ViridPlugin<PluginOption> {
           `[Virid Render] Preloading Failed: Please initialize in the preloaded script first.`,
         ),
       );
+      return;
     }
     // check whether parameters are passed
-    if (!options?.windowId) {
+    if (!options.windowId) {
       MessageWriter.error(
         new Error(
           `[Virid Render] Activate Failed: Please provide the windowId:${options?.windowId}.`,
         ),
       );
+      return;
     }
     // register your own id, so that all messages sent to the main process will carry your own id in the future
     ToMainMessage.__virid_source = options.windowId;
+    // Subscribe to the ipc channel, and convert all returned messages into our own message types according to the registry
+    window.__VIRID_BRIDGE__.subscribe(this.convertFromMainMessage.bind(this));
     // actively send a registration message to the main process to register itself
     window.__VIRID_BRIDGE__.post({
       __virid_source: options.windowId,
@@ -61,8 +65,6 @@ export class RenderPlugin implements ViridPlugin<PluginOption> {
         windowId: options.windowId,
       },
     });
-    // Subscribe to the ipc channel, and convert all returned messages into our own message types according to the registry
-    window.__VIRID_BRIDGE__.subscribe(this.convertFromMainMessage);
     // register your own middleware function to intercept messages of type ToMainMessage and forward them to the main process of electron
     app.useMiddleware(middleWare);
   }

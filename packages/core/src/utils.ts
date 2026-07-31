@@ -33,12 +33,10 @@ class ViridLogHandler {
   static globalInfoHandler(info: InfoMessage) {
     if (!globalSwitch) return;
     const header = `${clr.green}${clr.bold} ✔ [Virid Info] ${clr.reset}`;
-    const context = `${clr.magenta}${info.context}${clr.reset}`;
-
     console.log(
-      `${header}${clr.gray}Global Info Caught:${clr.reset}\n` +
-      `${clr.green}Details:${clr.reset}`,
-      context || "unknown Info",
+      `${header}${clr.gray} Global Info Caught: ${clr.reset}\n` +
+        `${clr.green} Details: ${clr.reset}`,
+      info.context || "unknown Info",
     );
   }
 
@@ -49,12 +47,11 @@ class ViridLogHandler {
   static globalErrorHandler(err: ErrorMessage) {
     if (!globalSwitch) return;
     const header = `${clr.red}${clr.bold} ✖ [Virid Error] ${clr.reset}`;
-    const context = `${clr.magenta}${err.context}${clr.reset}`;
 
     console.error(
-      `${header}${clr.gray}Global Error Caught:${clr.reset}\n` +
-      `${clr.red}Context:${clr.reset} ${context}\n` +
-      `${clr.red}Details:${clr.reset}`,
+      `${header}${clr.gray} Global Error Caught: ${clr.reset}\n` +
+        `${clr.red} Context: ${clr.reset} ${err.context}\n` +
+        `${clr.red} Details: ${clr.reset}`,
       err.error || err || "unknown Error",
     );
   }
@@ -66,11 +63,9 @@ class ViridLogHandler {
   static globalWarnHandler(warn: WarnMessage) {
     if (!globalSwitch) return;
     const header = `${clr.yellow}${clr.bold} ⚠ [Virid Warn] ${clr.reset}`;
-    const context = `${clr.cyan}${warn.context}${clr.reset}`;
-
     console.warn(
-      `${header}${clr.gray}Global Warn Caught:${clr.reset}\n` +
-      `${clr.yellow}Context:${clr.reset} ${context}`,
+      `${header}${clr.gray} Global Warn Caught: ${clr.reset}\n` +
+        `${clr.yellow} Context:${clr.reset} ${warn.context}`,
     );
   }
 }

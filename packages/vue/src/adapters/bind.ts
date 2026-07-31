@@ -32,14 +32,12 @@ import {
   EnvMetadata,
 } from "../interfaces";
 
-// controller注册表
-
+// Controller Registry
 export class GlobalRegistry {
   private static globalRegistry = shallowReactive(new Map<string, any>());
   static set(id: string, instance: any): () => boolean {
     if (!this.globalRegistry.has(id)) {
       this.globalRegistry.set(id, instance);
-      //返回卸载函数
       return () => {
         this.globalRegistry.delete(id);
         return true;
@@ -54,7 +52,6 @@ export class GlobalRegistry {
     }
   }
   static get(id: string): any {
-    //如果找不见，直接报错
     if (!this.globalRegistry.has(id)) {
       MessageWriter.error(
         new Error(
@@ -67,7 +64,7 @@ export class GlobalRegistry {
   }
 }
 /**
- * @Project 连接component，只读一个component的值
+ * @Project connects components, only reading the value of one component
  */
 export function bindProject(proto: any, instance: any) {
   const projects: ProjectMetadata = Reflect.getMetadata(
@@ -79,7 +76,6 @@ export function bindProject(proto: any, instance: any) {
     const { key, isAccessor, type, componentClass, source } = config;
     let project: WritableComputedRef<any, any>;
 
-    // 统一报错 Setter
     const readOnlySetter = (_val: any) => {
       MessageWriter.error(
         new Error(
@@ -88,7 +84,6 @@ export function bindProject(proto: any, instance: any) {
       );
     };
 
-    // 手写 Accessor
     if (isAccessor) {
       if (type === "component") {
         MessageWriter.error(
@@ -99,7 +94,7 @@ export function bindProject(proto: any, instance: any) {
         return;
       }
 
-      // 只有非 component 类型才走到这里，支持读写
+      // Only non component types have reached this point, supporting read and write operations
       const rawDescriptor = Object.getOwnPropertyDescriptor(proto, key);
       project = computed({
         get: () => rawDescriptor?.get?.call(instance),
@@ -111,9 +106,7 @@ export function bindProject(proto: any, instance: any) {
           }
         },
       });
-    }
-    //函数式投影
-    else {
+    } else {
       project = computed({
         get: () => {
           const isFromComponent = type === "component";
@@ -122,12 +115,11 @@ export function bindProject(proto: any, instance: any) {
             : instance;
           const val = source(target);
 
-          // 来自 component 的数据套盾
+          // Add borrowing check for data from component
           if (isFromComponent) {
             return createBorrowChecker(val, componentClass!.name, key);
           }
 
-          // 来自自己的投影，直接返回
           return val;
         },
         set: readOnlySetter,
@@ -146,7 +138,7 @@ export function bindProject(proto: any, instance: any) {
   });
 }
 /**
- * @Watch 自动把函数变成watch
+ * @Watch Automatically turn the function into a watch
  */
 
 export function bindWatch(proto: any, instance: any) {
@@ -157,14 +149,13 @@ export function bindWatch(proto: any, instance: any) {
   watches.forEach((config) => {
     const { type, source, methodName, options, componentClass } = config;
 
-    // 获取目标实例
     const target =
       type === "component" ? viridApp.get(componentClass) : instance;
-    // 确保目标实例已经过响应式处理
+
     if (target && !target.__ccs_processed__) {
       bindResponsive(target);
     }
-    // 封装 getter
+
     const getter = () => {
       try {
         return source(target);
@@ -176,9 +167,8 @@ export function bindWatch(proto: any, instance: any) {
         return undefined;
       }
     };
-    // 使用 bind 确保回调函数内部的 this 指向当前的 Controller/Instance
+    // Use bind to ensure that the 'this' inside the callback function points to the current Controller/Instance
     const callback = (instance[methodName] as any).bind(instance);
-    // 执行监听
     const stop = watch(
       getter,
       (newVal, oldVal) => {
@@ -195,7 +185,7 @@ export function bindWatch(proto: any, instance: any) {
 }
 
 /**
- * @Responsive 递归处理，支持在 Observer 基础上套娃
+ * @Responsive Recursive processing, supporting nesting on the basis of Observer
  */
 export function bindResponsive(instance: any) {
   if (!instance || typeof instance !== "object") return instance;
@@ -213,10 +203,9 @@ export function bindResponsive(instance: any) {
     const key = config.key;
     const descriptor = Object.getOwnPropertyDescriptor(instance, key);
 
-    // 【关键逻辑】检查是否已经被 bindObservers 劫持过
+    // Check if it has been hijacked by bindObservers
     const existingBox = (descriptor?.get as any)?.__virid_box__;
 
-    // 在 bindResponsive 内部
     if (existingBox) {
       const rawValue = existingBox.value;
       const vRef = config.shallow ? shallowRef(rawValue) : ref(rawValue);
@@ -230,7 +219,7 @@ export function bindResponsive(instance: any) {
         configurable: true,
       });
     } else {
-      // 普通属性，按照原逻辑处理
+      // Normal attribute, processed according to the original logic
       if (descriptor && descriptor.get) return;
 
       const rawValue = instance[key];
@@ -249,7 +238,7 @@ export function bindResponsive(instance: any) {
     }
   });
 
-  // 递归处理子对象
+  // Recursive processing of sub objects
   Reflect.ownKeys(instance).forEach((key) => {
     if (key === "__virid_responsive_processed__") return;
     const val = instance[key];
@@ -261,7 +250,7 @@ export function bindResponsive(instance: any) {
 }
 
 /**
- * 解析 @OnHook 并将其绑定到 Vue 生命周期
+ * Resolve @ OnHook and bind it to the Vue lifecycle
  */
 export function bindHooks(proto: any, instance: any) {
   const hooks: OnHookMetadata = Reflect.getMetadata(
@@ -292,13 +281,12 @@ export function bindHooks(proto: any, instance: any) {
       case "onSetup":
         fn();
         break;
-      // 可以根据需要扩展更多的钩子
     }
   });
 }
 
 /**
- * 执行并绑定万能 Hooks
+ * Execute and bind universal hooks
  */
 export function bindUseHooks(proto: any, instance: any) {
   const hooks: UseMetadata = Reflect.getMetadata(
@@ -307,15 +295,14 @@ export function bindUseHooks(proto: any, instance: any) {
   );
 
   hooks?.forEach((config) => {
-    // 在 useController 运行期间执行 hookFactory()
+    // Execute HookFactory during useController runtime
     const hookResult = config.hookFactory();
-    // 直接赋值给实例
     instance[config.key] = hookResult;
   });
 }
 
 /**
- * @description: 启动@Listener 为 Controller 实例绑定监听器并返回销毁函数列表
+ * Start @ Listener to bind a listener to the Controller instance and return a list of destruction functions
  **/
 export function bindListener(proto: any, instance: any): (() => void)[] {
   const listenerConfigs: ListenerMetadata =
@@ -323,9 +310,8 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
   const unbindFunctions: (() => void)[] = [];
 
   listenerConfigs.forEach(({ key, messageClass, priority, batchMode }) => {
-    const originalMethod = instance[key];
+    const originalMethod = instance[key].bind(instance);
 
-    // 给包装后的函数挂载上下文信息
     const listenerContext: SystemContext = {
       params: [messageClass],
       targetClass: instance.constructor,
@@ -340,7 +326,7 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
       priority: priority,
     };
     (instance[key] as any).systemContext = listenerContext;
-    (instance[key] as any).systemContext = listenerConfig;
+    (instance[key] as any).systemConfig = listenerConfig;
 
     const unregister = viridApp.register(instance[key]);
     unbindFunctions.push(unregister);
@@ -350,7 +336,7 @@ export function bindListener(proto: any, instance: any): (() => void)[] {
 }
 
 /**
- * @description: 启动@Inherit 使能够只读其他的controller
+ * Activate @ Inherit to enable read-only access to other controllers
  **/
 export function bindInherit(proto: any, instance: any) {
   const inherits: InheritMetadata = Reflect.getMetadata(
@@ -360,25 +346,20 @@ export function bindInherit(proto: any, instance: any) {
   if (!inherits) return;
 
   inherits.forEach(({ key, id, selector }) => {
-    // 为每个继承属性创建一个私有的 computed 引用
-    // 这个 computed 就像一个隧道，一头连着 Registry，一头连着子组件
     const tunnel = computed(() => {
-      const target = GlobalRegistry.get(id); // 自动依赖 Registry 的增删
+      const target = GlobalRegistry.get(id);
       if (!target) {
         MessageWriter.warn(
           `[Virid Inherit] Warning: Inherit target not found: ${id}`,
         );
         return null;
       }
-      // 这里的 selector(target) 也会触发依赖收集
-      // 如果 target.state.count 变了，这个 computed 也会感知到
       return selector ? selector(target) : target;
     });
 
     Object.defineProperty(instance, key, {
       get: () => {
-        const val = tunnel.value; // 访问 computed.value
-        // 返回时依然套上护盾，确保“弱引用”也是“只读引用”
+        const val = tunnel.value;
         return val ? createBorrowChecker(val, key, "") : null;
       },
       set: () => {
@@ -395,15 +376,14 @@ export function bindInherit(proto: any, instance: any) {
 }
 
 /**
-u* @description: 把槽或者其他乱七八糟的东西传递过来的上下文注入到controller里
- * @param {*} context 上下文对象
- * @param {*} instance controller实例
+ * Inject the context passed over by slots or other miscellaneous things into the controller
  */
 export function bindEnv(proto: any, instance: any, context: any) {
   const envs: EnvMetadata = Reflect.getMetadata(VIRID_VUE_METADATA.ENV, proto);
+  if (!envs) return;
 
   envs.forEach(({ key }) => {
-    if (!context[key]) {
+    if (key in context === false) {
       MessageWriter.warn(
         `[Virid Context] Env Not Found: The "${key}" is not defined in the context.`,
       );

@@ -18,8 +18,7 @@ import { VIRID_VUE_METADATA } from "../decorators/constant";
 import { MessageWriter, Newable } from "@virid/core";
 import { viridApp } from "../app";
 /**
- * @description: vue的hooks适配器，注入IOC容器中的Controller实例，并挂在vue的各种方法
- * @param token
+ * @description: Vue hooks adapter, injecting Controller instances into IOC containers, and mounting various methods of Vue
  */
 export function useController<T>(
   token: Newable<T>,
@@ -27,13 +26,11 @@ export function useController<T>(
 ): T {
   const instance = viridApp.get(token) as any;
 
-  // 检查身份 Controller
   const isController = Reflect.hasMetadata(
     VIRID_VUE_METADATA.CONTROLLER,
     token,
   );
   if (!isController) {
-    // 确保非 Controller 的实例不能被其他 Controller 访问
     MessageWriter.error(
       new Error(
         `[Virid Controller] ${token.name} is not a Controller.Use @Controller to inject it.`,
@@ -42,28 +39,19 @@ export function useController<T>(
     return null as T;
   }
 
-  //绑定各种魔法装饰器
+
   const proto = Object.getPrototypeOf(instance);
-  //注入vue的乱七八糟的context
+
   const reactiveContext = options?.context || useAttrs();
   if (reactiveContext) {
     bindEnv(proto, instance, reactiveContext);
   }
-  // @Use装饰器
   bindUseHooks(proto, instance);
-  // @Inherit装饰器
   bindInherit(proto, instance);
-  // @Project装饰器
   bindProject(proto, instance);
-  // @Listener装饰器
-  // 运行时动态挂载监听器
   const unbindList = bindListener(proto, instance);
-  // 生命周期钩子
   bindHooks(proto, instance);
-  //绑定全局注册表
-  // @Watch装饰器
   const stops = bindWatch(proto, instance);
-  //如果有id,就去注册
   let unbindRegister = () => true;
   if (options?.id) {
     unbindRegister = GlobalRegistry.set(options.id, instance);
@@ -72,7 +60,6 @@ export function useController<T>(
     stops.forEach((stop) => stop());
     unbindList.forEach((stop) => stop());
     unbindRegister();
-    // 自动卸载信号处理器，防止 Controller 销毁后残留
   });
 
   return instance;
