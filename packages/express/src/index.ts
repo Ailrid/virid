@@ -100,6 +100,16 @@ export class ExpressPlugin implements ViridPlugin<PluginOptions> {
 
   install(app: ViridApp, options: PluginOptions) {
     // register for express routing
+    HttpRequestMessage.incContext = (id: RequestId) => {
+      const ctx = this.httpContextStore.get(id);
+      if (!ctx) {
+        throw new Error(
+          `[Virid Http] Invalid Request Context: The request context for message ${id} is missing.`,
+        );
+      }
+      ctx.inc();
+    };
+
     for (const [_, routeInfo] of this.httpRouteRegistry.entries()) {
       const { method, path, httpMessage } = routeInfo;
       const expressMethod = method.toLowerCase() as HttpMethod;
@@ -110,7 +120,6 @@ export class ExpressPlugin implements ViridPlugin<PluginOptions> {
 
         // save contextual information
         const context = new HttpContext(newId, req, res, Date.now(), path);
-        context.inc();
         this.httpContextStore.set(
           newId,
           new HttpContext(newId, req, res, Date.now(), path),
