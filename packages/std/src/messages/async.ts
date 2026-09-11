@@ -22,7 +22,7 @@ const asyncMessageQueue = new Map<string, QueueContext[]>();
 /**
  * Register asynchronous queue messages
  */
-export function AsyncQueue(key: string = "default", maxSize: number = 1) {
+export function AsyncQueue(key: string = "default", maxSize: number = 100) {
   return function (target: Newable<EventMessage>) {
     asyncMessageMap.set(target, { key, maxSize });
   };

@@ -112,7 +112,7 @@ MyMessage.send(); // Parameters correspond to the constructor
 class PageController {}
 
 // Registration is required before use
-app.bindController(PageController);
+app.bind(PageController);
 ```
 
 ------
@@ -132,7 +132,7 @@ public count = 0;
 }
 
 // Registration is required before use
-app.bindComponent(CounterComponent); 
+app.bind(CounterComponent); 
 ```
 
 ------
