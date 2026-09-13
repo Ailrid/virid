@@ -22,16 +22,16 @@ Virid resolves the issues of "state drift" and "spaghetti logic" in large-scale 
 
 ##  Module composition
 
-| **Module**            | **Role**                               | **Key Features**                                             |
-| --------------------- | -------------------------------------- | ------------------------------------------------------------ |
-| **`@virid/core`**     | **Logic Kernel**                       | **Deterministic Tick mechanism, Double-buffered message pool, Inversion of Control (IoC).** |
-| **`@virid/vue`**      | **UI Projection**                      | **Reactive Projections, Dependency Tethering, Lifecycle Bridging.** |
-| **`@virid/bridge`**   | **IPC Transport**                      | **Underlying messaging layer for Electron cross-process communication.** |
-| **`@virid/renderer`** | **Renderer Bridge**                    | **Renderer-side message dispatching, Main-process message deserialization.** |
-| **`@virid/main`**     | **Main Bridge**                        | **Intelligent message routing, Multi-window message forwarding & arbitration.** |
-| **`@virid/amber`**    | **Causal State Management**            | **Message replay, Temporal state recovery, Multi-track Undo/Redo.** |
-| **`@virid/express`**  | **HTTP request to message conversion** | **Convert express requests into messages and process them in the system, providing dependency injection functionality similar to NestJS** |
-| **@virid/std**        | **Core function enhancement**          | **Provide asynchronous message timing control, throttling and debounce, etc** |
+| **Module**            | **Role**                               | **Key Features**                                             | Install                   |
+| --------------------- | -------------------------------------- | ------------------------------------------------------------ | ------------------------- |
+| **`@virid/core`**     | **Logic Kernel**                       | **Deterministic Tick mechanism, Double-buffered message pool, Inversion of Control (IoC).** | **npm i @virid/core**     |
+| **`@virid/vue`**      | **UI Projection**                      | Reactive Projections, Dependency Tethering, Lifecycle Bridging.**** | **npm i @virid/vue**      |
+| **`@virid/bridge`**   | **IPC Transport**                      | **Underlying messaging layer for Electron cross-process communication.** | **npm i @virid/bridge**   |
+| **`@virid/renderer`** | **Renderer Bridge**                    | **Renderer-side message dispatching, Main-process message deserialization.** | **npm i @virid/renderer** |
+| **`@virid/main`**     | **Main Bridge**                        | **Intelligent message routing, Multi-window message forwarding & arbitration.** | **npm i @virid/main**     |
+| **`@virid/amber`**    | **Causal State Management**            | **Message replay, Temporal state recovery, Multi-track Undo/Redo.** | **npm i @virid/amber**    |
+| **`@virid/express`**  | **HTTP request to message conversion** | **Convert express requests into messages and process them in the system, providing dependency injection functionality similar to NestJS** | **npm i @virid/express**  |
+| **@virid/std**        | **Core function enhancement**          | **Provide asynchronous message timing control, throttling and debounce, etc** | **npm i @virid/std**      |
 
 ##  Deep Dive
 
