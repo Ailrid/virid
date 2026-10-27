@@ -1,0 +1,44 @@
+{
+  "name": "@virid/websocket",
+  "type": "module",
+  "version": "0.4.4",
+  "description": "WebSocket plugin for virid, managing multiple connections through a global pool and message-driven architecture.",
+  "author": "Ailrid",
+  "license": "Apache 2.0",
+  "keywords": [
+    "websocket",
+    "renderer",
+    "virid",
+    "message"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ailrid/virid.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "dev": "tsup --config tsup.config.ts --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@virid/core": "workspace:*"
+  }
+}

@@ -73,6 +73,17 @@ const pct = useController(PageController)
 <div>当前页面是：{{pct.currentPageIndex}}<div>
 ```
 
+### ⚠️ 响应式更新规约
+
+System 中对 Component 的 `@Responsive` 数据，**推荐整体赋值**，避免原地修改：
+
+| 避免 ❌                                 | 推荐 ✅                                 |
+| -------------------------------------- | -------------------------------------- |
+| `component.list.splice(...)` 等长替换  | `component.list = newList`             |
+| `component.list.sort()` / `.reverse()` | `component.list = [...list].sort(...)` |
+
+**原因：**`@Project` 的 `computed` 只 track `ref.value` 的引用，不 track 数组内部索引。
+
 #### `@Project（）`
 
 - **功能**：`@virid/vue`最强大的投影机制，可以从**任意**`component`中拉取数据或从自身被`@Responsive()`标记的属性中生成新数，且保留响应式。

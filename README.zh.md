@@ -15,18 +15,17 @@
 
 ## 模块组成
 
-| **模块**              | **定位**                 | **关键特性**                                                 | 安装                       |
-| --------------------- | ------------------------ | ------------------------------------------------------------ | -------------------------- |
-| **`@virid/core`**     | **核心**                 | **确定性 Tick 机制、双缓冲消息池、依赖注入。**               | **npm i  @virid/core**     |
-| **`@virid/vue`**      | **UI投影层**             | **响应式投影、依赖注入、生命周期桥接、借用检查。**           | **npm i  @`virid`/vue**    |
-| **`@virid/bridge`**   | **electron消息转发层**   | **-**                                                        | **npm i  @virid/bridge**   |
-| **`@virid/renderer`** | **electron渲染进程桥接** | **渲染进程消息发送、主进程消息反序列化**                     | **npm i  @virid/renderer** |
-| **`@virid/main`**     | **electron主进程桥接**   | **消息路由、渲染进程转发**                                   | **npm i  @virid/core**     |
-| **`@virid/amber`**    | **因果状态管理**         | **版本管理、状态回溯、undo/redo**                            | **npm i  @virid/amber**    |
-| **@virid/express**    | **http请求消息化**       | **将express请求转换为消息在system中处理，并提供Nestjs一样的依赖注入功能** | **npm i  @virid/express**  |
-| **@virid/std**        | **核心功能增强**         | **提供异步消息时序控制、节流防抖、消息事务等等**             | **npm i  @virid/std**      |
-
----
+| **模块**                 | **定位**                 | **关键特性**                                                 | 安装                        |
+| ------------------------ | ------------------------ | ------------------------------------------------------------ | --------------------------- |
+| **@virid/core**        | **核心**                 | **确定性 Tick 机制、双缓冲消息池、依赖注入。**               | **npm i  @virid/core**      |
+| **@virid/vue**           | **UI投影层**             | **响应式投影、依赖注入、生命周期桥接、借用检查。**           | **npm i  @`virid`/vue**     |
+| **@virid/bridge**      | **electron消息转发层**   | **-**                                                        | **npm i  @virid/bridge**    |
+| **@virid/renderer**    | **electron渲染进程桥接** | **渲染进程消息发送、主进程消息反序列化**                     | **npm i  @virid/renderer**  |
+| **@virid/main**          | **electron主进程桥接**   | **消息路由、渲染进程转发**                                   | **npm i  @virid/main**   |
+| **@virid/amber**   | **因果状态管理**         | **版本管理、状态回溯、undo/redo**                            | **npm i  @virid/amber**     |
+| **@virid/express** | **http请求消息化**       | **将express请求转换为消息在system中处理，并提供Nestjs一样的依赖注入功能** | **npm i  @virid/express**   |
+| **@virid/websocket**     | **WebSocket桥接** | **WebSocket消息路由、进程转发、类型恢复**           | **npm i  @virid/websocket** |
+| **@virid/std**           | **核心功能增强**         | **提供异步消息时序控制、节流防抖、消息事务等等**             | **npm i  @virid/std**       |
 
 ## 深入了解
 
@@ -38,7 +37,8 @@
 - 👉 **[@virid/renderer](packages/renderer/README.md)** - 了解如何从渲染进程直接向主进程发消息
 - 👉 **[@virid/main](packages/main/README.md)** - 了解主进程如何处理渲染进程消息
 - 👉 **[@virid/amber](packages/amber/README.md)** - 了解如何使用消息重放、undo/redo功能
-- 👉 **[@virid/express](packages/express/README.md)** - 了解如何将express介入消息系统
+- 👉 **[@virid/express](packages/express/README.md)** - 了解如何将express接入消息系统
+- 👉 **[@virid/websocket](packages/websocket/README.md)** - 了解如何将websocket接入virid
 - 👉 **[@virid/std](packages/std/README.md)** - 了解如何对异步消息进行控制
 
 ## 其他

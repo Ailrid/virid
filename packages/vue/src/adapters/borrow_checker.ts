@@ -34,6 +34,10 @@ export function createBorrowChecker(
 
   const proxy = new Proxy(target, {
     get(obj, prop, receiver) {
+      if (typeof prop === "string" && prop.startsWith("__v_")) {
+        return Reflect.get(obj, prop, receiver);
+      }
+
       const value = Reflect.get(obj, prop, receiver);
       const currentPath = path ? `${path}.${String(prop)}` : String(prop);
       if (typeof value === "function") {

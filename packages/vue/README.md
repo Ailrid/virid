@@ -110,6 +110,17 @@ export class PageController {
 
 ------
 
+### ⚠️ Responsive Update Protocol
+
+In the System, it is recommended to assign an overall value to the'@ Responsive data of the Component to avoid modifying it in place。
+
+| ✅                                      | ❌                                      |
+| -------------------------------------- | -------------------------------------- |
+| `component.list = newList`             | `component.list.splice(...)`           |
+| `component.list = [...list].sort(...)` | `component.list.sort()` / `.reverse()` |
+
+**Reason**: The `computed` function of `@ Project` only tracks references to `ref. value` and does not track internal indexes of the array.
+
 #### `@Inherit()`
 
 - **Function:** Enables data sharing across different Controllers, bypassing component hierarchy entirely. The **enforced read-only** nature ensures that one Controller can never modify the data owned by another.
