@@ -1,7 +1,7 @@
 {
   "name": "@virid/websocket",
   "type": "module",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "description": "WebSocket plugin for virid, managing multiple connections through a global pool and message-driven architecture.",
   "author": "Ailrid",
   "license": "Apache 2.0",
